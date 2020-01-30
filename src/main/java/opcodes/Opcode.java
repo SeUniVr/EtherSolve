@@ -1,9 +1,9 @@
 package opcodes;
 
 public abstract class Opcode {
-    private String name;
-    private byte opcode;
-    private long offset;
+    protected String name;
+    protected byte opcode;
+    protected long offset;
 
     /**
      * Get the bytecodes length of the opcode
@@ -25,5 +25,10 @@ public abstract class Opcode {
 
     public long getOffset() {
         return offset;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
