@@ -14,4 +14,9 @@ public class StopOpcode extends ControlFlowOpcode {
     public int getStackInput() {
         return 0;
     }
+
+    @Override
+    public int getStackOutput() {
+        return 0;
+    }
 }

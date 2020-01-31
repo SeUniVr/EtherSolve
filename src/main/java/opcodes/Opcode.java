@@ -15,6 +15,10 @@ public abstract class Opcode {
 
     public abstract int getStackInput();
 
+    public int getStackOutput(){
+        return 1;
+    }
+
     public String getName() {
         return name;
     }
