@@ -33,6 +33,11 @@ public class PushOpcode extends StackOpcode {
     }
 
     @Override
+    public int getLength() {
+        return super.getLength() + parameter_length;
+    }
+
+    @Override
     public int getStackInput() {
         return 0;
     }

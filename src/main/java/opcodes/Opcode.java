@@ -6,15 +6,23 @@ public abstract class Opcode {
     protected long offset;
 
     /**
-     * Get the bytecodes length of the opcode
+     * Get the bytecode length of the opcode
      * @return length in byte of the opcode
      */
     public int getLength(){
         return 1;
     }
 
+    /**
+     * Get the number of inputs that the opcode needs. They have to be already in the stack.
+     * @return input number
+     */
     public abstract int getStackInput();
 
+    /**
+     * Get the number of outputs that the opcode leaves on the stack.
+     * @return output number
+     */
     public int getStackOutput(){
         return 1;
     }
