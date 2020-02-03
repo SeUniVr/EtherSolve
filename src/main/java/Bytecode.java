@@ -4,9 +4,12 @@ import java.util.ArrayList;
 
 public class Bytecode {
     private ArrayList<Opcode> opcodes;
-    private long offset;
+    //TODO: the offset is 0 when not computer, it will assume the final value when changed code is emitted
+    private long offset=0;
     private long length;
 
+
+    //TODO: the offset can not be an imput, it should be computed later when emitting the changed code
     /**
      * Creates an empty bytecode with no opcodes
      * @param offset the offset of the bytecode, a.k.a. the begin of the code
@@ -17,6 +20,8 @@ public class Bytecode {
         this.length = 0;
     }
 
+
+    //TODO: the offset can not be an imput, it should be computed later when emitting the changed code
     /**
      * Creates a bytecode with the given opcodes
      * @param opcodes The opcodes of the bytecode
@@ -30,6 +35,8 @@ public class Bytecode {
             this.length += o.getLength();
     }
 
+
+    //TODO: the offset can not be an imput, it should be computed later when emitting the changed code
     /**
      * Add a new Opcode to the bytecode
      * @param opcode the opcode to add
