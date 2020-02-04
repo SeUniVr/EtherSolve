@@ -1,17 +1,17 @@
 package opcodes.blockOpcodes;
 
 import opcodes.BlockOpcode;
+import opcodes.OpcodeID;
 
 public class TimeStampOpcode extends BlockOpcode {
 
     public TimeStampOpcode(long offset) {
-        this.name = "TIMESTAMP";
-        this.opcode = 0x42;
+        super(OpcodeID.TIMESTAMP);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 }

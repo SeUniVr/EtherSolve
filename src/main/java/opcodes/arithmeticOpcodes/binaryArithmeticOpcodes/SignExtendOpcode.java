@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class SignExtendOpcode extends BinaryArithmeticOpcode {
     public SignExtendOpcode(long offset) {
-        this.name = "SIGNEXTEND";
-        this.opcode = 0x0B;
+        super(OpcodeID.SIGNEXTEND);
         this.offset = offset;
     }
 }

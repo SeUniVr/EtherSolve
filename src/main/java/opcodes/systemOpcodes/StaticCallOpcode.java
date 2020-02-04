@@ -1,17 +1,17 @@
 package opcodes.systemOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.SystemOpcode;
 
 public class StaticCallOpcode extends SystemOpcode {
 
     public StaticCallOpcode(long offset) {
-        this.name = "STATICCALL";
-        this.opcode = (byte) 0xFA;
+        super(OpcodeID.STATICCALL);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 6;
     }
 }

@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class GTOpcode extends BinaryArithmeticOpcode {
     public GTOpcode(long offset) {
-        this.name = "GT";
-        this.opcode = 0x11;
+        super(OpcodeID.GT);
         this.offset = offset;
     }
 }

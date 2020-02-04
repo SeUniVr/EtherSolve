@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class OrOpcode extends BinaryArithmeticOpcode {
     public OrOpcode(long offset) {
-        this.name = "OR";
-        this.opcode = 0x17;
+        super(OpcodeID.OR);
         this.offset = offset;
     }
 }

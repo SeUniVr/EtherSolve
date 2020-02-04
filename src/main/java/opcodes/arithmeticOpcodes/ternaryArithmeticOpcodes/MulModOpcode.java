@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.ternaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.TernaryArithmeticOpcode;
 
 public class MulModOpcode extends TernaryArithmeticOpcode {
     public MulModOpcode(long offset) {
-        this.name = "MULMOD";
-        this.opcode = 0x09;
+        super(OpcodeID.MULMOD);
         this.offset = offset;
     }
 }

@@ -1,22 +1,22 @@
 package opcodes.systemOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.SystemOpcode;
 
 public class SelfDestructOpcode extends SystemOpcode {
 
     public SelfDestructOpcode(long offset) {
-        this.name = "SELFDESTRUCT";
-        this.opcode = (byte) 0xFF;
+        super(OpcodeID.SELFDESTRUCT);
         this.offset = offset;
     }
 
     @Override
-    public int getStackOutput() {
+    public int getStackGenerated() {
         return 0;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 1;
     }
 }

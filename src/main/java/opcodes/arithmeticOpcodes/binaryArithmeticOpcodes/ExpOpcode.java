@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class ExpOpcode extends BinaryArithmeticOpcode {
     public ExpOpcode(long offset) {
-        this.name = "EXP";
-        this.opcode = 0x0A;
+        super(OpcodeID.EXP);
         this.offset = offset;
     }
 }

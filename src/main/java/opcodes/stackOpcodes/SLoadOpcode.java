@@ -1,17 +1,17 @@
 package opcodes.stackOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.StackOpcode;
 
 public class SLoadOpcode extends StackOpcode {
 
     public SLoadOpcode(long offset) {
-        this.name = "SLOAD";
-        this.opcode = 0x54;
+        super(OpcodeID.SLOAD);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 1;
     }
 }

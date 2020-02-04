@@ -1,17 +1,17 @@
 package opcodes.blockOpcodes;
 
 import opcodes.BlockOpcode;
+import opcodes.OpcodeID;
 
 public class CoinBaseOpcode extends BlockOpcode {
 
     public CoinBaseOpcode(long offset) {
-        this.name = "COINBASE";
-        this.opcode = 0x41;
+        super(OpcodeID.COINBASE);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 }

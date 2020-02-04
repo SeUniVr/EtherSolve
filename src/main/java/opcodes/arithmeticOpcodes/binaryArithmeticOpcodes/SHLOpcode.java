@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class SHLOpcode extends BinaryArithmeticOpcode {
     public SHLOpcode(long offset) {
-        this.name = "SHL";
-        this.opcode = 0x1B;
+        super(OpcodeID.SHL);
         this.offset = offset;
     }
 }

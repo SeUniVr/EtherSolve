@@ -3,18 +3,17 @@ package opcodes;
 public class InvalidOpcode extends Opcode {
 
     public InvalidOpcode(long offset) {
-        this.name = "INVALID";
-        this.opcode = (byte) 0xFE;
+        super(OpcodeID.INVALID);
         this.offset = offset;
     }
 
     @Override
-    public int getStackOutput() {
+    public int getStackGenerated() {
         return 0;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 }

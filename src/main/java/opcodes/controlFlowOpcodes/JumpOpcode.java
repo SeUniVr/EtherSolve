@@ -1,22 +1,22 @@
 package opcodes.controlFlowOpcodes;
 
 import opcodes.ControlFlowOpcode;
+import opcodes.OpcodeID;
 
 public class JumpOpcode extends ControlFlowOpcode {
 
     public JumpOpcode(long offset) {
-        this.name = "JUMP";
-        this.opcode = 0x56;
+        super(OpcodeID.JUMP);
         this.offset = offset;
     }
 
     @Override
-    public int getStackOutput() {
+    public int getStackGenerated() {
         return 0;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 1;
     }
 }

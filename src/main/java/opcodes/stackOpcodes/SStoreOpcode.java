@@ -1,22 +1,22 @@
 package opcodes.stackOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.StackOpcode;
 
 public class SStoreOpcode extends StackOpcode {
 
     public SStoreOpcode(long offset) {
-        this.name = "SSTORE";
-        this.opcode = 0x55;
+        super(OpcodeID.SSTORE);
         this.offset = offset;
     }
 
     @Override
-    public int getStackOutput() {
+    public int getStackGenerated() {
         return 0;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 2;
     }
 }

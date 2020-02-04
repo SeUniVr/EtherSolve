@@ -1,22 +1,22 @@
 package opcodes.controlFlowOpcodes;
 
 import opcodes.ControlFlowOpcode;
+import opcodes.OpcodeID;
 
 public class StopOpcode extends ControlFlowOpcode {
 
     public StopOpcode(long offset) {
-        this.name = "STOP";
-        this.opcode = 0x00;
+        super(OpcodeID.STOP);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 
     @Override
-    public int getStackOutput() {
+    public int getStackGenerated() {
         return 0;
     }
 }

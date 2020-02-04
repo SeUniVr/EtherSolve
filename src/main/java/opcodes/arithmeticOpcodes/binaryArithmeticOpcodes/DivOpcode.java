@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class DivOpcode extends BinaryArithmeticOpcode {
     public DivOpcode(long offset) {
-        this.name = "DIV";
-        this.opcode = 0x04;
+        super(OpcodeID.DIV);
         this.offset = offset;
     }
 }

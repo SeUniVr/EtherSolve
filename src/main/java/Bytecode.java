@@ -1,27 +1,25 @@
 import opcodes.Opcode;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Bytecode {
     private ArrayList<Opcode> opcodes;
-    //TODO: the offset is 0 when not computer, it will assume the final value when changed code is emitted
-    private long offset=0;
+    private long offset = 0;
     private long length;
 
+    public Bytecode() {
+        this(0);
+    }
 
-    //TODO: the offset can not be an imput, it should be computed later when emitting the changed code
     /**
      * Creates an empty bytecode with no opcodes
      * @param offset the offset of the bytecode, a.k.a. the begin of the code
      */
     public Bytecode(long offset) {
-        this.offset = offset;
-        this.opcodes = new ArrayList<>();
-        this.length = 0;
+        this(new ArrayList<>(), offset);
     }
 
-
-    //TODO: the offset can not be an imput, it should be computed later when emitting the changed code
     /**
      * Creates a bytecode with the given opcodes
      * @param opcodes The opcodes of the bytecode
@@ -35,8 +33,6 @@ public class Bytecode {
             this.length += o.getLength();
     }
 
-
-    //TODO: the offset can not be an imput, it should be computed later when emitting the changed code
     /**
      * Add a new Opcode to the bytecode
      * @param opcode the opcode to add
@@ -44,5 +40,23 @@ public class Bytecode {
     public void addOpcode(Opcode opcode){
         this.opcodes.add(opcode);
         this.length += opcode.getLength();
+    }
+
+    /**
+     * Builds a hex string representing the bytecode
+     * @return bytecode string
+     */
+    public String getBytes(){
+        return opcodes.stream().map(Opcode::getBytes).collect(Collectors.joining());
+    }
+
+    @Override
+    public String toString() {
+        return opcodes.stream().map(Opcode::toString).collect(Collectors.joining("\n"));
+    }
+
+    public void addAll(Opcode... opcodes) {
+        for (Opcode o : opcodes)
+            addOpcode(o);
     }
 }

@@ -1,17 +1,17 @@
 package opcodes.stackOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.StackOpcode;
 
 public class PCOpcode extends StackOpcode {
 
     public PCOpcode(long offset) {
-        this.name = "PC";
-        this.opcode = 0x58;
+        super(OpcodeID.PC);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 }

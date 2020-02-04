@@ -1,17 +1,17 @@
 package opcodes.blockOpcodes;
 
 import opcodes.BlockOpcode;
+import opcodes.OpcodeID;
 
 public class DifficultyOpcode extends BlockOpcode {
 
     public DifficultyOpcode(long offset) {
-        this.name = "DIFFICULTY";
-        this.opcode = 0x44;
+        super(OpcodeID.DIFFICULTY);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 }

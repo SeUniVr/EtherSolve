@@ -1,11 +1,11 @@
 package opcodes.arithmeticOpcodes.binaryArithmeticOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.BinaryArithmeticOpcode;
 
 public class SLTOpcode extends BinaryArithmeticOpcode {
     public SLTOpcode(long offset) {
-        this.name = "SLT";
-        this.opcode = 0x12;
+        super(OpcodeID.SLT);
         this.offset = offset;
     }
 }

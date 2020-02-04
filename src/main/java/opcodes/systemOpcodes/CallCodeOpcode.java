@@ -1,17 +1,17 @@
 package opcodes.systemOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.SystemOpcode;
 
 public class CallCodeOpcode extends SystemOpcode {
 
     public CallCodeOpcode(long offset) {
-        this.name = "CALLCODE";
-        this.opcode = (byte) 0xF2;
+        super(OpcodeID.CALLCODE);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 7;
     }
 }

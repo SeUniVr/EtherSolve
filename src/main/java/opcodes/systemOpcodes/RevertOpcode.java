@@ -1,22 +1,22 @@
 package opcodes.systemOpcodes;
 
+import opcodes.OpcodeID;
 import opcodes.SystemOpcode;
 
 public class RevertOpcode extends SystemOpcode {
 
     public RevertOpcode(long offset) {
-        this.name = "REVERT";
-        this.opcode = (byte) 0xFD;
+        super(OpcodeID.REVERT);
         this.offset = offset;
     }
 
     @Override
-    public int getStackOutput() {
+    public int getStackGenerated() {
         return 0;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 2;
     }
 }

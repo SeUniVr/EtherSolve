@@ -1,17 +1,17 @@
 package opcodes.blockOpcodes;
 
 import opcodes.BlockOpcode;
+import opcodes.OpcodeID;
 
 public class NumberOpcode extends BlockOpcode {
 
     public NumberOpcode(long offset) {
-        this.name = "NUMBER";
-        this.opcode = 0x43;
+        super(OpcodeID.NUMBER);
         this.offset = offset;
     }
 
     @Override
-    public int getStackInput() {
+    public int getStackConsumed() {
         return 0;
     }
 }
