@@ -1,3 +1,5 @@
+package parseTree;
+
 import opcodes.Opcode;
 
 import java.util.ArrayList;
@@ -5,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class Bytecode {
     private ArrayList<Opcode> opcodes;
-    private long offset = 0;
+    private long offset;
     private long length;
 
     public Bytecode() {

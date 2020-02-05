@@ -2,6 +2,7 @@ import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AddOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.stackOpcodes.SwapOpcode;
+import parseTree.Bytecode;
 
 import java.math.BigInteger;
 
