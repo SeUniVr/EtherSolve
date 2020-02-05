@@ -2,7 +2,7 @@ package opcodes;
 
 public class LogOpcode extends Opcode {
 
-    private int topic_number;
+    private int topicNumber;
 
     /**
      * Constructor for default case with 0 topics.
@@ -22,12 +22,12 @@ public class LogOpcode extends Opcode {
         if (topic_number < 0 || topic_number > 4)
             throw new IllegalArgumentException("Events can have up to 4 topics");
         this.offset = offset;
-        this.topic_number = topic_number;
+        this.topicNumber = topic_number;
     }
 
     @Override
     public int getStackConsumed() {
-        return 2 + topic_number;
+        return 2 + topicNumber;
     }
 
     @Override
@@ -37,12 +37,12 @@ public class LogOpcode extends Opcode {
 
     @Override
     public String toString() {
-        return super.toString() + topic_number;
+        return super.toString() + topicNumber;
     }
 
     @Override
     public String getBytes() {
-        byte opcode = (byte) (opcodeID.getOpcode() + topic_number);
+        byte opcode = (byte) (opcodeID.getOpcode() + topicNumber);
         return String.format("%02x", opcode);
     }
 }

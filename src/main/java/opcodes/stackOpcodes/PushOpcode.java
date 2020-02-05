@@ -6,8 +6,8 @@ import opcodes.StackOpcode;
 import java.math.BigInteger;
 
 public class PushOpcode extends StackOpcode {
-    protected int parameter_length;
-    protected BigInteger parameter;
+    protected final int parameterLength;
+    protected final BigInteger parameter;
 
     /**
      * Basic constructor for all Push opcodes
@@ -20,7 +20,7 @@ public class PushOpcode extends StackOpcode {
         if (parameter_length < 1 || parameter_length > 32)
             throw new IllegalArgumentException("Push parameter length must be between 1 and 32 bytes");
         this.offset = offset;
-        this.parameter_length = parameter_length;
+        this.parameterLength = parameter_length;
         this.parameter = parameter;
     }
 
@@ -28,13 +28,13 @@ public class PushOpcode extends StackOpcode {
         return parameter;
     }
 
-    public int getParameter_length() {
-        return parameter_length;
+    public int getParameterLength() {
+        return parameterLength;
     }
 
     @Override
     public int getLength() {
-        return super.getLength() + parameter_length;
+        return super.getLength() + parameterLength;
     }
 
     @Override
@@ -44,13 +44,15 @@ public class PushOpcode extends StackOpcode {
 
     @Override
     public String toString() {
-        return super.toString() + parameter_length + " 0x" + parameter.toString(16);
+        return super.toString() + parameterLength + " 0x" + parameter.toString(16);
     }
 
     @Override
     public String getBytes() {
-        byte opcode = (byte) (opcodeID.getOpcode() + parameter_length - 1);
+        byte opcode = (byte) (opcodeID.getOpcode() + parameterLength - 1);
         String argument = parameter.toString(16);
-        return String.format("%x%s", opcode, argument);
+        // print the argument with the right number of leading zeros
+        int zeros = parameterLength * 2 - argument.length();
+        return String.format("%x%0" + zeros +"d%s", opcode, 0, argument);
     }
 }
