@@ -53,6 +53,6 @@ public class PushOpcode extends StackOpcode {
         String argument = parameter.toString(16);
         // print the argument with the right number of leading zeros
         int zeros = parameterLength * 2 - argument.length();
-        return String.format("%x%0" + zeros +"d%s", opcode, 0, argument);
+        return String.format("%x%s", opcode, "0".repeat(zeros) + argument);
     }
 }

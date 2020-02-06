@@ -36,23 +36,25 @@ public class BytecodeParser {
         final byte PUSH_OPCODE = OpcodeID.PUSH.getOpcode();
 
         // Read two bytes for each opcode
-        for (int offset = 0; offset < binary.length(); offset+=2){
+        for (int i = 0; i < binary.length(); i+=2){
             // Cast the 2 hex char to one byte
-            byte byteOpcode = (byte) Character.digit(binary.charAt(offset), 16);
+            byte byteOpcode = (byte) Character.digit(binary.charAt(i), 16);
             byteOpcode <<= 4;
-            byteOpcode += (byte) Character.digit(binary.charAt(offset + 1), 16);
+            byteOpcode += (byte) Character.digit(binary.charAt(i + 1), 16);
 
             // Parse all the opcodes except for the PUSH
             if (byteOpcode < PUSH_OPCODE || byteOpcode > PUSH_OPCODE + 32){
-                result.addOpcode(parseOpcode(byteOpcode, offset));
+                // the offset is the half of the string index
+                result.addOpcode(parseOpcode(byteOpcode, i / 2));
             } else {
                 // Treat the PUSH in different ways
                 int argumentNumber = byteOpcode - PUSH_OPCODE + 1;
+                // System.out.println(String.format("[%2d] 0x%x value = %d", i / 2, byteOpcode, argumentNumber));
                 // get the arguments of the PUSH
-                String strArgument = binary.substring(offset + 2, offset + 2 + argumentNumber*2);
+                String strArgument = binary.substring(i + 2, i + 2 + argumentNumber*2);
                 BigInteger argument = new BigInteger(strArgument, 16);
-                result.addOpcode(new PushOpcode(offset, argumentNumber, argument));
-                offset += argumentNumber * 2;
+                result.addOpcode(new PushOpcode(i / 2, argumentNumber, argument));
+                i += argumentNumber * 2;
             }
         }
 
@@ -60,14 +62,16 @@ public class BytecodeParser {
     }
 
     private Opcode parseOpcode(byte byteOpcode, int offset) {
+        // System.out.println(String.format("[%2d] 0x%x", offset, byteOpcode));
         // DUP
-        if (byteOpcode >= OpcodeID.DUP.getOpcode() && byteOpcode <= OpcodeID.DUP.getOpcode() + 16){
+        if (byteOpcode >= OpcodeID.DUP.getOpcode() && byteOpcode <= OpcodeID.DUP.getOpcode() + 15){
             int value = byteOpcode - OpcodeID.DUP.getOpcode() + 1;
+            //System.out.println(String.format("%d, [0x%x - 0x%x]", value, OpcodeID.DUP.getOpcode(), OpcodeID.DUP.getOpcode() + 16));
             return new DupOpcode(offset, value);
         }
 
         // SWAP
-        if (byteOpcode >= OpcodeID.SWAP.getOpcode() && byteOpcode <= OpcodeID.SWAP.getOpcode() + 16){
+        if (byteOpcode >= OpcodeID.SWAP.getOpcode() && byteOpcode <= OpcodeID.SWAP.getOpcode() + 15){
             int value = byteOpcode - OpcodeID.SWAP.getOpcode() + 1;
             return new SwapOpcode(offset, value);
         }

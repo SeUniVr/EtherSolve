@@ -16,4 +16,5 @@ public class InvalidOpcode extends Opcode {
     public int getStackConsumed() {
         return 0;
     }
+
 }
