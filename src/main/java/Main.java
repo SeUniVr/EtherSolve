@@ -1,13 +1,18 @@
-import parseTree.Bytecode;
+import parseTree.Contract;
 
 public class Main {
     public static void main(String[] args) {
         String input1 = "6080604052348015600f57600080fd5b5060aa60008190555060538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fea2646970667358221220e73604337ca6440964bb7aaae76c90999a4ba3d1746f922f9b1534366a8051c86473";//6f6c63430006020033";
         String input2 = "6080604052348015600f57600080fd5b5060aa60008190555060538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fea2646970667358221220e73604337ca6440964bb7aaae76c90999a4ba3d1746f922f9b1534366a8051c864736f6c63430006020033";
         String input3 = "6080604052348015600f57600080fd5b5060aa60008190555060538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fea264697066735822122084caa862448229c72e485dc6650fe6a76f351622432eb39a9a2e2c9fb30dd5de64736f6c63430006020033";
-        Bytecode bytecode1 = BytecodeParser.getInstance().parse(input1);
-        System.out.println(bytecode1);
-        System.out.println(input1.equals(bytecode1.getBytes()));
-        System.out.println(input1 + "\n" + bytecode1.getBytes());
+        String input4 = "60538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fe";//a2646970667358221220e73";
+
+        Contract c2 = new Contract(input2);
+        System.out.println(c2);
+        System.out.println(c2.getBytes());
+        System.out.println(c2.getBasicBlocks());
+
+//        Bytecode bytecode4 = BytecodeParser.getInstance().parse(input4);
+//        System.out.println(bytecode4);
     }
 }

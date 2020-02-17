@@ -3,12 +3,16 @@ package parseTree;
 import opcodes.Opcode;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class Bytecode {
+public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
     private ArrayList<Opcode> opcodes;
     private long offset;
     private long length;
+    private String remainingData;
 
     public Bytecode() {
         this(0);
@@ -19,18 +23,24 @@ public class Bytecode {
      * @param offset the offset of the bytecode, a.k.a. the begin of the code
      */
     public Bytecode(long offset) {
-        this(new ArrayList<>(), offset);
+        this(offset, new ArrayList<>());
     }
 
+
+    public Bytecode(long offset, ArrayList<Opcode> opcodes){
+        this(offset, opcodes, "");
+    }
     /**
      * Creates a bytecode with the given opcodes
      * @param opcodes The opcodes of the bytecode
      * @param offset the offset of the bytecode, a.k.a. the begin of the code
      */
-    public Bytecode(ArrayList<Opcode> opcodes, long offset) {
+    public Bytecode(long offset, ArrayList<Opcode> opcodes, String remainingData) {
         this.opcodes = opcodes;
         this.offset = offset;
-        this.length = 0;
+        this.remainingData = remainingData;
+        // Every 2 character of remaining data forms a byte
+        this.length = remainingData.length() / 2;
         for (Opcode o : opcodes)
             this.length += o.getLength();
     }
@@ -49,16 +59,49 @@ public class Bytecode {
      * @return bytecode string
      */
     public String getBytes(){
-        return opcodes.stream().map(Opcode::getBytes).collect(Collectors.joining());
+        return opcodes.stream().map(Opcode::getBytes).collect(Collectors.joining()) + remainingData;
     }
 
     @Override
     public String toString() {
-        return opcodes.stream().map(Opcode::toString).collect(Collectors.joining("\n"));
+        String result = opcodes.stream().map(Opcode::toString).collect(Collectors.joining("\n"));
+        if (! remainingData.equals(""))
+            result += "\nRemaining Data: " + remainingData;
+        return result;
     }
 
     public void addAll(Opcode... opcodes) {
         for (Opcode o : opcodes)
             addOpcode(o);
+    }
+
+    public String getRemainingData() {
+        return remainingData;
+    }
+
+    public void setRemainingData(String remainingData) {
+        // Update the length: subtract the old length of remainingData and add the new one
+        this.length = this.length - this.remainingData.length() / 2 + remainingData.length() / 2;
+        this.remainingData = remainingData;
+    }
+
+    @Override
+    public Iterator<Opcode> iterator() {
+        return opcodes.iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super Opcode> action) {
+        opcodes.forEach(action);
+    }
+
+    @Override
+    public Spliterator<Opcode> spliterator() {
+        return opcodes.spliterator();
+    }
+
+    @Override
+    public int compareTo(Bytecode other) {
+        return Long.compare(offset, other.offset);
     }
 }
