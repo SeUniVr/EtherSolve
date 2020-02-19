@@ -7,6 +7,7 @@ public class JumpIOpcode extends ControlFlowOpcode {
 
     public JumpIOpcode(long offset) {
         super(OpcodeID.JUMPI);
+        this.offset = offset;
     }
 
     @Override

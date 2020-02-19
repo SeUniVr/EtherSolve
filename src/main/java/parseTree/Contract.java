@@ -4,7 +4,6 @@ import opcodes.Opcode;
 import opcodes.OpcodeID;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -12,6 +11,7 @@ public class Contract {
     private Bytecode constructor;
     private Bytecode body;
     private Set<BasicBlock> basicBlocks;
+    private String name;
 
     private static final OpcodeID[] SET_VALUES = new OpcodeID[] {
             OpcodeID.JUMP,
@@ -20,30 +20,39 @@ public class Contract {
             OpcodeID.REVERT,
             OpcodeID.RETURN
         };
-    public static final HashSet<OpcodeID> DELIMITERS = new HashSet<OpcodeID>(Arrays.asList(SET_VALUES));
+    public static final TreeSet<OpcodeID> DELIMITERS = new TreeSet<>(Arrays.asList(SET_VALUES));
 
-    public Contract(){
-        this(new Bytecode(), new Bytecode());
+    private Contract(String name){
+        this(name, new Bytecode(), new Bytecode());
     }
 
-    public Contract(String binary){
-        this();
+    public Contract(String name, String binary){
+        this(name);
         Bytecode rawBytecode = BytecodeParser.getInstance().parse(binary);
         splitBytecode(rawBytecode);
         generateBasicBlocks();
     }
 
     private void generateBasicBlocks() {
+
+        System.out.println(body.toString());
+
         BasicBlock current = new BasicBlock();
         for (Opcode o : this.body){
             current.addOpcode(o);
             if (DELIMITERS.contains(o.getOpcodeID())) {
+                System.out.println(o + "\tCambio");
                 basicBlocks.add(current);
                 BasicBlock nextOne = new BasicBlock(o.getOffset());
                 // TODO add the other children too
                 current.addChild(nextOne);
                 current = nextOne;
             }
+        }
+
+        for (BasicBlock from : basicBlocks){
+            for (BasicBlock to : from.getChildren())
+                System.out.println(from.getOffset() + " -> " + to.getOffset());
         }
     }
 
@@ -52,7 +61,8 @@ public class Contract {
         body = rawBytecode;
     }
 
-    public Contract(Bytecode constructor, Bytecode body){
+    public Contract(String name, Bytecode constructor, Bytecode body){
+        this.name = name;
         this.constructor = constructor;
         this.body = body;
         this.basicBlocks = new TreeSet<>();
@@ -69,5 +79,9 @@ public class Contract {
 
     public Set<BasicBlock> getBasicBlocks() {
         return basicBlocks;
+    }
+
+    public String getName() {
+        return this.name;
     }
 }

@@ -11,17 +11,12 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    maven {
-        url "http://maven.scijava.org/content/repositories/public/"
-    }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    // https://mvnrepository.com/artifact/com.github.graphstream/gs-ui-javafx
-    compile group: 'com.github.graphstream', name: 'gs-ui-javafx', version: '2.0-alpha'
-    // https://mvnrepository.com/artifact/com.github.graphstream/gs-core
-    compile group: 'com.github.graphstream', name: 'gs-core', version: '2.0.0-beta'
+    // https://mvnrepository.com/artifact/com.sirolf2009/fxgraph
+    compile group: 'com.sirolf2009', name: 'fxgraph', version: '0.0.3'
 }
 
 javafx {

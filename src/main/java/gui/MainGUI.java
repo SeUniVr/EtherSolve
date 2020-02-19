@@ -2,15 +2,9 @@ package gui;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import org.graphstream.graph.Graph;
-import org.graphstream.graph.Node;
-import org.graphstream.graph.implementations.SingleGraph;
-import org.graphstream.ui.fx_viewer.FxViewer;
-import org.graphstream.ui.javafx.FxGraphRenderer;
-import org.graphstream.ui.view.View;
-import org.graphstream.ui.view.Viewer;
+import parseTree.Contract;
 
 public class MainGUI extends Application {
 
@@ -20,28 +14,17 @@ public class MainGUI extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setScene(new Scene(new StackPane((javafx.scene.Node) prova()), 800, 600));
+        String input1 = "6080604052348015600f57600080fd5b5060aa60008190555060538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fea2646970667358221220e73604337ca6440964bb7aaae76c90999a4ba3d1746f922f9b1534366a8051c86473";//6f6c63430006020033";
+        String input2 = "6080604052348015600f57600080fd5b5060aa60008190555060538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fea2646970667358221220e73604337ca6440964bb7aaae76c90999a4ba3d1746f922f9b1534366a8051c864736f6c63430006020033";
+        String input3 = "6080604052348015600f57600080fd5b5060aa60008190555060538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fea264697066735822122084caa862448229c72e485dc6650fe6a76f351622432eb39a9a2e2c9fb30dd5de64736f6c63430006020033";
+        String input4 = "60538060256000396000f3fe608060405260008054600e6014565b01905050005b6000608890509056fe";//a2646970667358221220e73";
+
+        Contract c2 = new Contract("c2", input2);
+
+        Pane cfg = CFGPrinter.print(c2);
+        Scene mainScene = new Scene(cfg,800, 600);
+        primaryStage.setScene(mainScene);
         primaryStage.show();
     }
 
-    private View prova() {
-        Graph mGraph = new SingleGraph("1");
-        System.setProperty("org.graphstream.ui", "javafx");
-        mGraph.setAttribute("ui.antialias");
-        mGraph.setAttribute("ui.quality");
-        mGraph.addNode("1");
-        Node a = mGraph.getNode("1");
-        a.setAttribute("ui.label", "Ciao\nCome\nVa\nTesto Molto lungo\nAltro testo\nPUSH 0x100\nJUMP");
-        a.setAttribute("ui.stroke-mode", "plain");
-        a.setAttribute("ui.shape", "box");
-        a.setAttribute("ui.size", "40px, 40px");
-        mGraph.addNode("2");
-        a = mGraph.getNode("2");
-        a.setAttribute("ui.label", "Ciao\nCome\nVa\nTesto Molto lungo\nAltro testo\nPUSH 0x100\nJUMP");
-        a.setAttribute("ui.stroke-mode", "plain");
-        a.setAttribute("ui.shape", "box");
-        a.setAttribute("ui.size", "40px, 40px");
-        mGraph.addEdge("1", "1", "2");
-        return new FxViewer(mGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD).addDefaultView(false, new FxGraphRenderer());
-    }
 }

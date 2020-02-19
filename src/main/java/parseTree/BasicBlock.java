@@ -37,4 +37,5 @@ public class BasicBlock extends Bytecode {
     public void addChildAll(BasicBlock... children){
         this.children.addAll(Arrays.asList(children));
     }
+
 }

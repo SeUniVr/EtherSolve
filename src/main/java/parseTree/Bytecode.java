@@ -4,6 +4,7 @@ import opcodes.Opcode;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -103,5 +104,25 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
     @Override
     public int compareTo(Bytecode other) {
         return Long.compare(offset, other.offset);
+    }
+
+    public long getOffset() {
+        return offset;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Bytecode bytecode = (Bytecode) o;
+        return offset == bytecode.offset &&
+                length == bytecode.length &&
+                opcodes.equals(bytecode.opcodes) &&
+                remainingData.equals(bytecode.remainingData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(opcodes, offset, length, remainingData);
     }
 }

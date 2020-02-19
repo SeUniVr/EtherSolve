@@ -47,13 +47,12 @@ public abstract class Opcode {
         return String.format("%02x", opcodeID.getOpcode());
     }
 
-    //why don't you compute this on the fligth?
     public long getOffset() {
         return offset;
     }
 
     @Override
     public String toString() {
-        return opcodeID.getName();
+        return offset + ": " + opcodeID.getName();
     }
 }
