@@ -3,9 +3,10 @@ package parseTree;
 import opcodes.Opcode;
 import opcodes.OpcodeID;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class Contract {
     private Bytecode constructor;
@@ -20,7 +21,7 @@ public class Contract {
             OpcodeID.REVERT,
             OpcodeID.RETURN
         };
-    public static final TreeSet<OpcodeID> DELIMITERS = new TreeSet<>(Arrays.asList(SET_VALUES));
+    public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(SET_VALUES));
 
     private Contract(String name){
         this(name, new Bytecode(), new Bytecode());
@@ -34,14 +35,10 @@ public class Contract {
     }
 
     private void generateBasicBlocks() {
-
-        System.out.println(body.toString());
-
         BasicBlock current = new BasicBlock();
         for (Opcode o : this.body){
             current.addOpcode(o);
             if (DELIMITERS.contains(o.getOpcodeID())) {
-                System.out.println(o + "\tCambio");
                 basicBlocks.add(current);
                 BasicBlock nextOne = new BasicBlock(o.getOffset());
                 // TODO add the other children too
@@ -50,22 +47,48 @@ public class Contract {
             }
         }
 
-        for (BasicBlock from : basicBlocks){
-            for (BasicBlock to : from.getChildren())
-                System.out.println(from.getOffset() + " -> " + to.getOffset());
+        current = new BasicBlock();
+        for (Opcode o : this.constructor){
+            current.addOpcode(o);
+            if (DELIMITERS.contains(o.getOpcodeID())) {
+                basicBlocks.add(current);
+                BasicBlock nextOne = new BasicBlock(o.getOffset());
+                // TODO add the other children too
+                current.addChild(nextOne);
+                current = nextOne;
+            }
         }
+
     }
 
     private void splitBytecode(Bytecode rawBytecode) {
-        // TODO split between constructor and body
-        body = rawBytecode;
+        this.constructor = new Bytecode();
+
+        ArrayList<Opcode> opcodes = rawBytecode.getOpcodes();
+
+        for (int i = 0; i<opcodes.size()-2; i++){
+            if (opcodes.get(i).getBytes().equals("6080") && i != 0){
+                if (opcodes.get(i+1).getBytes().equals("6040")){
+                    if (opcodes.get(i+2).getBytes().equals("52")){
+                        this.body = new Bytecode();
+                        long bodyOffset = opcodes.get(i).getOffset();
+                        body.addAll(opcodes.subList(i, opcodes.size()));
+                        body.forEach((o) -> o.addOffset(-bodyOffset));
+                        return;
+                    }
+                }
+            } else {
+                constructor.addOpcode(opcodes.get(i));
+            }
+        }
+
     }
 
     public Contract(String name, Bytecode constructor, Bytecode body){
         this.name = name;
         this.constructor = constructor;
         this.body = body;
-        this.basicBlocks = new TreeSet<>();
+        this.basicBlocks = new HashSet<>();
     }
 
     @Override

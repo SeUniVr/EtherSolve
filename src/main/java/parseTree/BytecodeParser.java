@@ -47,7 +47,6 @@ public class BytecodeParser {
             if (byteOpcode < PUSH_OPCODE || byteOpcode > PUSH_OPCODE + 32){
                 // the offset is the half of the string index
                 result.addOpcode(parseOpcode(byteOpcode, i / 2));
-                System.out.println("CREO OPCODE " + i/2 + " = " + parseOpcode(byteOpcode, i/2));
             } else {
                 // Treat the PUSH in different ways
                 int argumentNumber = byteOpcode - PUSH_OPCODE + 1;

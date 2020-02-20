@@ -6,6 +6,7 @@ import com.fxgraph.graph.Model;
 import com.fxgraph.layout.AbegoTreeLayout;
 import javafx.geometry.Orientation;
 import javafx.scene.layout.Pane;
+import org.abego.treelayout.Configuration;
 import parseTree.BasicBlock;
 import parseTree.Contract;
 
@@ -31,7 +32,7 @@ public class CFGPrinter {
         }
 
         mGraph.endUpdate();
-        mGraph.layout(new AbegoTreeLayout());
+        mGraph.layout(new AbegoTreeLayout(200, 200, Configuration.Location.Top));
 
         return mGraph.getCanvas();
 

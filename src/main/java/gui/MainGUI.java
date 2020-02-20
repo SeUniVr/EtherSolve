@@ -3,6 +3,7 @@ package gui;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import parseTree.Contract;
 
@@ -10,6 +11,7 @@ public class MainGUI extends Application {
 
     public static void main(String[] args) {
         launch(args);
+        //MainApp.main(args);
     }
 
     @Override
@@ -22,7 +24,9 @@ public class MainGUI extends Application {
         Contract c2 = new Contract("c2", input2);
 
         Pane cfg = CFGPrinter.print(c2);
-        Scene mainScene = new Scene(cfg,800, 600);
+        StackPane root = new StackPane();
+        root.getChildren().add(cfg);
+        Scene mainScene = new Scene(root,1024, 768);
         primaryStage.setScene(mainScene);
         primaryStage.show();
     }

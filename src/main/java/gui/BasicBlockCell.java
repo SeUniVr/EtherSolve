@@ -6,8 +6,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import parseTree.BasicBlock;
 
-import java.util.Objects;
-
 public class BasicBlockCell extends AbstractCell {
 
     private BasicBlock mBasicBlock;
@@ -20,7 +18,7 @@ public class BasicBlockCell extends AbstractCell {
     public Region getGraphic(Graph graph) {
         Label result = new Label(mBasicBlock.toString());
         result.setStyle("-fx-border-color: red;");
-        result.setStyle("-fx-background-color: #cccccc");
+        result.setStyle("-fx-background-color: #dddddd");
         return result;
     }
 
@@ -29,7 +27,7 @@ public class BasicBlockCell extends AbstractCell {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BasicBlockCell that = (BasicBlockCell) o;
-        return Objects.equals(mBasicBlock, that.mBasicBlock);
+        return mBasicBlock.equals(that.mBasicBlock);
     }
 
     @Override

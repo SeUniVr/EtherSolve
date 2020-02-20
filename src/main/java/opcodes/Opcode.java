@@ -55,4 +55,8 @@ public abstract class Opcode {
     public String toString() {
         return offset + ": " + opcodeID.getName();
     }
+
+    public void addOffset(long amount) {
+        offset += amount;
+    }
 }
