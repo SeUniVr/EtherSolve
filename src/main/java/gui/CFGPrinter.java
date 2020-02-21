@@ -1,10 +1,8 @@
 package gui;
 
-import com.fxgraph.edges.DoubleCorneredEdge;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.Model;
 import com.fxgraph.layout.AbegoTreeLayout;
-import javafx.geometry.Orientation;
 import javafx.scene.layout.Pane;
 import org.abego.treelayout.Configuration;
 import parseTree.BasicBlock;
@@ -27,12 +25,12 @@ public class CFGPrinter {
                 to = new BasicBlockCell(child);
                 if (! mModel.getAddedCells().contains(to))
                     mModel.addCell(to);
-                mModel.addEdge(new DoubleCorneredEdge(from, to, Orientation.VERTICAL));
+                mModel.addEdge(new CfgEdge(from, to));
             }
         }
 
         mGraph.endUpdate();
-        mGraph.layout(new AbegoTreeLayout(200, 200, Configuration.Location.Top));
+        mGraph.layout(new AbegoTreeLayout(200, 200, Configuration.Location.Right));
 
         return mGraph.getCanvas();
 
