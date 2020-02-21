@@ -10,6 +10,10 @@ public class BasicBlockCell extends AbstractCell {
 
     private BasicBlock mBasicBlock;
 
+    private BasicBlockCell(){
+        this(new BasicBlock());
+    }
+
     public BasicBlockCell(BasicBlock mBasicBlock) {
         this.mBasicBlock = mBasicBlock;
     }

@@ -1,27 +1,20 @@
 package parseTree;
 
 import opcodes.Opcode;
-import opcodes.OpcodeID;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 public class Contract {
+    private String name;
     private Bytecode constructor;
     private Bytecode body;
-    private Set<BasicBlock> basicBlocks;
-    private String name;
 
-    private static final OpcodeID[] SET_VALUES = new OpcodeID[] {
-            OpcodeID.JUMP,
-            OpcodeID.JUMPI,
-            OpcodeID.STOP,
-            OpcodeID.REVERT,
-            OpcodeID.RETURN
-        };
-    public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(SET_VALUES));
+    private Cfg constructorCfg = null;
+    private Cfg bodyCfg = null;
+
+    private Set<BasicBlock> basicBlocks;
 
     private Contract(String name){
         this(name, new Bytecode(), new Bytecode());
@@ -31,34 +24,6 @@ public class Contract {
         this(name);
         Bytecode rawBytecode = BytecodeParser.getInstance().parse(binary);
         splitBytecode(rawBytecode);
-        generateBasicBlocks();
-    }
-
-    private void generateBasicBlocks() {
-        BasicBlock current = new BasicBlock();
-        for (Opcode o : this.body){
-            current.addOpcode(o);
-            if (DELIMITERS.contains(o.getOpcodeID())) {
-                basicBlocks.add(current);
-                BasicBlock nextOne = new BasicBlock(o.getOffset());
-                // TODO add the other children too
-                current.addChild(nextOne);
-                current = nextOne;
-            }
-        }
-
-        current = new BasicBlock();
-        for (Opcode o : this.constructor){
-            current.addOpcode(o);
-            if (DELIMITERS.contains(o.getOpcodeID())) {
-                basicBlocks.add(current);
-                BasicBlock nextOne = new BasicBlock(o.getOffset());
-                // TODO add the other children too
-                current.addChild(nextOne);
-                current = nextOne;
-            }
-        }
-
     }
 
     private void splitBytecode(Bytecode rawBytecode) {
@@ -67,7 +32,7 @@ public class Contract {
         ArrayList<Opcode> opcodes = rawBytecode.getOpcodes();
 
         for (int i = 0; i<opcodes.size()-2; i++){
-            if (opcodes.get(i).getBytes().equals("6080") && i != 0){
+            if ((opcodes.get(i).getBytes().equals("6080") || opcodes.get(i).getBytes().equals("6080")) && i != 0){
                 if (opcodes.get(i+1).getBytes().equals("6040")){
                     if (opcodes.get(i+2).getBytes().equals("52")){
                         this.body = new Bytecode();
@@ -106,5 +71,17 @@ public class Contract {
 
     public String getName() {
         return this.name;
+    }
+
+    public Cfg getConstructorCfg() {
+        if (constructorCfg == null)
+            constructorCfg = new Cfg(constructor);
+        return constructorCfg;
+    }
+
+    public Cfg getBodyCfg() {
+        if (bodyCfg == null)
+            bodyCfg = new Cfg(body);
+        return bodyCfg;
     }
 }

@@ -8,10 +8,10 @@ import javafx.geometry.Orientation;
 import javafx.scene.layout.Pane;
 import org.abego.treelayout.Configuration;
 import parseTree.BasicBlock;
-import parseTree.Contract;
+import parseTree.Cfg;
 
 public class CFGPrinter {
-    public static Pane print(Contract contract) {
+    public static Pane print(Cfg cfg) {
 
         Graph mGraph = new Graph();
         final Model mModel = mGraph.getModel();
@@ -19,7 +19,7 @@ public class CFGPrinter {
         mGraph.beginUpdate();
 
         BasicBlockCell from, to;
-        for (BasicBlock bb : contract.getBasicBlocks()){
+        for (BasicBlock bb : cfg){
             from = new BasicBlockCell(bb);
             if (! mModel.getAddedCells().contains(from))
                 mModel.addCell(from);

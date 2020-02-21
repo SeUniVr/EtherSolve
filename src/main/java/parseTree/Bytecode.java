@@ -80,6 +80,10 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
         return remainingData;
     }
 
+    public long getLength() {
+        return length;
+    }
+
     public void setRemainingData(String remainingData) {
         // Update the length: subtract the old length of remainingData and add the new one
         this.length = this.length - this.remainingData.length() / 2 + remainingData.length() / 2;
