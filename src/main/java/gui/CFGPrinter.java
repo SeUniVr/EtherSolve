@@ -30,7 +30,7 @@ public class CFGPrinter {
         }
 
         mGraph.endUpdate();
-        mGraph.layout(new AbegoTreeLayout(200, 200, Configuration.Location.Right));
+        mGraph.layout(new AbegoTreeLayout(200, 200, Configuration.Location.Bottom));
 
         return mGraph.getCanvas();
 

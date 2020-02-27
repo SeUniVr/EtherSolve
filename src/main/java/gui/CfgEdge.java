@@ -29,17 +29,16 @@ public class CfgEdge extends AbstractEdge {
             Region source = graph.getGraphic(cfgEdge.getSource());
             Region target = graph.getGraphic(cfgEdge.getTarget());
 
-            DoubleBinding startX = source.layoutXProperty().add(target.widthProperty().divide(2));
+            DoubleBinding startX = source.layoutXProperty().add(source.widthProperty().divide(2));
             DoubleBinding startY = source.layoutYProperty().add(source.heightProperty());
             DoubleBinding endX = target.layoutXProperty().add(target.widthProperty().divide(2));
             DoubleBinding endY = target.layoutYProperty().add(0);
             DoubleBinding centerY = startY.add(endY).divide(2);
 
             Random randomGenerator = new Random();
-            double randomSize = 20;
-            double xOffset = randomGenerator.nextDouble()*randomSize - randomSize / 2;
-            startX = startX.add(xOffset);
-            endX = endX.add(xOffset);
+            double randomOffset = randomGenerator.nextDouble() / 2 - 0.25;
+            startX = startX.add(source.widthProperty().multiply(randomOffset));
+            endX = endX.add(target.widthProperty().multiply(randomOffset));
 
             Line lineA = new Line();
             Line lineB = new Line();

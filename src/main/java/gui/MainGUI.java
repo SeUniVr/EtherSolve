@@ -28,6 +28,7 @@ public class MainGUI extends Application {
         root.getChildren().add(cfg);
         Scene mainScene = new Scene(root,1024, 768);
         primaryStage.setScene(mainScene);
+        primaryStage.setTitle(contract.getName());
         primaryStage.show();
     }
 
