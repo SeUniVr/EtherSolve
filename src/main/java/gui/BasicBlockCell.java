@@ -8,7 +8,7 @@ import parseTree.BasicBlock;
 
 public class BasicBlockCell extends AbstractCell {
 
-    private BasicBlock mBasicBlock;
+    private final BasicBlock mBasicBlock;
 
     private BasicBlockCell(){
         this(new BasicBlock());

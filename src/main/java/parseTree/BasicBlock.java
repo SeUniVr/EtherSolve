@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 public class BasicBlock extends Bytecode {
 
-    private ArrayList<BasicBlock> children;
+    private final ArrayList<BasicBlock> children;
 
     public BasicBlock(){
         this(0);

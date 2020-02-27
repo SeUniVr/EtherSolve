@@ -77,8 +77,8 @@ public enum OpcodeID {
     INVALID ((byte) 0xfe,"INVALID"),
     SELFDESTRUCT ((byte) 0xff,"SELFDESTRUCT");
 
-    private byte opcode;
-    private String name;
+    private final byte opcode;
+    private final String name;
 
     OpcodeID(byte opcode, String name) {
         this.opcode = opcode;

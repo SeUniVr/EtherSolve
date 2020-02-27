@@ -13,7 +13,7 @@ public class PushOpcode extends StackOpcode {
      * Basic constructor for all Push opcodes
      * @param offset the offset in the bytecode, expressed in bytes
      * @param parameter_length the number of the PUSH. It must be between 1 and 32
-     * @param parameter the number pushed to the stack
+     * @param parameter the number pushed to the stack.
      */
     public PushOpcode(long offset, int parameter_length, BigInteger parameter) {
         super(OpcodeID.PUSH);

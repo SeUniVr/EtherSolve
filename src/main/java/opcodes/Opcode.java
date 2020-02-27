@@ -12,7 +12,7 @@ public abstract class Opcode {
      * Get the bytecode length of the opcode.
      *
      * Default value is 1, but the PUSH statement overrides this method.
-     * @return length in byte of the opcode
+     * @return length in byte of the opcode.
      */
     public int getLength(){
         return 1;
@@ -21,7 +21,7 @@ public abstract class Opcode {
 
     /**
      * Get the number of elements that the opcode consumes. They have to be already in the stack.
-     * @return consumed stack elements
+     * @return consumed stack elements.
      */
     public abstract int getStackConsumed();
 
@@ -29,7 +29,7 @@ public abstract class Opcode {
      * Get the number of elements that the opcode generates on the stack.
      *
      * Default value is 1, but some opcodes override this method
-     * @return generated stack elements
+     * @return generated stack elements.
      */
     public int getStackGenerated(){
         return 1;

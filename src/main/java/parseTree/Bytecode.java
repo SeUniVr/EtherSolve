@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
-    private ArrayList<Opcode> opcodes;
+    private final ArrayList<Opcode> opcodes;
     private long offset;
     private long length;
     private String remainingData;
@@ -21,7 +21,7 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
 
     /**
      * Creates an empty bytecode with no opcodes
-     * @param offset the offset of the bytecode, a.k.a. the begin of the code
+     * @param offset the offset of the bytecode, a.k.a. begin of the code
      */
     public Bytecode(long offset) {
         this(offset, new ArrayList<>());
@@ -34,7 +34,7 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
     /**
      * Creates a bytecode with the given opcodes
      * @param opcodes The opcodes of the bytecode
-     * @param offset the offset of the bytecode, a.k.a. the begin of the code
+     * @param offset the offset of the bytecode, a.k.a. begin of the code
      */
     public Bytecode(long offset, ArrayList<Opcode> opcodes, String remainingData) {
         this.opcodes = opcodes;

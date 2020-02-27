@@ -18,7 +18,7 @@ public class Cfg implements Iterable<BasicBlock> {
     };
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
 
-    private TreeMap<Long, BasicBlock> basicBlocks;
+    private final TreeMap<Long, BasicBlock> basicBlocks;
 
     public Cfg(Bytecode bytecode) {
         basicBlocks = new TreeMap<>();
@@ -38,7 +38,7 @@ public class Cfg implements Iterable<BasicBlock> {
                 current = new BasicBlock(o.getOffset() + 1);
             } else if (o.getOpcodeID() == OpcodeID.JUMPDEST && current.getLength() != 0) {
                 // This is already a new one, add and create new
-                // If the current length is 0 then do not append an empty basic block
+                // If the current length is 0 then do not append empty blocks
                 basicBlocks.put(current.getOffset(), current);
                 current = new BasicBlock(o.getOffset());
                 current.addOpcode(o);

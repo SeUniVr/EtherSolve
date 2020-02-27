@@ -22,7 +22,7 @@ import java.math.BigInteger;
 
 public class BytecodeParser {
 
-    private static BytecodeParser ilSoloEUnico = new BytecodeParser();
+    private static final BytecodeParser ilSoloEUnico = new BytecodeParser();
 
     private BytecodeParser(){
 

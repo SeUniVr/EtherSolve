@@ -7,14 +7,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Contract {
-    private String name;
+    private final String name;
     private Bytecode constructor;
     private Bytecode body;
 
     private Cfg constructorCfg = null;
     private Cfg bodyCfg = null;
 
-    private Set<BasicBlock> basicBlocks;
+    private final Set<BasicBlock> basicBlocks;
 
     private Contract(String name){
         this(name, new Bytecode(), new Bytecode());

@@ -11,12 +11,14 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     // https://mvnrepository.com/artifact/com.sirolf2009/fxgraph
-    compile group: 'com.sirolf2009', name: 'fxgraph', version: '0.0.3'
+    // compile group: 'com.sirolf2009', name: 'fxgraph', version: '0.0.3'
+    implementation 'com.github.VersusF:fxgraph:master-SNAPSHOT'
 }
 
 javafx {
