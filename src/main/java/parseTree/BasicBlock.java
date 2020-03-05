@@ -1,13 +1,14 @@
 package parseTree;
 
 import opcodes.Opcode;
+import opcodes.OpcodeID;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class BasicBlock extends Bytecode {
 
+    private final ArrayList<BasicBlock> parents;
     private final ArrayList<BasicBlock> children;
     private int stackBalance;
 
@@ -26,6 +27,7 @@ public class BasicBlock extends Bytecode {
     public BasicBlock(long offset, ArrayList<Opcode> opcodes, String remainingData) {
         super(offset, opcodes, remainingData);
         this.children = new ArrayList<>();
+        this.parents = new ArrayList<>();
         this.stackBalance = calculateStackBalance();
     }
 
@@ -42,16 +44,17 @@ public class BasicBlock extends Bytecode {
         return children;
     }
 
+    public ArrayList<BasicBlock> getParents() {
+        return parents;
+    }
+
     public int getStackBalance() {
         return stackBalance;
     }
 
     public void addChild(BasicBlock next){
         this.children.add(next);
-    }
-
-    public void addChildAll(BasicBlock... children){
-        this.children.addAll(Arrays.asList(children));
+        next.parents.add(this);
     }
 
     @Override
@@ -71,5 +74,11 @@ public class BasicBlock extends Bytecode {
     public void addAll(List<Opcode> subList) {
         super.addAll(subList);
         this.stackBalance = calculateStackBalance();
+    }
+
+    public boolean hasOrphanJump() {
+        ArrayList<Opcode> opcodes = getOpcodes();
+        Opcode lastOpcode = opcodes.get(opcodes.size() - 1);
+        return lastOpcode.getOpcodeID() == OpcodeID.JUMP && children.isEmpty();
     }
 }

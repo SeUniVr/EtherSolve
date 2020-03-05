@@ -1,5 +1,6 @@
 package parseTree;
 
+import javafx.util.Pair;
 import opcodes.Opcode;
 import opcodes.OpcodeID;
 import opcodes.stackOpcodes.PushOpcode;
@@ -25,6 +26,7 @@ public class Cfg implements Iterable<BasicBlock> {
         generateBasicBlocks(bytecode);
         //basicBlocks.forEach((o, b) -> System.out.println(o + ": " + b.getBytes()));
         calculateChildren();
+        resolveOrphanJumps();
         removeDeathCode();
     }
 
@@ -95,6 +97,65 @@ public class Cfg implements Iterable<BasicBlock> {
                 long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
                 BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);
                 basicBlock.addChild(nextBasicBlock);
+            }
+        });
+    }
+
+    private void resolveOrphanJumps() {
+        // For each basic block which terminates with an orphan jump
+        basicBlocks.descendingMap().forEach((offset, basicBlock) -> {
+            if (basicBlock.hasOrphanJump()){
+                // Iterate over the ancestors using a DFS
+                HashSet<BasicBlock> visited = new HashSet<>();
+                BasicBlock current = basicBlock;
+                Stack<Pair<BasicBlock, Integer>> queue = new Stack<>();
+                queue.push(new Pair<>(current, 0));
+
+                while (! queue.isEmpty()) {
+                    // Get next block in the queue
+                    Pair<BasicBlock, Integer> pair = queue.pop();
+                    current = pair.getKey();
+                    int stackBalance = pair.getValue();
+                    visited.add(current);
+
+                    // Walk the basic block bottom-up
+                    boolean found = false;
+                    ArrayList<Opcode> opcodes = current.getOpcodes();
+                    for (int i = opcodes.size() - 1; i >= 0; i--){
+                        stackBalance += opcodes.get(i).getStackGenerated();
+                        stackBalance -= opcodes.get(i).getStackConsumed();
+
+                        // When the stack balance is 1 that's the value which is taken by the jump
+                        // WARNING: there can be swaps and other operations that obfuscates the code
+                        if (stackBalance == 1){
+                            found = true;
+
+                            // If it's a push the destination address is easily resolvable
+                            if (opcodes.get(i) instanceof PushOpcode){
+                                PushOpcode opcode = (PushOpcode) opcodes.get(i);
+                                long targetOffset = opcode.getParameter().longValue();
+                                if (basicBlocks.containsKey(targetOffset))
+                                    basicBlock.addChild(basicBlocks.get(targetOffset));
+                                else
+                                    System.err.println("Orphan jump block at offset " + basicBlock.getOffset() + " is not resolvable with " + opcodes.get(i));
+                            } else {
+                                System.err.println("Orphan jump block at offset " + basicBlock.getOffset() + " is not resolvable with " + opcodes.get(i));
+                            }
+
+                            // Exit the loop
+                            i = 0;
+                        }
+                    }
+
+                    // Add the parents to the queue if not found
+                    if (! found){
+                        int finalStackBalance = stackBalance;
+                        current.getParents().forEach(parent -> {
+                            if (! visited.contains(parent))
+                                queue.push(new Pair<>(parent, finalStackBalance));
+                        });
+                    }
+                }
             }
         });
     }
