@@ -25,7 +25,10 @@ public class CFGPrinter {
                 to = new BasicBlockCell(child);
                 if (! mModel.getAddedCells().contains(to))
                     mModel.addCell(to);
-                mModel.addEdge(new CfgEdge(from, to));
+                if (bb.getOffset() < child.getOffset())
+                    mModel.addEdge(new CfgEdge(from, to));
+                else
+                    mModel.addEdge(new CfgBackwardEdge(from, to));
             }
         }
 
