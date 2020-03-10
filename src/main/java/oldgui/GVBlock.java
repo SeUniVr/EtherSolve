@@ -30,7 +30,6 @@ public class GVBlock {
     public String toString() {
         return "\"" +
                 mBasicBlock.toString().replace("\n", "\\l") + "\\l" +
-                mBasicBlock.getStackBalance() +
                 "\"";
     }
 }

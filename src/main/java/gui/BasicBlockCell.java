@@ -23,6 +23,8 @@ public class BasicBlockCell extends AbstractCell {
         Label result = new Label(mBasicBlock.toString());
         result.setStyle("-fx-border-color: red;");
         result.setStyle("-fx-background-color: #dddddd");
+        if (mBasicBlock.isDispatcherBlock())
+            result.setStyle("-fx-background-color: #fdffaf");
         return result;
     }
 

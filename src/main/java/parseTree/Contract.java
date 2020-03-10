@@ -32,7 +32,7 @@ public class Contract {
         ArrayList<Opcode> opcodes = rawBytecode.getOpcodes();
 
         for (int i = 0; i<opcodes.size()-2; i++){
-            if ((opcodes.get(i).getBytes().equals("6080") || opcodes.get(i).getBytes().equals("6080")) && i != 0){
+            if ((opcodes.get(i).getBytes().equals("6080") || opcodes.get(i).getBytes().equals("6060")) && i != 0){
                 if (opcodes.get(i+1).getBytes().equals("6040")){
                     if (opcodes.get(i+2).getBytes().equals("52")){
                         this.body = new Bytecode();

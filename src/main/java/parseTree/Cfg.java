@@ -27,7 +27,8 @@ public class Cfg implements Iterable<BasicBlock> {
         //basicBlocks.forEach((o, b) -> System.out.println(o + ": " + b.getBytes()));
         calculateChildren();
         resolveOrphanJumps();
-        removeDeathCode();
+        removeDeadCode();
+        colorDispatcher();
     }
 
     private void generateBasicBlocks(Bytecode bytecode) {
@@ -160,8 +161,12 @@ public class Cfg implements Iterable<BasicBlock> {
         });
     }
 
-    private void removeDeathCode() {
+    private void removeDeadCode() {
         // TODO
+    }
+
+    private void colorDispatcher(){
+        // TODO Marchetto
     }
 
     @Override
