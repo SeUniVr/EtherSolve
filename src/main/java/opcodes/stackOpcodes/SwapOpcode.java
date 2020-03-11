@@ -1,5 +1,6 @@
 package opcodes.stackOpcodes;
 
+import opcodes.Opcode;
 import opcodes.OpcodeID;
 import opcodes.StackOpcode;
 
@@ -39,5 +40,14 @@ public class SwapOpcode extends StackOpcode {
     public String getBytes() {
         byte opcode = (byte) (opcodeID.getOpcode() + value - 1);
         return String.format("%02x", opcode);
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    @Override
+    public boolean isSameOpcode(Opcode other) {
+        return super.isSameOpcode(other) && ((SwapOpcode)other).value == this.value;
     }
 }

@@ -59,4 +59,8 @@ public abstract class Opcode {
     public void addOffset(long amount) {
         offset += amount;
     }
+
+    public boolean isSameOpcode(Opcode other){
+        return this.opcodeID == other.opcodeID;
+    }
 }

@@ -1,5 +1,6 @@
 package opcodes.stackOpcodes;
 
+import opcodes.Opcode;
 import opcodes.OpcodeID;
 import opcodes.StackOpcode;
 
@@ -54,5 +55,11 @@ public class PushOpcode extends StackOpcode {
         // print the argument with the right number of leading zeros
         int zeros = parameterLength * 2 - argument.length();
         return String.format("%x%s", opcode, "0".repeat(zeros) + argument);
+    }
+
+    @Override
+    public boolean isSameOpcode(Opcode other) {
+        // Ignore the parameter value
+        return super.isSameOpcode(other) && ((PushOpcode) other).parameterLength == this.parameterLength;
     }
 }

@@ -3,8 +3,16 @@ package parseTree;
 import javafx.util.Pair;
 import opcodes.Opcode;
 import opcodes.OpcodeID;
+import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
+import opcodes.arithmeticOpcodes.unaryArithmeticOpcodes.IsZeroOpcode;
+import opcodes.controlFlowOpcodes.JumpDestOpcode;
+import opcodes.controlFlowOpcodes.JumpIOpcode;
+import opcodes.environmentalOpcodes.CallValueOpcode;
+import opcodes.stackOpcodes.DupOpcode;
 import opcodes.stackOpcodes.PushOpcode;
+import opcodes.systemOpcodes.RevertOpcode;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -166,16 +174,16 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
 
-    private boolean checkPattern(BasicBlock basicBlock, List<String> pattern){
+    private boolean checkPattern(BasicBlock basicBlock, Opcode... pattern){
         int checkPointer = 0;
         for (Opcode opcode : basicBlock){
-            String opName = opcode.toString().split(" ")[1]; // es. "PUSH4"
-            if (opName.equals(pattern.get(checkPointer)))
+            if (opcode.isSameOpcode(pattern[checkPointer])){
                 checkPointer += 1;
+            }
             else
                 checkPointer = 0;
 
-            if (checkPointer == pattern.size())
+            if (checkPointer == pattern.length)
                 return true;
         }
         return false;
@@ -183,32 +191,40 @@ public class Cfg implements Iterable<BasicBlock> {
 
 
     private void colorDispatcher(){
+        final ArrayList<Opcode[]> patterns = new ArrayList<>();
+        // "DUP1", "PUSH4", "EQ"
+        patterns.add(new Opcode[]{new DupOpcode(0, 1), new PushOpcode(0, 4, BigInteger.ZERO), new EQOpcode(0)});
+        // "PUSH1", "DUP1", "REVERT"
+        patterns.add(new Opcode[]{new PushOpcode(0, 1, BigInteger.ZERO), new DupOpcode(0, 1), new RevertOpcode(0)});
+        // "JUMPDEST", "CALLVALUE", "DUP1", "ISZERO", "PUSH1", "JUMPI"
+        patterns.add(new Opcode[]{new JumpDestOpcode(0), new CallValueOpcode(0), new DupOpcode(0, 1), new IsZeroOpcode(0), new PushOpcode(0, 1, BigInteger.ZERO), new JumpIOpcode(0)});
+
         HashSet<BasicBlock> dispatcher = new HashSet<>();
 
-        // The first body block(with offset 0) is always a dispatcher block
+        // The first body block (with offset 0) is always a dispatcher block
         BasicBlock first = basicBlocks.firstEntry().getValue(); // The first entry is the one with offset = 0
         dispatcher.add(first);
         first.setDispatcherBlock(true);
 
-        // For each basic block
         for (Map.Entry<Long,BasicBlock> entry : basicBlocks.entrySet()) {
-            Long offset = entry.getKey();
             BasicBlock basicBlock = entry.getValue();
 
-            // Otherwise a block to be a dispatcher block must have a parent block in the dispatcher and also ...
+            // A dispatcher block must have a parent in the dispatcher
             BasicBlock parentInDispatcher = null;
             for (BasicBlock parent : basicBlock.getParents())
                 if (dispatcher.contains(parent) && parent.getOffset() < basicBlock.getOffset())
                     parentInDispatcher = parent;
 
+            // In this case we can check various conditions
             if (parentInDispatcher != null){
                 //Conditions
                 List<Boolean> conditions = new ArrayList<>();
-                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("DUP1", "PUSH4", "EQ"))));
-                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("PUSH1", "DUP1", "REVERT"))));
-                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("PUSH1", "DUP1", "REVERT"))));
-                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("JUMPDEST", "CALLVALUE", "DUP1", "ISZERO", "PUSH1", "JUMPI"))));
+                patterns.forEach(pattern -> conditions.add(checkPattern(basicBlock, pattern)));
 
+                // Potential checks between father and son should be implemented here
+
+
+                // If the block passes the check then set it as dispatcher
                 if (conditions.contains(true)) {
                     dispatcher.add(basicBlock);
                     basicBlock.setDispatcherBlock(true);

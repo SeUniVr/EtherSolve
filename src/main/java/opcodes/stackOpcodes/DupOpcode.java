@@ -1,5 +1,6 @@
 package opcodes.stackOpcodes;
 
+import opcodes.Opcode;
 import opcodes.OpcodeID;
 import opcodes.StackOpcode;
 
@@ -39,5 +40,14 @@ public class DupOpcode extends StackOpcode {
     @Override
     public String toString() {
         return super.toString() + value;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    @Override
+    public boolean isSameOpcode(Opcode other) {
+        return super.isSameOpcode(other) && ((DupOpcode) other).value == this.value;
     }
 }

@@ -45,4 +45,9 @@ public class LogOpcode extends Opcode {
         byte opcode = (byte) (opcodeID.getOpcode() + topicNumber);
         return String.format("%02x", opcode);
     }
+
+    @Override
+    public boolean isSameOpcode(Opcode other) {
+        return super.isSameOpcode(other) && ((LogOpcode) other).topicNumber == this.topicNumber;
+    }
 }
