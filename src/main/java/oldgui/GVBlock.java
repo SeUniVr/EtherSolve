@@ -32,4 +32,8 @@ public class GVBlock {
                 mBasicBlock.toString().replace("\n", "\\l") + "\\l" +
                 "\"";
     }
+
+    public boolean isDispatcherBlock() {
+        return mBasicBlock.isDispatcherBlock();
+    }
 }

@@ -165,8 +165,56 @@ public class Cfg implements Iterable<BasicBlock> {
         // TODO
     }
 
+
+    private boolean checkPattern(BasicBlock basicBlock, List<String> pattern){
+        int checkPointer = 0;
+        for (Opcode opcode : basicBlock){
+            String opName = opcode.toString().split(" ")[1]; // es. "PUSH4"
+            if (opName.equals(pattern.get(checkPointer)))
+                checkPointer += 1;
+            else
+                checkPointer = 0;
+
+            if (checkPointer == pattern.size())
+                return true;
+        }
+        return false;
+    }
+
+
     private void colorDispatcher(){
-        // TODO Marchetto
+        HashSet<BasicBlock> dispatcher = new HashSet<>();
+
+        // The first body block(with offset 0) is always a dispatcher block
+        BasicBlock first = basicBlocks.firstEntry().getValue(); // The first entry is the one with offset = 0
+        dispatcher.add(first);
+        first.setDispatcherBlock(true);
+
+        // For each basic block
+        for (Map.Entry<Long,BasicBlock> entry : basicBlocks.entrySet()) {
+            Long offset = entry.getKey();
+            BasicBlock basicBlock = entry.getValue();
+
+            // Otherwise a block to be a dispatcher block must have a parent block in the dispatcher and also ...
+            BasicBlock parentInDispatcher = null;
+            for (BasicBlock parent : basicBlock.getParents())
+                if (dispatcher.contains(parent) && parent.getOffset() < basicBlock.getOffset())
+                    parentInDispatcher = parent;
+
+            if (parentInDispatcher != null){
+                //Conditions
+                List<Boolean> conditions = new ArrayList<>();
+                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("DUP1", "PUSH4", "EQ"))));
+                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("PUSH1", "DUP1", "REVERT"))));
+                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("PUSH1", "DUP1", "REVERT"))));
+                conditions.add(checkPattern(basicBlock, new ArrayList<>(Arrays.asList("JUMPDEST", "CALLVALUE", "DUP1", "ISZERO", "PUSH1", "JUMPI"))));
+
+                if (conditions.contains(true)) {
+                    dispatcher.add(basicBlock);
+                    basicBlock.setDispatcherBlock(true);
+                }
+            }
+        }
     }
 
     @Override

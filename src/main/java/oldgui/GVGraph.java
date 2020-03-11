@@ -50,7 +50,10 @@ public class GVGraph {
         s += "\nnode [" + DEFAULT_NODE_STYLE + "];\n";
         //Blocks are added
         for (GVBlock block : blocks) {
-            s += block + ";";
+            s += block;
+            if(block.isDispatcherBlock())
+                s += " [ fillcolor=lemonchiffon ]";
+            s += ";\n";
         }
 
         //Edges are added
