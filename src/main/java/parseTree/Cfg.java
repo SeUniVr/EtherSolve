@@ -28,9 +28,11 @@ public class Cfg implements Iterable<BasicBlock> {
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
 
     private final TreeMap<Long, BasicBlock> basicBlocks;
+    private final Bytecode mBytecode;
 
     public Cfg(Bytecode bytecode) {
         basicBlocks = new TreeMap<>();
+        mBytecode = bytecode;
         generateBasicBlocks(bytecode);
         //basicBlocks.forEach((o, b) -> System.out.println(o + ": " + b.getBytes()));
         calculateChildren();
@@ -189,8 +191,40 @@ public class Cfg implements Iterable<BasicBlock> {
         return false;
     }
 
-
     private void colorDispatcher(){
+        // DFS and keep track of the last block with STOP, REVERT or RETURN
+        final Stack<BasicBlock> queue = new Stack<>();
+        final HashSet<BasicBlock> visited = new HashSet<>();
+        long lastBlockOffset = 0;
+        queue.push(basicBlocks.get(basicBlocks.firstKey()));
+        while (! queue.isEmpty()){
+            BasicBlock current = queue.pop();
+            visited.add(current);
+            // Check if it ends with a STOP, REVERT or RETURN
+            switch (current.getOpcodes().get(current.getOpcodes().size() - 1).getOpcodeID()){
+                case STOP:
+                case RETURN:
+                case REVERT:
+                    if (current.getOffset() > lastBlockOffset)
+                        lastBlockOffset = current.getOffset();
+                    break;
+                default:
+                    break;
+            }
+            current.getChildren().forEach(child -> {
+                if (! visited.contains(child))
+                    queue.push(child);
+            });
+        }
+        // All the basic block having an offset <= last block is dispatcher
+        long finalLastBlockOffset = lastBlockOffset;
+        basicBlocks.forEach((offset, basicBlock) -> {
+            if (offset <= finalLastBlockOffset)
+                basicBlock.setDispatcherBlock(true);
+        });
+    }
+
+    private void colorDispatcherOld(){
         final ArrayList<Opcode[]> patterns = new ArrayList<>();
         // "DUP1", "PUSH4", "EQ"
         patterns.add(new Opcode[]{new DupOpcode(0, 1), new PushOpcode(0, 4, BigInteger.ZERO), new EQOpcode(0)});
