@@ -53,6 +53,8 @@ public class GVGraph {
             s += block;
             if(block.isDispatcherBlock())
                 s += " [ fillcolor=lemonchiffon ]";
+            if (block.isFallBackBlock())
+                s += " [ fillcolor=coral]";
             s += ";\n";
         }
 

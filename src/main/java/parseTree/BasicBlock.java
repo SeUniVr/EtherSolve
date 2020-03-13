@@ -11,7 +11,7 @@ public class BasicBlock extends Bytecode {
     private final ArrayList<BasicBlock> parents;
     private final ArrayList<BasicBlock> children;
     private int stackBalance;
-    private boolean isDispatcherBlock;
+    private BasicBlockType type;
 
     public BasicBlock(){
         this(0);
@@ -29,8 +29,7 @@ public class BasicBlock extends Bytecode {
         super(offset, opcodes, remainingData);
         this.children = new ArrayList<>();
         this.parents = new ArrayList<>();
-        this.stackBalance = calculateStackBalance();
-        this.isDispatcherBlock = false;
+        this.type = BasicBlockType.COMMON;
     }
 
     private int calculateStackBalance() {
@@ -84,11 +83,11 @@ public class BasicBlock extends Bytecode {
         return lastOpcode.getOpcodeID() == OpcodeID.JUMP && children.isEmpty();
     }
 
-    public void setDispatcherBlock(boolean dispatcherBlock) {
-        isDispatcherBlock = dispatcherBlock;
+    public void setType(BasicBlockType type) {
+        this.type = type;
     }
 
-    public boolean isDispatcherBlock() {
-        return isDispatcherBlock;
+    public BasicBlockType getType() {
+        return type;
     }
 }

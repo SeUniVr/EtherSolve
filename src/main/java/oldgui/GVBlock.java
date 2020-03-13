@@ -1,6 +1,7 @@
 package oldgui;
 
 import parseTree.BasicBlock;
+import parseTree.BasicBlockType;
 
 public class GVBlock {
     private final BasicBlock mBasicBlock;
@@ -34,6 +35,10 @@ public class GVBlock {
     }
 
     public boolean isDispatcherBlock() {
-        return mBasicBlock.isDispatcherBlock();
+        return mBasicBlock.getType() == BasicBlockType.DISPATCHER;
+    }
+
+    public boolean isFallBackBlock() {
+        return mBasicBlock.getType() == BasicBlockType.FALLBACK;
     }
 }

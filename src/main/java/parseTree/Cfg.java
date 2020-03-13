@@ -35,10 +35,13 @@ public class Cfg implements Iterable<BasicBlock> {
         mBytecode = bytecode;
         generateBasicBlocks(bytecode);
         //basicBlocks.forEach((o, b) -> System.out.println(o + ": " + b.getBytes()));
+
         calculateChildren();
         resolveOrphanJumps();
         removeDeadCode();
-        colorDispatcher();
+        detectDispatcher();
+        detectFallBack();
+        /**/
     }
 
     private void generateBasicBlocks(Bytecode bytecode) {
@@ -59,8 +62,8 @@ public class Cfg implements Iterable<BasicBlock> {
                 current.addOpcode(o);
             }
         }
-        basicBlocks.put(current.getOffset(), current);
-
+        if (! current.getOpcodes().isEmpty())
+            basicBlocks.put(current.getOffset(), current);
     }
 
     private void calculateChildren() {
@@ -85,7 +88,8 @@ public class Cfg implements Iterable<BasicBlock> {
                 // Add the next one
                 long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
                 BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);
-                basicBlock.addChild(nextBasicBlock);
+                if (nextBasicBlock != null)
+                    basicBlock.addChild(nextBasicBlock);
                 // if there is a push before
                 Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
                 if (secondLastOpcode instanceof PushOpcode){
@@ -191,7 +195,7 @@ public class Cfg implements Iterable<BasicBlock> {
         return false;
     }
 
-    private void colorDispatcher(){
+    private void detectDispatcher(){
         // DFS and keep track of the last block with STOP, REVERT or RETURN
         final Stack<BasicBlock> queue = new Stack<>();
         final HashSet<BasicBlock> visited = new HashSet<>();
@@ -220,7 +224,7 @@ public class Cfg implements Iterable<BasicBlock> {
         long finalLastBlockOffset = lastBlockOffset;
         basicBlocks.forEach((offset, basicBlock) -> {
             if (offset <= finalLastBlockOffset)
-                basicBlock.setDispatcherBlock(true);
+                basicBlock.setType(BasicBlockType.DISPATCHER);
         });
     }
 
@@ -238,7 +242,7 @@ public class Cfg implements Iterable<BasicBlock> {
         // The first body block (with offset 0) is always a dispatcher block
         BasicBlock first = basicBlocks.firstEntry().getValue(); // The first entry is the one with offset = 0
         dispatcher.add(first);
-        first.setDispatcherBlock(true);
+        first.setType(BasicBlockType.DISPATCHER);
 
         for (Map.Entry<Long,BasicBlock> entry : basicBlocks.entrySet()) {
             BasicBlock basicBlock = entry.getValue();
@@ -261,9 +265,24 @@ public class Cfg implements Iterable<BasicBlock> {
                 // If the block passes the check then set it as dispatcher
                 if (conditions.contains(true)) {
                     dispatcher.add(basicBlock);
-                    basicBlock.setDispatcherBlock(true);
+                    basicBlock.setType(BasicBlockType.DISPATCHER);
                 }
             }
+        }
+    }
+
+    private void detectFallBack(){
+        Stack<BasicBlock> queue = new Stack<>();
+        for (BasicBlock child : basicBlocks.firstEntry().getValue().getChildren())
+            if (child.getLength() == 1 && child.getOpcodes().get(0).getOpcodeID() == OpcodeID.JUMPDEST)
+                child.getChildren().forEach(granChild -> queue.push(granChild));
+        while (!queue.isEmpty()){
+            BasicBlock current = queue.pop();
+            current.setType(BasicBlockType.FALLBACK);
+            current.getChildren().forEach(child -> {
+                if (child.getType() != BasicBlockType.FALLBACK)
+                    queue.push(child);
+            });
         }
     }
 

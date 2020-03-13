@@ -5,6 +5,7 @@ import com.fxgraph.graph.Graph;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import parseTree.BasicBlock;
+import parseTree.BasicBlockType;
 
 public class BasicBlockCell extends AbstractCell {
 
@@ -23,7 +24,7 @@ public class BasicBlockCell extends AbstractCell {
         Label result = new Label(mBasicBlock.toString());
         result.setStyle("-fx-border-color: red;");
         result.setStyle("-fx-background-color: #dddddd");
-        if (mBasicBlock.isDispatcherBlock())
+        if (mBasicBlock.getType() == BasicBlockType.DISPATCHER)
             result.setStyle("-fx-background-color: #fdffaf");
         return result;
     }
