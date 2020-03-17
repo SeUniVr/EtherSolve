@@ -1,4 +1,4 @@
-package oldgui;
+package gvgui;
 
 import parseTree.BasicBlock;
 import parseTree.Cfg;

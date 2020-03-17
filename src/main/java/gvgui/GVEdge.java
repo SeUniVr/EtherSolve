@@ -1,4 +1,4 @@
-package oldgui;
+package gvgui;
 
 public class GVEdge{
     GVBlock from;
