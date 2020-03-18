@@ -229,7 +229,7 @@ public class BytecodeParser {
             case (byte) 0xFF:
                 return new SelfDestructOpcode(offset);
             default:
-                return new InvalidOpcode(offset);
+                return new InvalidOpcode(offset, byteOpcode);
         }
     }
 

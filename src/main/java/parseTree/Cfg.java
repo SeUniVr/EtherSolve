@@ -23,7 +23,8 @@ public class Cfg implements Iterable<BasicBlock> {
             OpcodeID.JUMPI,
             OpcodeID.STOP,
             OpcodeID.REVERT,
-            OpcodeID.RETURN
+            OpcodeID.RETURN,
+            OpcodeID.INVALID
     };
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
 
@@ -73,7 +74,7 @@ public class Cfg implements Iterable<BasicBlock> {
             Opcode lastOpcode = opcodes.get(opcodes.size() - 1);
 
             // Jump
-            if (lastOpcode.getOpcodeID() == OpcodeID.JUMP){
+            if (lastOpcode.getOpcodeID() == OpcodeID.JUMP && opcodes.size() > 1){
                 // Check if there is a push before
                 Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
                 if (secondLastOpcode instanceof PushOpcode){

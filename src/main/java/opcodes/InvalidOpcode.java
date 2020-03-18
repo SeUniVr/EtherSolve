@@ -2,9 +2,12 @@ package opcodes;
 
 public class InvalidOpcode extends Opcode {
 
-    public InvalidOpcode(long offset) {
+    private byte realOpcode;
+
+    public InvalidOpcode(long offset, byte realOpcode) {
         super(OpcodeID.INVALID);
         this.offset = offset;
+        this.realOpcode = realOpcode;
     }
 
     @Override
@@ -17,4 +20,8 @@ public class InvalidOpcode extends Opcode {
         return 0;
     }
 
+    @Override
+    public String getBytes() {
+        return String.format("%02x", realOpcode);
+    }
 }
