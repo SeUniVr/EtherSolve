@@ -140,6 +140,7 @@ public class Cfg implements Iterable<BasicBlock> {
                     for (int i = opcodes.size() - 1; i >= 0; i--){
                         stackBalance += opcodes.get(i).getStackGenerated();
                         stackBalance -= opcodes.get(i).getStackConsumed();
+                        System.out.println(opcodes.get(i) + "\n\talpha: " + opcodes.get(i).getStackConsumed() + "\tdelta: " + opcodes.get(i).getStackGenerated() + "\t-> " + stackBalance);
 
                         // When the stack balance is 1 that's the value which is taken by the jump
                         // WARNING: there can be swaps and other operations that obfuscates the code
@@ -150,6 +151,7 @@ public class Cfg implements Iterable<BasicBlock> {
                             if (opcodes.get(i) instanceof PushOpcode){
                                 PushOpcode opcode = (PushOpcode) opcodes.get(i);
                                 long targetOffset = opcode.getParameter().longValue();
+                                System.out.println("Solved: " + basicBlock.getOffset() + " with " + targetOffset +" given by " + opcode);
                                 if (basicBlocks.containsKey(targetOffset))
                                     basicBlock.addChild(basicBlocks.get(targetOffset));
                                 else

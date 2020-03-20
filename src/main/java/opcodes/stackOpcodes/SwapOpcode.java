@@ -23,12 +23,12 @@ public class SwapOpcode extends StackOpcode {
 
     @Override
     public int getStackConsumed() {
-        return value;
+        return value + 1;
     }
 
     @Override
     public int getStackGenerated() {
-        return value;
+        return super.getStackGenerated() + value;
     }
 
     @Override

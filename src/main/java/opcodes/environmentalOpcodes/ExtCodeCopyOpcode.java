@@ -17,6 +17,6 @@ public class ExtCodeCopyOpcode extends EnvironmentalOpcode {
 
     @Override
     public int getStackConsumed() {
-        return 3;
+        return 4;
     }
 }
