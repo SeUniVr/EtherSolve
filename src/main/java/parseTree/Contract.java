@@ -1,5 +1,8 @@
 package parseTree;
 
+import SolidityInfo.SolidityVersion;
+import SolidityInfo.SolidityVersionUnknownException;
+
 import java.util.HashSet;
 import java.util.Set;
 

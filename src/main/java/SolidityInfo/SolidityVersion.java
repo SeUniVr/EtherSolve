@@ -1,4 +1,4 @@
-package parseTree;
+package SolidityInfo;
 
 public enum SolidityVersion {
     UNKNOWN,

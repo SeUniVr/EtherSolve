@@ -7,10 +7,14 @@ import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
 import opcodes.arithmeticOpcodes.unaryArithmeticOpcodes.IsZeroOpcode;
 import opcodes.controlFlowOpcodes.JumpDestOpcode;
 import opcodes.controlFlowOpcodes.JumpIOpcode;
+import opcodes.controlFlowOpcodes.JumpOpcode;
+import opcodes.environmentalOpcodes.CallDataSizeOpcode;
 import opcodes.environmentalOpcodes.CallValueOpcode;
 import opcodes.stackOpcodes.DupOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
+import parseTree.SymbolicExecution.SymbolicExecutionStack;
+import parseTree.SymbolicExecution.UnknownStackElementException;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -39,7 +43,6 @@ public class Cfg implements Iterable<BasicBlock> {
 
         calculateChildren();
         resolveOrphanJumps();
-        removeDeadCode();
         detectDispatcher();
         detectFallBack();
         /**/
@@ -117,7 +120,57 @@ public class Cfg implements Iterable<BasicBlock> {
         });
     }
 
-    private void resolveOrphanJumps() {
+    private void resolveOrphanJumps(){
+        // DFS on nodes visiting each edge only once
+        HashSet<Pair<Long, Long>> visited = new HashSet<>();
+        BasicBlock current = basicBlocks.firstEntry().getValue();
+        SymbolicExecutionStack stack = new SymbolicExecutionStack();
+        Stack<Pair<BasicBlock, SymbolicExecutionStack>> queue = new Stack<>();
+        queue.push(new Pair<>(current, stack));
+
+        while (! queue.isEmpty()){
+            Pair<BasicBlock, SymbolicExecutionStack> element = queue.pop();
+            current = element.getKey();
+            stack = element.getValue();
+
+            // Execute all opcodes except for the last
+            for (int i = 0; i < current.getOpcodes().size() - 1; i++) {
+                Opcode o = current.getOpcodes().get(i);
+                stack.executeOpcode(o);
+            }
+
+            Opcode lastOpcode = current.getOpcodes().get(current.getOpcodes().size() - 1);
+
+            // Check for orphan jump and resolve
+            if (lastOpcode instanceof JumpOpcode){
+                try {
+                    long nextOffset = stack.peek().longValue();
+                    BasicBlock nextBB = basicBlocks.get(nextOffset);
+                    if (nextBB != null)
+                        current.addChild(nextBB);
+                    else
+                        System.err.println("Trying to resolve orphan jump at " + current.getOpcodes().get(current.getOpcodes().size() - 1) + " with " + nextOffset);
+                } catch (UnknownStackElementException e) {
+                    System.err.println(stack);
+                    System.err.println("Orphan jump unresolvable at " + current.getOpcodes().get(current.getOpcodes().size() - 1));
+                }
+            }
+
+            // Execute last opcode
+            stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));
+
+            // Add next elements for DFS
+            for (BasicBlock child : current.getChildren()){
+                Pair<Long, Long> edge = new Pair<>(current.getOffset(), child.getOffset());
+                if (! visited.contains(edge)){
+                    visited.add(edge);
+                    queue.push(new Pair<>(child, stack.copy()));
+                }
+            }
+        }
+    }
+
+    private void resolveOrphanJumpsWithStackBalance() {
         // For each basic block which terminates with an orphan jump
         basicBlocks.descendingMap().forEach((offset, basicBlock) -> {
             if (basicBlock.hasOrphanJump()){
@@ -140,7 +193,7 @@ public class Cfg implements Iterable<BasicBlock> {
                     for (int i = opcodes.size() - 1; i >= 0; i--){
                         stackBalance += opcodes.get(i).getStackGenerated();
                         stackBalance -= opcodes.get(i).getStackConsumed();
-                        System.out.println(opcodes.get(i) + "\n\talpha: " + opcodes.get(i).getStackConsumed() + "\tdelta: " + opcodes.get(i).getStackGenerated() + "\t-> " + stackBalance);
+                        //System.out.println(opcodes.get(i) + "\n\talpha: " + opcodes.get(i).getStackConsumed() + "\tdelta: " + opcodes.get(i).getStackGenerated() + "\t-> " + stackBalance);
 
                         // When the stack balance is 1 that's the value which is taken by the jump
                         // WARNING: there can be swaps and other operations that obfuscates the code
@@ -163,6 +216,19 @@ public class Cfg implements Iterable<BasicBlock> {
                             // Exit the loop
                             i = 0;
                         }
+                        // If contains a CallDataSize instruction then solve the orphan jump with the push in the second opcode
+                        // This works iff there are not any other CALLDATASIZE inside the solidity code
+                        if (opcodes.get(i) instanceof CallDataSizeOpcode){
+                            PushOpcode opcode = (PushOpcode) opcodes.get(1);
+                            long targetOffset = opcode.getParameter().longValue();
+                            System.out.println("Solved: " + basicBlock.getOffset() + " with " + targetOffset +" given by " + opcode);
+                            if (basicBlocks.containsKey(targetOffset))
+                                basicBlock.addChild(basicBlocks.get(targetOffset));
+                            else
+                                System.err.println("Orphan jump block at offset " + basicBlock.getOffset() + " is not resolvable with " + opcodes.get(i));
+                            found = true;
+                            i = 0;
+                        }
                     }
 
                     // Add the parents to the queue if not found
@@ -177,11 +243,6 @@ public class Cfg implements Iterable<BasicBlock> {
             }
         });
     }
-
-    private void removeDeadCode() {
-        // TODO
-    }
-
 
     private boolean checkPattern(BasicBlock basicBlock, Opcode... pattern){
         int checkPointer = 0;
@@ -199,6 +260,7 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
     private void detectDispatcher(){
+        // FIXME This does not work if the code contains Revert or other special Opcode
         // DFS and keep track of the last block with STOP, REVERT or RETURN
         final Stack<BasicBlock> queue = new Stack<>();
         final HashSet<BasicBlock> visited = new HashSet<>();
@@ -275,6 +337,7 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
     private void detectFallBack(){
+        // FIXME Does not work anymore
         Stack<BasicBlock> queue = new Stack<>();
         for (BasicBlock child : basicBlocks.firstEntry().getValue().getChildren())
             if (child.getLength() == 1 && child.getOpcodes().get(0).getOpcodeID() == OpcodeID.JUMPDEST)

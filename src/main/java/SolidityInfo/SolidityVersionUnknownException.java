@@ -1,4 +1,4 @@
-package parseTree;
+package SolidityInfo;
 
 public class SolidityVersionUnknownException extends Exception {
     public SolidityVersionUnknownException(String s) {
