@@ -26,7 +26,7 @@ public class MainGUI extends Application {
 
         Contract contract = new Contract("C8", input8);
 
-        Pane cfg = CFGPrinter.print(contract.getBodyCfg());
+        Pane cfg = CFGPrinter.print(contract.getRuntimeCfg());
         StackPane root = new StackPane();
         root.getChildren().add(cfg);
         Scene mainScene = new Scene(root,1024, 768);

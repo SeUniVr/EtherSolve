@@ -45,10 +45,10 @@ public class GVGraph {
     public String toString() {
         String s = "digraph " + GRAPH_NAME + " {\n" +
                 PROPRIETIES; //+ "\n" +
-                //"node [shape = point, color=white, fontcolor=white]; start;\n";
+                // "node [shape = point, color=white, fontcolor=white]; start;\n";
 
         s += "\nnode [" + DEFAULT_NODE_STYLE + "];\n";
-        //Blocks are added
+        // Add nodes
         for (GVBlock block : blocks) {
             s += block;
             if(block.isDispatcherBlock())
@@ -58,7 +58,7 @@ public class GVGraph {
             s += ";\n";
         }
 
-        //Edges are added
+        // Add edges
         for (GVEdge edge : edges) {
             s += edge;
         }

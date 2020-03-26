@@ -2,6 +2,7 @@ package gvgui;
 
 import parseTree.BasicBlock;
 import parseTree.Cfg;
+
 import java.io.*;
 import java.time.LocalDateTime;
 
@@ -121,7 +122,7 @@ public class CFGPrinter {
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line = "";
         while ((line = reader.readLine())!= null) {
-            output.append(line + "\n");
+            output.append(line).append("\n");
         }
 
         return output.toString();

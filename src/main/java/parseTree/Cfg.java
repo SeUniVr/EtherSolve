@@ -43,6 +43,7 @@ public class Cfg implements Iterable<BasicBlock> {
 
         calculateChildren();
         resolveOrphanJumps();
+        removeRemainingData();
         detectDispatcher();
         detectFallBack();
         /**/
@@ -244,6 +245,20 @@ public class Cfg implements Iterable<BasicBlock> {
         });
     }
 
+    private void removeRemainingData(){
+        long firstInvalidBlock = basicBlocks.lastKey();
+        final ArrayList<Long> offsetList = new ArrayList<>();
+        basicBlocks.forEach((offset, block) -> offsetList.add(offset));
+        for (Long offset : offsetList){
+            if (basicBlocks.get(offset).getParents().isEmpty() && basicBlocks.get(offset).getBytes().equals("fe")){
+                firstInvalidBlock = offset;
+            }
+            if (offset >= firstInvalidBlock)
+                basicBlocks.remove(offset);
+        }
+        mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstInvalidBlock * 2));
+    }
+
     private boolean checkPattern(BasicBlock basicBlock, Opcode... pattern){
         int checkPointer = 0;
         for (Opcode opcode : basicBlock){
@@ -365,5 +380,9 @@ public class Cfg implements Iterable<BasicBlock> {
     @Override
     public Spliterator<BasicBlock> spliterator() {
         return basicBlocks.values().spliterator();
+    }
+
+    public Bytecode getBytecode() {
+        return mBytecode;
     }
 }

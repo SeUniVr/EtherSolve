@@ -16,7 +16,7 @@ public class Contract {
     private SolidityVersion solidityVersion;
 
     private Cfg constructorCfg = null;
-    private Cfg bodyCfg = null;
+    private Cfg runtimeCfg = null;
 
     private final Set<BasicBlock> basicBlocks;
 
@@ -129,13 +129,15 @@ public class Contract {
     public Cfg getConstructorCfg() {
         if (constructorCfg == null)
             constructorCfg = new Cfg(constructor);
+        constructor = constructorCfg.getBytecode();
         return constructorCfg;
     }
 
-    public Cfg getBodyCfg() {
-        if (bodyCfg == null)
-            bodyCfg = new Cfg(runtime);
-        return bodyCfg;
+    public Cfg getRuntimeCfg() {
+        if (runtimeCfg == null)
+            runtimeCfg = new Cfg(runtime);
+        runtime = runtimeCfg.getBytecode();
+        return runtimeCfg;
     }
 
     public SolidityVersion getSolidityVersion() {
@@ -153,5 +155,13 @@ public class Contract {
         StringBuilder sb = new StringBuilder();
         sb.append(v1).append('.').append(v2).append('.').append(v3);
         return sb.toString();
+    }
+
+    public Bytecode getConstructor() {
+        return constructor;
+    }
+
+    public Bytecode getRuntime() {
+        return runtime;
     }
 }
