@@ -52,8 +52,10 @@ public class CFGPrinter {
      * @param cfg graph to save and show
      */
     public static void show(Cfg cfg) {
-        String filepath = save(cfg);
-        showGraph(filepath);
+        new Thread(() -> {
+            String filepath = save(cfg);
+            showGraph(filepath);
+        }).start();
     }
 
     /**

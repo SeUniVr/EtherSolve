@@ -72,4 +72,16 @@ public class SymbolicExecutionStack {
             throw new UnknownStackElementException();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SymbolicExecutionStack that = (SymbolicExecutionStack) o;
+        return stack.equals(that.stack);
+    }
+
+    @Override
+    public int hashCode() {
+        return stack.hashCode();
+    }
 }

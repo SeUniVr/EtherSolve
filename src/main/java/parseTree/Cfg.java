@@ -15,6 +15,7 @@ import opcodes.stackOpcodes.PushOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
+import utils.Triplet;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -123,7 +124,7 @@ public class Cfg implements Iterable<BasicBlock> {
 
     private void resolveOrphanJumps(){
         // DFS on nodes visiting each edge only once
-        HashSet<Pair<Long, Long>> visited = new HashSet<>();
+        HashSet<Triplet<Long, Long, SymbolicExecutionStack>> visited = new HashSet<>();
         BasicBlock current = basicBlocks.firstEntry().getValue();
         SymbolicExecutionStack stack = new SymbolicExecutionStack();
         Stack<Pair<BasicBlock, SymbolicExecutionStack>> queue = new Stack<>();
@@ -162,7 +163,7 @@ public class Cfg implements Iterable<BasicBlock> {
 
             // Add next elements for DFS
             for (BasicBlock child : current.getChildren()){
-                Pair<Long, Long> edge = new Pair<>(current.getOffset(), child.getOffset());
+                Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), child.getOffset(), stack);
                 if (! visited.contains(edge)){
                     visited.add(edge);
                     queue.push(new Pair<>(child, stack.copy()));
