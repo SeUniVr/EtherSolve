@@ -25,6 +25,10 @@ public class PushOpcode extends StackOpcode {
         this.parameter = parameter;
     }
 
+    public PushOpcode(long offset, int parameterLength) {
+        this(offset, parameterLength, BigInteger.ZERO);
+    }
+
     public BigInteger getParameter() {
         return parameter;
     }

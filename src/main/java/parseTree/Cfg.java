@@ -263,7 +263,7 @@ public class Cfg implements Iterable<BasicBlock> {
     private boolean checkPattern(BasicBlock basicBlock, Opcode... pattern){
         int checkPointer = 0;
         for (Opcode opcode : basicBlock){
-            if (opcode.isSameOpcode(pattern[checkPointer])){
+            if (pattern[checkPointer] == null || opcode.isSameOpcode(pattern[checkPointer])){
                 checkPointer += 1;
             }
             else
@@ -275,7 +275,7 @@ public class Cfg implements Iterable<BasicBlock> {
         return false;
     }
 
-    private void detectDispatcher(){
+    private void detectDispatcherOld(){
         // FIXME This does not work if the code contains Revert or other special Opcode
         // DFS and keep track of the last block with STOP, REVERT or RETURN
         final Stack<BasicBlock> queue = new Stack<>();
@@ -350,6 +350,30 @@ public class Cfg implements Iterable<BasicBlock> {
                 }
             }
         }
+    }
+
+    private void detectDispatcher(){
+        long lastOffset = 0;
+
+        for (long offset : basicBlocks.keySet()){
+            BasicBlock current = basicBlocks.get(offset);
+            if (checkPattern(current, new DupOpcode(0, 1), new PushOpcode(0, 4), new EQOpcode(0), null, new JumpIOpcode(0))){
+                for (BasicBlock child : current.getChildren())
+                    if (child.getLength() > 1 && child.getOpcodes().get(0) instanceof JumpDestOpcode)
+                        if (child.getOpcodes().get(1) instanceof PushOpcode){
+                            long destination = ((PushOpcode) child.getOpcodes().get(1)).getParameter().longValue();
+                            if (destination > lastOffset)
+                                lastOffset = destination;
+                        }
+            }
+        }
+
+        // All the basic block having an offset <= last block is dispatcher
+        long finalLastBlockOffset = lastOffset;
+        basicBlocks.forEach((offset, basicBlock) -> {
+            if (offset <= finalLastBlockOffset)
+                basicBlock.setType(BasicBlockType.DISPATCHER);
+        });
     }
 
     private void detectFallBack(){
