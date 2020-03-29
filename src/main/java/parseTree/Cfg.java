@@ -358,13 +358,26 @@ public class Cfg implements Iterable<BasicBlock> {
         for (long offset : basicBlocks.keySet()){
             BasicBlock current = basicBlocks.get(offset);
             if (checkPattern(current, new DupOpcode(0, 1), new PushOpcode(0, 4), new EQOpcode(0), null, new JumpIOpcode(0))){
-                for (BasicBlock child : current.getChildren())
-                    if (child.getLength() > 1 && child.getOpcodes().get(0) instanceof JumpDestOpcode)
+                for (BasicBlock child : current.getChildren()){
+                    // Get the next block in offset order
+                    long candidateOffset = basicBlocks.higherKey(child.getOffset());
+                    if (candidateOffset > lastOffset)
+                        lastOffset = candidateOffset;
+                    // If the block contains CallDataLoad then he and its next block are part of the dispatcher
+                    for (BasicBlock granChild : child.getChildren())
+                        for (Opcode o : granChild)
+                            if (o.getOpcodeID() == OpcodeID.CALLDATALOAD){
+                                candidateOffset = basicBlocks.higherKey(granChild.getOffset());
+                                if (candidateOffset > lastOffset)
+                                    lastOffset = candidateOffset;
+                            }
+                    /*if (child.getLength() > 1 && child.getOpcodes().get(0) instanceof JumpDestOpcode)
                         if (child.getOpcodes().get(1) instanceof PushOpcode){
                             long destination = ((PushOpcode) child.getOpcodes().get(1)).getParameter().longValue();
                             if (destination > lastOffset)
                                 lastOffset = destination;
-                        }
+                        }*/
+                }
             }
         }
 
@@ -377,11 +390,12 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
     private void detectFallBack(){
-        // FIXME Does not work anymore
+        // FIXME Does not work for old versions of solidity
         Stack<BasicBlock> queue = new Stack<>();
         for (BasicBlock child : basicBlocks.firstEntry().getValue().getChildren())
-            if (child.getLength() == 1 && child.getOpcodes().get(0).getOpcodeID() == OpcodeID.JUMPDEST)
-                child.getChildren().forEach(granChild -> queue.push(granChild));
+            for (BasicBlock granChild : child.getChildren())
+                if (granChild.getLength() == 1 && granChild.getOpcodes().get(0).getOpcodeID() == OpcodeID.JUMPDEST)
+                    granChild.getChildren().forEach(queue::push);
         while (!queue.isEmpty()){
             BasicBlock current = queue.pop();
             current.setType(BasicBlockType.FALLBACK);

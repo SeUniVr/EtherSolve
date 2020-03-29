@@ -63,4 +63,17 @@ public abstract class Opcode {
     public boolean isSameOpcode(Opcode other){
         return this.opcodeID == other.opcodeID;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Opcode opcode = (Opcode) o;
+        return offset == opcode.offset && opcodeID == opcode.opcodeID;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (opcodeID.hashCode() ^ offset);
+    }
 }
