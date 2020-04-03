@@ -135,4 +135,8 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
     public void addAll(List<Opcode> subList) {
         opcodes.addAll(subList);
     }
+
+    public Opcode getLastOpcode() {
+        return opcodes.get(opcodes.size() - 1);
+    }
 }
