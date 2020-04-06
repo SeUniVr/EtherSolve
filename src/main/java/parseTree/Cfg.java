@@ -6,6 +6,7 @@ import opcodes.OpcodeID;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
 import opcodes.controlFlowOpcodes.JumpIOpcode;
 import opcodes.controlFlowOpcodes.JumpOpcode;
+import opcodes.controlFlowOpcodes.StopOpcode;
 import opcodes.stackOpcodes.DupOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.systemOpcodes.ReturnOpcode;
@@ -190,27 +191,12 @@ public class Cfg implements Iterable<BasicBlock> {
         mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstInvalidBlock * 2));
     }
 
-    private boolean checkPattern(BasicBlock basicBlock, Opcode... pattern){
-        int checkPointer = 0;
-        for (Opcode opcode : basicBlock){
-            if (pattern[checkPointer] == null || opcode.isSameOpcode(pattern[checkPointer])){
-                checkPointer += 1;
-            }
-            else
-                checkPointer = 0;
-
-            if (checkPointer == pattern.length)
-                return true;
-        }
-        return false;
-    }
-
     private void detectDispatcherOld(){
         long lastOffset = 0;
 
         for (long offset : basicBlocks.keySet()){
             BasicBlock current = basicBlocks.get(offset);
-            if (checkPattern(current, new DupOpcode(0, 1), new PushOpcode(0, 4), new EQOpcode(0), null, new JumpIOpcode(0))){
+            if (current.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4), new EQOpcode(0), null, new JumpIOpcode(0))){
                 for (BasicBlock child : current.getChildren()){
                     // Get the next block in offset order
                     long candidateOffset = basicBlocks.higherKey(child.getOffset());
@@ -245,7 +231,7 @@ public class Cfg implements Iterable<BasicBlock> {
     private void detectDispatcher(){
         long lastOffset = 0;
         for (BasicBlock bb : basicBlocks.values())
-            if (bb.getLastOpcode() instanceof ReturnOpcode)
+            if (bb.getLastOpcode() instanceof ReturnOpcode || bb.getLastOpcode() instanceof StopOpcode)
                 if (bb.getOffset() > lastOffset)
                     lastOffset = bb.getOffset();
         long finalLastBlockOffset = lastOffset;
@@ -289,5 +275,9 @@ public class Cfg implements Iterable<BasicBlock> {
 
     public Bytecode getBytecode() {
         return mBytecode;
+    }
+
+    public BasicBlock getBasicBlock(long key){
+        return basicBlocks.get(key);
     }
 }

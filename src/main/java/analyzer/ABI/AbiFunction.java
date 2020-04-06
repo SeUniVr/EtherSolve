@@ -12,6 +12,11 @@ public class AbiFunction {
     private ArrayList<IOElement> inputs;
     private ArrayList<IOElement> outputs;
     private StateMutability stateMutability;
+
+    public AbiFunction(String name, FunctionType functionType) {
+        this.name = name;
+        this.type = functionType;
+    }
     /*
     Not considered, they can be calculated
     private boolean constant;

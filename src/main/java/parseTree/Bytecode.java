@@ -139,4 +139,19 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
     public Opcode getLastOpcode() {
         return opcodes.get(opcodes.size() - 1);
     }
+
+    public boolean checkPattern(Opcode... pattern){
+        int checkPointer = 0;
+        for (Opcode opcode : opcodes){
+            if (pattern[checkPointer] == null || opcode.isSameOpcode(pattern[checkPointer])){
+                checkPointer += 1;
+            }
+            else
+                checkPointer = 0;
+
+            if (checkPointer == pattern.length)
+                return true;
+        }
+        return false;
+    }
 }
