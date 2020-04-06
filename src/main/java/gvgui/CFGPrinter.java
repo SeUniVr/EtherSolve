@@ -11,6 +11,8 @@ public class CFGPrinter {
     public static final String PNG_FORMAT = "png";
     public static final String SVG_FORMAT = "svg";
 
+    private static final String CURRENT_FORMAT = SVG_FORMAT;
+
     /**
      * Create the dot notation from the cfg
      *
@@ -43,7 +45,7 @@ public class CFGPrinter {
      */
     public static String save(Cfg cfg){
         String dot = getDotNotation(cfg);
-        return renderGraph(dot, PNG_FORMAT);
+        return renderGraph(dot, CURRENT_FORMAT);
     }
 
     /**

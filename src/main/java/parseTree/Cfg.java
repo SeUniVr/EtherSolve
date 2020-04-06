@@ -8,6 +8,7 @@ import opcodes.controlFlowOpcodes.JumpIOpcode;
 import opcodes.controlFlowOpcodes.JumpOpcode;
 import opcodes.stackOpcodes.DupOpcode;
 import opcodes.stackOpcodes.PushOpcode;
+import opcodes.systemOpcodes.ReturnOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
 import utils.Triplet;
@@ -204,7 +205,7 @@ public class Cfg implements Iterable<BasicBlock> {
         return false;
     }
 
-    private void detectDispatcher(){
+    private void detectDispatcherOld(){
         long lastOffset = 0;
 
         for (long offset : basicBlocks.keySet()){
@@ -234,6 +235,19 @@ public class Cfg implements Iterable<BasicBlock> {
         }
 
         // All the basic block having an offset <= last block is dispatcher
+        long finalLastBlockOffset = lastOffset;
+        basicBlocks.forEach((offset, basicBlock) -> {
+            if (offset <= finalLastBlockOffset)
+                basicBlock.setType(BasicBlockType.DISPATCHER);
+        });
+    }
+
+    private void detectDispatcher(){
+        long lastOffset = 0;
+        for (BasicBlock bb : basicBlocks.values())
+            if (bb.getLastOpcode() instanceof ReturnOpcode)
+                if (bb.getOffset() > lastOffset)
+                    lastOffset = bb.getOffset();
         long finalLastBlockOffset = lastOffset;
         basicBlocks.forEach((offset, basicBlock) -> {
             if (offset <= finalLastBlockOffset)
