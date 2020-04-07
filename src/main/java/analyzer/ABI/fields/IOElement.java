@@ -14,4 +14,16 @@ public class IOElement {
     private String name;
     private SolidityType type;
     private ArrayList<Pair<String, SolidityType>> components;
+
+    private IOElement(){}
+
+    public IOElement(String name, SolidityType type){
+        this.name = name;
+        this.type = type;
+        this.components = new ArrayList<>();
+    }
+
+    public void addComponent(Pair<String, SolidityType> component){
+        this.components.add(component);
+    }
 }

@@ -16,6 +16,8 @@ public class AbiFunction {
     public AbiFunction(String name, FunctionType functionType) {
         this.name = name;
         this.type = functionType;
+        this.inputs = new ArrayList<>();
+        this.outputs = new ArrayList<>();
     }
     /*
     Not considered, they can be calculated
@@ -23,6 +25,37 @@ public class AbiFunction {
     private boolean payable;
     */
 
+    public FunctionType getType() {
+        return type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public ArrayList<IOElement> getInputs() {
+        return inputs;
+    }
+
+    public ArrayList<IOElement> getOutputs() {
+        return outputs;
+    }
+
+    public StateMutability getStateMutability() {
+        return stateMutability;
+    }
+
+    public void addInput(IOElement input){
+        this.inputs.add(input);
+    }
+
+    public void addOutput(IOElement output){
+        this.outputs.add(output);
+    }
+
+    public void popInput() {
+        this.inputs.remove(this.inputs.size()-1);
+    }
 
 
 
