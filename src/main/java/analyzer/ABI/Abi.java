@@ -1,7 +1,10 @@
 package analyzer.ABI;
 
+import analyzer.ABI.fields.SolidityType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 
 import java.util.ArrayList;
 
@@ -13,7 +16,9 @@ public class Abi {
     }
 
     public String toJson(){
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        GsonBuilder gsonBuilder = new GsonBuilder().setPrettyPrinting();
+        gsonBuilder.registerTypeAdapter(SolidityType.class, (JsonSerializer<SolidityType>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()));
+        Gson gson = gsonBuilder.create();
         return gson.toJson(this);
     }
 

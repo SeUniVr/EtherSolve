@@ -3,6 +3,7 @@ package analyzer.ABI;
 import analyzer.ABI.fields.FunctionType;
 import analyzer.ABI.fields.IOElement;
 import analyzer.ABI.fields.SolidityType;
+import analyzer.ABI.fields.SolidityTypeID;
 import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
@@ -11,9 +12,11 @@ import opcodes.controlFlowOpcodes.JumpIOpcode;
 import opcodes.environmentalOpcodes.CallDataCopyOpcode;
 import opcodes.environmentalOpcodes.CallDataLoadOpcode;
 import opcodes.stackOpcodes.DupOpcode;
+import opcodes.stackOpcodes.MStoreOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import parseTree.BasicBlock;
 import parseTree.BasicBlockType;
+import parseTree.Cfg;
 import parseTree.Contract;
 
 import java.util.Stack;
@@ -34,25 +37,28 @@ public class AbiExtractor {
         contract.getRuntimeCfg().forEach(basicBlock -> {
             if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4),
                                         new EQOpcode(0), null, new JumpIOpcode(0)))
-                parseFunction(basicBlock, abi);
+                parseFunction(contract.getRuntimeCfg(), basicBlock, abi);
         });
 
         return abi;
     }
 
-    private void parseFunction(BasicBlock basicBlock, Abi abi) {
+    private void parseFunction(Cfg cfg, BasicBlock basicBlock, Abi abi) {
         String name = "0x" + ((PushOpcode) basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 4)).getParameter().toString(16);
         AbiFunction abiFunction = new AbiFunction(name, FunctionType.FUNCTION);
 
-        parseInputs(basicBlock, abiFunction);
+        long returnBlockOffset = parseInputsAndReturnLastOffset(basicBlock, abiFunction);
+        long closureOffset = cfg.getNextBasicBlock(returnBlockOffset);
+        parseOutput(cfg.getBasicBlock(closureOffset), abiFunction);
 
         abi.addFunction(abiFunction);
     }
 
-    private void parseInputs(BasicBlock basicBlock, AbiFunction abiFunction) {
+    private long parseInputsAndReturnLastOffset(BasicBlock basicBlock, AbiFunction abiFunction) {
         // Perform a DFS on dispatcher blocks child of basicBlock
         // Count CallDataLoad and CallDataCopy
         int argumentCount = 0;
+        long lastOffset = 0;
         Stack<BasicBlock> queue = new Stack<>();
         // The first block is the one with higher offset
         long maxOffset = 0;
@@ -64,19 +70,30 @@ public class AbiExtractor {
             }
         }
         queue.add(firstArgumentBlock);
+
+        // Real DFS
         while (! queue.isEmpty()) {
             BasicBlock current = queue.pop();
+            // Check if it's the last block of the dispatcher
+            if (current.getOffset() > lastOffset)
+                lastOffset = current.getOffset();
+
             // Count
             for (int i = 0; i < current.getOpcodes().size(); i++){
                 Opcode opcode = current.getOpcodes().get(i);
                 if (opcode instanceof CallDataLoadOpcode){
-                    SolidityType inputType = SolidityType.UINT256;
+                    SolidityType inputType = new SolidityType(SolidityTypeID.INT, 256);
                     // Calculates the type
                     // Case 1: after the load there is a push20 0xffff...; AND
-                    if (current.getOpcodes().get(i+1) instanceof PushOpcode && current.getOpcodes().get(i+2) instanceof AndOpcode)
-                        inputType = SolidityType.ADDRESS;
+                    if (current.getOpcodes().get(i+1) instanceof PushOpcode && current.getOpcodes().get(i+2) instanceof AndOpcode){
+                        PushOpcode pushOpcode = (PushOpcode) current.getOpcodes().get(i+1);
+                        if (pushOpcode.getParameterLength() == 20)
+                            inputType = new SolidityType(SolidityTypeID.ADDRESS);
+                        else
+                            inputType = new SolidityType(SolidityTypeID.INT, pushOpcode.getParameterLength() * 8);
+                    }
                     else if (current.getOpcodes().get(i+1) instanceof IsZeroOpcode)
-                        inputType = SolidityType.BOOL;
+                        inputType = new SolidityType(SolidityTypeID.BOOL);
 
                     abiFunction.addInput(new IOElement("arg_"+argumentCount, inputType));
                     argumentCount++;
@@ -85,7 +102,7 @@ public class AbiExtractor {
                     abiFunction.popInput();
                     abiFunction.popInput();
                     argumentCount-=2;
-                    abiFunction.addInput(new IOElement("arg_"+argumentCount, SolidityType.BYTES));
+                    abiFunction.addInput(new IOElement("arg_"+argumentCount, new SolidityType(SolidityTypeID.BYTES)));
                     argumentCount++;
                 }
             }
@@ -97,6 +114,44 @@ public class AbiExtractor {
             });
         }
 
+        return lastOffset;
+    }
+
+    private void parseOutput(BasicBlock basicBlock, AbiFunction abiFunction) {
+        int argumentCount = 0;
+        Stack<BasicBlock> queue = new Stack<>();
+        queue.push(basicBlock);
+
+        while (! queue.isEmpty()) {
+            BasicBlock current = queue.pop();
+
+            for (int i = 0; i < current.getOpcodes().size(); i++) {
+                Opcode opcode = current.getOpcodes().get(i);
+
+                if (opcode instanceof MStoreOpcode){
+                    SolidityType outputType = new SolidityType(SolidityTypeID.INT, 256);
+
+                    if (current.getOpcodes().get(i-2) instanceof AndOpcode && current.getOpcodes().get(i-3) instanceof PushOpcode){
+                        PushOpcode pushOpcode = (PushOpcode) current.getOpcodes().get(i-3);
+                        if (pushOpcode.getParameterLength() == 20)
+                            outputType = new SolidityType(SolidityTypeID.ADDRESS);
+                        else
+                            outputType = new SolidityType(SolidityTypeID.INT, pushOpcode.getParameterLength() * 8);
+                    }
+                    else if (current.getOpcodes().get(i-2) instanceof IsZeroOpcode)
+                        outputType = new SolidityType(SolidityTypeID.BOOL);
+
+                    abiFunction.addOutput(new IOElement("arg_"+argumentCount, outputType));
+                    argumentCount++;
+                }
+
+            }
+
+            current.getChildren().forEach(child -> {
+                if (child.getType() == BasicBlockType.DISPATCHER)
+                    queue.push(child);
+            });
+        }
     }
 
 }
