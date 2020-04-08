@@ -7,5 +7,6 @@ public enum SolidityType {
     INT,
     ADDRESS,
     BOOL,
-    TUPLE
+    TUPLE,
+    BYTES
 }
