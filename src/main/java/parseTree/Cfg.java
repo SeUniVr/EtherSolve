@@ -3,13 +3,11 @@ package parseTree;
 import javafx.util.Pair;
 import opcodes.Opcode;
 import opcodes.OpcodeID;
-import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
-import opcodes.controlFlowOpcodes.JumpIOpcode;
 import opcodes.controlFlowOpcodes.JumpOpcode;
 import opcodes.controlFlowOpcodes.StopOpcode;
-import opcodes.stackOpcodes.DupOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.systemOpcodes.ReturnOpcode;
+import opcodes.systemOpcodes.RevertOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
 import utils.Triplet;
@@ -191,43 +189,6 @@ public class Cfg implements Iterable<BasicBlock> {
         mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstInvalidBlock * 2));
     }
 
-    private void detectDispatcherOld(){
-        long lastOffset = 0;
-
-        for (long offset : basicBlocks.keySet()){
-            BasicBlock current = basicBlocks.get(offset);
-            if (current.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4), new EQOpcode(0), null, new JumpIOpcode(0))){
-                for (BasicBlock child : current.getChildren()){
-                    // Get the next block in offset order
-                    long candidateOffset = basicBlocks.higherKey(child.getOffset());
-                    if (candidateOffset > lastOffset)
-                        lastOffset = candidateOffset;
-                    // If the block contains CallDataLoad then he and its next block are part of the dispatcher
-                    for (BasicBlock granChild : child.getChildren())
-                        for (Opcode o : granChild)
-                            if (o.getOpcodeID() == OpcodeID.CALLDATALOAD){
-                                candidateOffset = basicBlocks.higherKey(granChild.getOffset());
-                                if (candidateOffset > lastOffset)
-                                    lastOffset = candidateOffset;
-                            }
-                    /*if (child.getLength() > 1 && child.getOpcodes().get(0) instanceof JumpDestOpcode)
-                        if (child.getOpcodes().get(1) instanceof PushOpcode){
-                            long destination = ((PushOpcode) child.getOpcodes().get(1)).getParameter().longValue();
-                            if (destination > lastOffset)
-                                lastOffset = destination;
-                        }*/
-                }
-            }
-        }
-
-        // All the basic block having an offset <= last block is dispatcher
-        long finalLastBlockOffset = lastOffset;
-        basicBlocks.forEach((offset, basicBlock) -> {
-            if (offset <= finalLastBlockOffset)
-                basicBlock.setType(BasicBlockType.DISPATCHER);
-        });
-    }
-
     private void detectDispatcher(){
         long lastOffset = 0;
         for (BasicBlock bb : basicBlocks.values())
@@ -242,20 +203,28 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
     private void detectFallBack(){
-        // TODO re implement with symbolic execution with no parameters
-        Stack<BasicBlock> queue = new Stack<>();
+        // It's the highest child of the highest child
+        // The fallback function exists iff it ends with a Stop
+        long maxChildOffset = 0;
         for (BasicBlock child : basicBlocks.firstEntry().getValue().getChildren())
-            for (BasicBlock granChild : child.getChildren())
-                if (granChild.getLength() == 1 && granChild.getOpcodes().get(0).getOpcodeID() == OpcodeID.JUMPDEST)
-                    granChild.getChildren().forEach(queue::push);
-        while (!queue.isEmpty()){
-            BasicBlock current = queue.pop();
-            current.setType(BasicBlockType.FALLBACK);
-            /*current.getChildren().forEach(child -> {
-                if (child.getType() != BasicBlockType.FALLBACK)
-                    queue.push(child);
-            });*/
-        }
+            if (child.getOffset() > maxChildOffset)
+                maxChildOffset = child.getOffset();
+
+        long maxGranChildOffset = 0;
+        for (BasicBlock granChild : basicBlocks.get(maxChildOffset).getChildren())
+            if (granChild.getOffset() > maxGranChildOffset)
+                maxGranChildOffset = granChild.getOffset();
+
+        // If it is a JumpDest only block the skip and mark the next One
+        // If the block ends with a Revert then it's not a declared fallback
+        BasicBlock fallbackCandidate = basicBlocks.get(maxGranChildOffset);
+        if (fallbackCandidate.getLength() == 1)
+            fallbackCandidate.getChildren().forEach(block -> {
+                if (!(block.getLastOpcode() instanceof RevertOpcode))
+                    block.setType(BasicBlockType.FALLBACK);
+            });
+        else if (!(fallbackCandidate.getLastOpcode() instanceof RevertOpcode))
+            fallbackCandidate.setType(BasicBlockType.FALLBACK);
     }
 
     @Override
