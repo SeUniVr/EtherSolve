@@ -48,8 +48,8 @@ public class AbiExtractor {
         AbiFunction abiFunction = new AbiFunction(name, FunctionType.FUNCTION);
 
         long returnBlockOffset = parseInputsAndReturnLastOffset(basicBlock, abiFunction);
-        long closureOffset = cfg.getNextBasicBlock(returnBlockOffset);
-        parseOutput(cfg.getBasicBlock(closureOffset), abiFunction);
+        BasicBlock closureBlock = cfg.getNextBasicBlock(returnBlockOffset);
+        parseOutput(closureBlock, abiFunction, cfg);
 
         abi.addFunction(abiFunction);
     }
@@ -117,13 +117,14 @@ public class AbiExtractor {
         return lastOffset;
     }
 
-    private void parseOutput(BasicBlock basicBlock, AbiFunction abiFunction) {
+    private void parseOutput(BasicBlock basicBlock, AbiFunction abiFunction, Cfg cfg) {
         int argumentCount = 0;
         Stack<BasicBlock> queue = new Stack<>();
         queue.push(basicBlock);
 
         while (! queue.isEmpty()) {
             BasicBlock current = queue.pop();
+            boolean addChildren = true;
 
             for (int i = 0; i < current.getOpcodes().size(); i++) {
                 Opcode opcode = current.getOpcodes().get(i);
@@ -143,14 +144,28 @@ public class AbiExtractor {
 
                     abiFunction.addOutput(new IOElement("arg_"+argumentCount, outputType));
                     argumentCount++;
-                }
 
+                } else if (opcode instanceof JumpIOpcode){
+                    // Change the type to BYTES and skip the next 4 blocks
+                    abiFunction.popOutput();
+                    abiFunction.addOutput(new IOElement("arg_" + (argumentCount-1), new SolidityType(SolidityTypeID.BYTES)));
+
+                    // Skip 4 blocks
+                    current = cfg.getNextBasicBlock(current.getOffset());
+                    current = cfg.getNextBasicBlock(current.getOffset());
+                    current = cfg.getNextBasicBlock(current.getOffset());
+                    current = cfg.getNextBasicBlock(current.getOffset());
+                    queue.push(current);
+                    addChildren = false;
+                }
             }
 
-            current.getChildren().forEach(child -> {
-                if (child.getType() == BasicBlockType.DISPATCHER)
-                    queue.push(child);
-            });
+            // Add children
+            if (addChildren)
+                current.getChildren().forEach(child -> {
+                    if (child.getType() == BasicBlockType.DISPATCHER)
+                        queue.push(child);
+                });
         }
     }
 

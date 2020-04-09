@@ -281,7 +281,7 @@ public class Cfg implements Iterable<BasicBlock> {
         return basicBlocks.get(key);
     }
 
-    public long getNextBasicBlock(long returnBlockOffset) {
-        return basicBlocks.higherKey(returnBlockOffset);
+    public BasicBlock getNextBasicBlock(long offset) {
+        return basicBlocks.higherEntry(offset).getValue();
     }
 }

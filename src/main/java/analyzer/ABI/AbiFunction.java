@@ -57,6 +57,10 @@ public class AbiFunction {
         this.inputs.remove(this.inputs.size()-1);
     }
 
+    public void popOutput() {
+        this.outputs.remove(this.outputs.size()-1);
+    }
+
 
 
     /*
