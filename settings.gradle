@@ -1,2 +1,5 @@
 rootProject.name = 'EthereumBytecodeTransformer'
+include 'Gui'
+include 'Core'
+include 'Abi'
 
