@@ -38,6 +38,8 @@ public class AbiExtractor {
             if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4),
                                         new EQOpcode(0), null, new JumpIOpcode(0)))
                 parseFunction(contract.getRuntimeCfg(), basicBlock, abi);
+            else if (basicBlock.getType() == BasicBlockType.FALLBACK)
+                parseFallback(contract.getRuntimeCfg(), basicBlock, abi);
         });
 
         return abi;
@@ -169,4 +171,7 @@ public class AbiExtractor {
         }
     }
 
+    private void parseFallback(Cfg runtimeCfg, BasicBlock basicBlock, Abi abi){
+        abi.addFunction(new AbiFunction("", FunctionType.FALLBACK));
+    }
 }
