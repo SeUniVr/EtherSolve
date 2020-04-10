@@ -25,4 +25,4 @@ javafx {
     modules = [ 'javafx.controls', 'javafx.fxml' ]
 }
 
-mainClassName = 'gui.MainGUI'
+mainClassName = 'javafx.MainFx'

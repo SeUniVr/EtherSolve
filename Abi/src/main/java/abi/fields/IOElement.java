@@ -1,7 +1,6 @@
 package abi.fields;
 
-import javafx.util.Pair;
-
+import utils.Pair;
 import java.util.ArrayList;
 
 public class IOElement {
