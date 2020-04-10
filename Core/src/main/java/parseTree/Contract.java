@@ -42,6 +42,13 @@ public class Contract {
         runtime = BytecodeParser.getInstance().parse(runtimeCode);
     }
 
+    /**
+     * Removes the final part of the string with contains Solidity metadata
+     *
+     * It cycles through a list of regexp which represents the changes from version 0.4.17 on
+     * @param binary the bytecode string
+     * @return the stripped string
+     */
     private String removeCompilationInfo(String binary) {
         // From version solc-0.4.17
         // 0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
@@ -99,6 +106,12 @@ public class Contract {
         return binary;
     }
 
+    /**
+     * Splits the code between constructor and runtime
+     *
+     * It splits the string using the patter 6060604052 or 6080604052
+     * @param binary complete string
+     */
     private void splitBytecode(String binary) {
         this.constructor = new Bytecode();
         // 6080604052 or 6060604052
@@ -126,6 +139,10 @@ public class Contract {
         return this.name;
     }
 
+    /**
+     * Builds the cfg and updates the bytecode if it founds any other extra data
+     * @return constructor cfg
+     */
     public Cfg getConstructorCfg() {
         if (constructorCfg == null)
             constructorCfg = new Cfg(constructor);
@@ -133,6 +150,10 @@ public class Contract {
         return constructorCfg;
     }
 
+    /**
+     * Builds the cfg and updates the bytecode if it founds any other extra data
+     * @return runtime cfg
+     */
     public Cfg getRuntimeCfg() {
         if (runtimeCfg == null)
             runtimeCfg = new Cfg(runtime);
@@ -144,6 +165,11 @@ public class Contract {
         return solidityVersion;
     }
 
+    /**
+     * Parse the contract metadata trying to reconstruct the solidity compiler version
+     * @return A string with the version
+     * @throws SolidityVersionUnknownException if the version is under 0.4.17 then it's unresolvable
+     */
     public String getExactSolidityVersion() throws SolidityVersionUnknownException {
         if (solidityVersion == SolidityVersion.UNKNOWN || solidityVersion == SolidityVersion.FROM_0_4_17_TO_0_5_8)
             throw new SolidityVersionUnknownException("Version unknown or before 0.5.9");
@@ -152,9 +178,7 @@ public class Contract {
         v1 = Integer.parseInt(version.substring(0,2));
         v2 = Integer.parseInt(version.substring(2,4));
         v3 = Integer.parseInt(version.substring(4));
-        StringBuilder sb = new StringBuilder();
-        sb.append(v1).append('.').append(v2).append('.').append(v3);
-        return sb.toString();
+        return String.valueOf(v1) + '.' + v2 + '.' + v3;
     }
 
     public Bytecode getConstructor() {

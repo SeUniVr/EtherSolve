@@ -30,11 +30,21 @@ public class Cfg implements Iterable<BasicBlock> {
     private final TreeMap<Long, BasicBlock> basicBlocks;
     private final Bytecode mBytecode;
 
+    /**
+     * Builds a control flow graph from the bytecode in 6 phases:
+     *
+     * - Basic Block generation
+     * - Simple jump resolver
+     * - Orphan jump resolver with partial symbolic execution
+     * - Unreachable blocks remover
+     * - Dispatcher detector
+     * - Fallback detector
+     * @param bytecode source code
+     */
     public Cfg(Bytecode bytecode) {
         basicBlocks = new TreeMap<>();
         mBytecode = bytecode;
         generateBasicBlocks(bytecode);
-
         calculateChildren();
         resolveOrphanJumps();
         removeRemainingData();
