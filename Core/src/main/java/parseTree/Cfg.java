@@ -1,6 +1,5 @@
 package parseTree;
 
-import javafx.util.Pair;
 import opcodes.Opcode;
 import opcodes.OpcodeID;
 import opcodes.controlFlowOpcodes.JumpOpcode;
@@ -10,6 +9,7 @@ import opcodes.systemOpcodes.ReturnOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
+import utils.Pair;
 import utils.Triplet;
 
 import java.util.*;
