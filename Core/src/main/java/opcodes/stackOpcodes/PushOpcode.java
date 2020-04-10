@@ -49,7 +49,7 @@ public class PushOpcode extends StackOpcode {
 
     @Override
     public String toString() {
-        return super.toString() + parameterLength + " 0x" + parameter.toString(16);
+        return super.toString() + parameterLength + " 0x" + getBytes().substring(2);
     }
 
     @Override

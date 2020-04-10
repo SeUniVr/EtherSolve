@@ -46,7 +46,7 @@ public class AbiExtractor {
     }
 
     private void parseFunction(Cfg cfg, BasicBlock basicBlock, Abi abi) {
-        String name = "0x" + ((PushOpcode) basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 4)).getParameter().toString(16);
+        String name = "0x" + basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 4).getBytes().substring(2);
         AbiFunction abiFunction = new AbiFunction(name, FunctionType.FUNCTION);
 
         long returnBlockOffset = parseInputsAndReturnLastOffset(basicBlock, abiFunction);
