@@ -31,6 +31,11 @@ public class AbiExtractor {
         return ilSoloEUnico;
     }
 
+    public Abi extractAbi(String abiString){
+        // TODO
+        return null;
+    }
+
     public Abi extractAbi(Contract contract) {
         Abi abi = new Abi();
 
