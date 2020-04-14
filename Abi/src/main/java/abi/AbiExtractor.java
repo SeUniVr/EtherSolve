@@ -4,6 +4,8 @@ import abi.fields.FunctionType;
 import abi.fields.IOElement;
 import abi.fields.SolidityType;
 import abi.fields.SolidityTypeID;
+import com.google.gson.*;
+import gson.GsonAbi;
 import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
@@ -31,12 +33,22 @@ public class AbiExtractor {
         return ilSoloEUnico;
     }
 
+    /**
+     * Extract the Abi from the Json String
+     * @param abiString Json string representing the Abi
+     * @return instance of class Abi
+     */
     public Abi extractAbi(String abiString){
-        // TODO
-        return null;
+        return new GsonAbi().fromJson(abiString, Abi.class);
     }
 
+    /**
+     * Extract an Abi from a contract
+     * @param contract source
+     * @return Abi of the contract
+     */
     public Abi extractAbi(Contract contract) {
+        // TODO consider constructor
         Abi abi = new Abi();
 
         contract.getRuntimeCfg().forEach(basicBlock -> {
