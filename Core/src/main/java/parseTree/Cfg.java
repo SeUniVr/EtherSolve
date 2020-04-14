@@ -108,7 +108,7 @@ public class Cfg implements Iterable<BasicBlock> {
             }
             // Other delimiters
             else if (DELIMITERS.contains(lastOpcode.getOpcodeID())){
-                // There is a control flow beak, no child added
+                // There is a control flow break, no child added
             }
             // Exclude the last block which has no sequent
             else if (offset.equals(basicBlocks.lastKey())){

@@ -12,4 +12,15 @@ public class Abi {
     public void addFunction(AbiFunction function) {
         functions.add(function);
     }
+
+    public Iterable<? extends AbiFunction> getFunctions() {
+        return functions;
+    }
+
+    public AbiFunction getFunction(String name){
+        for (AbiFunction function : functions)
+            if (function.getName().equals(name))
+                return function;
+        return null;
+    }
 }
