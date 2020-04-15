@@ -25,4 +25,8 @@ public class IOElement {
     public void addComponent(Pair<String, SolidityType> component){
         this.components.add(component);
     }
+
+    public SolidityType getType() {
+        return type;
+    }
 }

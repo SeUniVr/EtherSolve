@@ -3,7 +3,7 @@ package comparation;
 import java.util.HashMap;
 
 public class AbiComparison {
-    private HashMap<String, Double> functionsScore;
+    private final HashMap<String, Double> functionsScore;
     private double globalScore;
 
     public AbiComparison(){
@@ -28,5 +28,8 @@ public class AbiComparison {
         globalScore /= functionsScore.size();
     }
 
-
+    @Override
+    public String toString() {
+        return functionsScore + "\nGlobal score:" + globalScore;
+    }
 }

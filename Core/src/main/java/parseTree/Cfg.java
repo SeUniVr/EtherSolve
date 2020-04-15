@@ -220,7 +220,7 @@ public class Cfg implements Iterable<BasicBlock> {
             if (child.getOffset() > maxChildOffset)
                 maxChildOffset = child.getOffset();
 
-        long maxGranChildOffset = 0;
+        long maxGranChildOffset = maxChildOffset;
         for (BasicBlock granChild : basicBlocks.get(maxChildOffset).getChildren())
             if (granChild.getOffset() > maxGranChildOffset)
                 maxGranChildOffset = granChild.getOffset();

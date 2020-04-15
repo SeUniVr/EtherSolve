@@ -8,6 +8,8 @@ import abi.fields.SolidityType;
 import abi.fields.SolidityTypeID;
 import com.google.gson.*;
 
+import java.util.Arrays;
+
 public class GsonAbi {
 
     private final Gson gson;
@@ -81,9 +83,21 @@ public class GsonAbi {
         String[] types = type.split("(?=[0-9])",2);
         SolidityTypeID id = gsonBuilder.create().fromJson(types[0].toUpperCase(), SolidityTypeID.class);
         SolidityType solidityType;
-        if (types.length == 2)
-            solidityType = new SolidityType(id, Integer.parseInt(types[1]));
+        if (types.length == 2){
+            if (types[1].endsWith("]")){
+                // It's Array
+                String[] arrElements = types[1].split("\\[");
+                if (arrElements[1].length() == 1)
+                    solidityType = new SolidityType(id, Integer.parseInt(arrElements[0]), true);
+                else
+                    solidityType = new SolidityType(id, Integer.parseInt(arrElements[0]), true, true, Integer.parseInt(arrElements[1].substring(0, arrElements[1].length() - 1)));
+            } else {
+                // It's not
+                solidityType = new SolidityType(id, Integer.parseInt(types[1]));
+            }
+        }
         else
+            // Simple type
             solidityType = new SolidityType(id);
         return new IOElement(object.get("name").getAsString(), solidityType);
     }
