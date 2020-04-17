@@ -1,4 +1,4 @@
-rootProject.name = 'EthereumBytecodeTransformer'
+rootProject.name = 'EtherSolve'
 include 'Gui'
 include 'Core'
 include 'Abi'
