@@ -188,6 +188,10 @@ public class BytecodeParser {
                 return new DifficultyOpcode(offset);
             case 0x45:
                 return new GasLimitOpcode(offset);
+            case 0x46:
+                return new ChainIdOpcode(offset);
+            case 0x47:
+                return new SelfBalanceOpcode(offset);
             case 0x50:
                 return new PopOpcode(offset);
             case 0x51:

@@ -51,6 +51,8 @@ public enum OpcodeID {
     NUMBER ((byte) 0x43,"NUMBER"),
     DIFFICULTY ((byte) 0x44,"DIFFICULTY"),
     GASLIMIT ((byte) 0x45,"GASLIMIT"),
+    CHAINID ((byte) 0x46, "CHAINID"),
+    SELFBALANCE ((byte) 0x47, "SELFBALANCE"),
     POP ((byte) 0x50,"POP"),
     MLOAD ((byte) 0x51,"MLOAD"),
     MSTORE ((byte) 0x52,"MSTORE"),

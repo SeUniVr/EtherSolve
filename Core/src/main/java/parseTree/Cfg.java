@@ -86,8 +86,12 @@ public class Cfg implements Iterable<BasicBlock> {
                 Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
                 if (secondLastOpcode instanceof PushOpcode){
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
-                    BasicBlock destination = basicBlocks.get(destinationOffset);
-                    basicBlock.addChild(destination);
+                    if (basicBlocks.containsKey(destinationOffset)){
+                        BasicBlock destination = basicBlocks.get(destinationOffset);
+                        basicBlock.addChild(destination);
+                    } else {
+                        System.err.println(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
+                    }
                 }
                 // Else Unknown
             }
@@ -102,8 +106,12 @@ public class Cfg implements Iterable<BasicBlock> {
                 Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
                 if (secondLastOpcode instanceof PushOpcode){
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
-                    BasicBlock destination = basicBlocks.get(destinationOffset);
-                    basicBlock.addChild(destination);
+                    if (basicBlocks.containsKey(destinationOffset)){
+                        BasicBlock destination = basicBlocks.get(destinationOffset);
+                        basicBlock.addChild(destination);
+                    } else {
+                        System.err.println(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
+                    }
                 }
             }
             // Other delimiters

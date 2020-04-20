@@ -1,6 +1,7 @@
 package parseTree.SymbolicExecution;
 
 import opcodes.Opcode;
+import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.stackOpcodes.DupOpcode;
 import opcodes.stackOpcodes.PopOpcode;
 import opcodes.stackOpcodes.PushOpcode;
@@ -36,6 +37,9 @@ public class SymbolicExecutionStack {
             executeSwap((SwapOpcode) opcode);
         else if (opcode instanceof PopOpcode)
             executePop((PopOpcode) opcode);
+        // AND added in order to resolve PushPushAndJump
+        else if (opcode instanceof AndOpcode)
+            executeAnd((AndOpcode) opcode);
         else {
             for (int i = 0; i < opcode.getStackConsumed(); i++)
                 stack.remove(stack.size() - 1);
@@ -61,7 +65,16 @@ public class SymbolicExecutionStack {
     }
 
     private void executePop(PopOpcode opcode) {
-        stack.remove(stack.size() - 1);
+        pop();
+    }
+
+    private void executeAnd(AndOpcode opcode) {
+        BigInteger a = pop();
+        BigInteger b = pop();
+        if (a != null && b != null)
+            stack.add(a.and(b));
+        else
+            stack.add(null);
     }
 
     public BigInteger peek() throws UnknownStackElementException {
@@ -83,5 +96,11 @@ public class SymbolicExecutionStack {
     @Override
     public int hashCode() {
         return stack.hashCode();
+    }
+
+    private BigInteger pop(){
+        BigInteger value = stack.get(stack.size() - 1);
+        stack.remove(stack.size() - 1);
+        return value;
     }
 }
