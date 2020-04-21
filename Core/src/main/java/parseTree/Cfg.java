@@ -9,6 +9,7 @@ import opcodes.systemOpcodes.ReturnOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
+import utils.Message;
 import utils.Pair;
 import utils.Triplet;
 
@@ -50,6 +51,7 @@ public class Cfg implements Iterable<BasicBlock> {
         removeRemainingData();
         detectDispatcher();
         detectFallBack();
+        validateCfg();
     }
 
     private void generateBasicBlocks(Bytecode bytecode) {
@@ -90,7 +92,7 @@ public class Cfg implements Iterable<BasicBlock> {
                         BasicBlock destination = basicBlocks.get(destinationOffset);
                         basicBlock.addChild(destination);
                     } else {
-                        System.err.println(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
+                        Message.printError(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
                     }
                 }
                 // Else Unknown
@@ -110,7 +112,7 @@ public class Cfg implements Iterable<BasicBlock> {
                         BasicBlock destination = basicBlocks.get(destinationOffset);
                         basicBlock.addChild(destination);
                     } else {
-                        System.err.println(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
+                        Message.printError(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
                     }
                 }
             }
@@ -163,10 +165,10 @@ public class Cfg implements Iterable<BasicBlock> {
                     if (nextBB != null)
                         current.addChild(nextBB);
                     else
-                        System.err.println("Trying to resolve orphan jump at " + current.getOpcodes().get(current.getOpcodes().size() - 1) + " with " + nextOffset);
+                        Message.printError("Trying to resolve orphan jump at " + current.getOpcodes().get(current.getOpcodes().size() - 1) + " with " + nextOffset);
                 } catch (UnknownStackElementException e) {
-                    System.err.println(stack);
-                    System.err.println("Orphan jump unresolvable at " + current.getOpcodes().get(current.getOpcodes().size() - 1));
+                    Message.printError(stack.toString());
+                    Message.printError("Orphan jump unresolvable at " + current.getOpcodes().get(current.getOpcodes().size() - 1));
                 }
             }
 
@@ -243,6 +245,17 @@ public class Cfg implements Iterable<BasicBlock> {
             });
         else if (!(fallbackCandidate.getLastOpcode() instanceof RevertOpcode))
             fallbackCandidate.setType(BasicBlockType.FALLBACK);
+    }
+
+    private void validateCfg(){
+        // check whether there is only a tree
+        int trees = 0;
+        for (long offset : basicBlocks.keySet()){
+            if (basicBlocks.get(offset).getParents().isEmpty())
+                trees++;
+        }
+        if (trees != 1)
+            Message.printWarning(String.format("Warning: the CFG has %d blocks without parents.", trees));
     }
 
     @Override

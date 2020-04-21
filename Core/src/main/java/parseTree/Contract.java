@@ -2,6 +2,8 @@ package parseTree;
 
 import SolidityInfo.SolidityVersion;
 import SolidityInfo.SolidityVersionUnknownException;
+import utils.Message;
+import utils.Pair;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,11 +16,10 @@ public class Contract {
     private String runtimeCode;
     private String metadata;
     private SolidityVersion solidityVersion;
+    private String constructorRemainingData;
 
     private Cfg constructorCfg = null;
     private Cfg runtimeCfg = null;
-
-    private final Set<BasicBlock> basicBlocks;
 
     private Contract(String name){
         this(name, new Bytecode(), new Bytecode());
@@ -28,7 +29,6 @@ public class Contract {
         this.name = name;
         this.constructor = constructor;
         this.runtime = body;
-        this.basicBlocks = new HashSet<>();
         this.constructorCode = "";
         this.runtimeCode = "";
         this.metadata = "";
@@ -36,26 +36,31 @@ public class Contract {
 
     public Contract(String name, String binary){
         this(name);
-        String remainingCode = removeCompilationInfo(binary);
+        Pair<String, String> strippedCode = removeCompilationInfo(binary);
+        String remainingCode = strippedCode.getKey();
         splitBytecode(remainingCode);
         constructor = BytecodeParser.getInstance().parse(constructorCode);
+        if (constructor.getRemainingData() != null && ! constructor.getRemainingData().equals(""))
+            Message.printWarning("Warning: constructor has remaining data");
+        constructorRemainingData = strippedCode.getValue();
         runtime = BytecodeParser.getInstance().parse(runtimeCode);
     }
 
     /**
-     * Removes the final part of the string with contains Solidity metadata
+     * Removes the final part of the string with contains Solidity metadata and constructor remaining data
      *
      * It cycles through a list of regexp which represents the changes from version 0.4.17 on
      * @param binary the bytecode string
-     * @return the stripped string
+     * @return the stripped string and the constructor remaining data
      */
-    private String removeCompilationInfo(String binary) {
+    private Pair<String, String> removeCompilationInfo(String binary) {
         // From version solc-0.4.17
         // 0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
-        if (binary.matches("^[0-9a-f]*a165627a7a72305820[0-9a-f]{64}0029$")){
+        if (binary.matches("^[0-9a-f]*a165627a7a72305820[0-9a-f]{64}0029[0-9a-f]*$")){
             solidityVersion = SolidityVersion.FROM_0_4_17_TO_0_5_8;
-            metadata = binary.substring(binary.length() - 86);
-            return binary.substring(0, binary.length() - 86);
+            String[] splitString = binary.split("(?<=a165627a7a72305820[0-9a-f]{64}0029)", 2);
+            metadata = binary.substring(splitString[0].length() - 86);
+            return new Pair<>(splitString[0].substring(0, splitString[0].length() - 86), splitString[1]);
         }
 
         // From version solc-0.5.9
@@ -63,10 +68,11 @@ public class Contract {
         // 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash>
         // 0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
         // 0x00 0x32
-        else if (binary.matches("^[0-9a-f]*a265627a7a72305820[0-9a-f]{64}64736f6c6343[0-9a-f]{6}0032$")){
+        else if (binary.matches("^[0-9a-f]*a265627a7a72305820[0-9a-f]{64}64736f6c6343[0-9a-f]{6}0032[0-9a-f]*$")){
             solidityVersion = SolidityVersion.FROM_0_5_9_TO_0_5_11;
-            metadata = binary.substring(binary.length() - 104);
-            return binary.substring(0, binary.length() - 104);
+            String[] splitString = binary.split("(?<=a265627a7a72305820[0-9a-f]{64}64736f6c6343[0-9a-f]{6}0032)", 2);
+            metadata = splitString[0].substring(splitString[0].length() - 104);
+            return new Pair<>(splitString[0].substring(0, splitString[0].length() - 104), splitString[1]);
         }
 
         // From version solc-0.5.12
@@ -74,10 +80,11 @@ public class Contract {
         // 0x65 'b' 'z' 'z' 'r' '1' 0x58 0x20 <32 bytes swarm hash>
         // 0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
         // 0x00 0x32
-        else if (binary.matches("^[0-9a-f]*a265627a7a72315820[0-9a-f]{64}64736f6c6343[0-9a-f]{6}0032$")){
+        else if (binary.matches("^[0-9a-f]*a265627a7a72315820[0-9a-f]{64}64736f6c6343[0-9a-f]{6}0032[0-9a-f]*$")){
             solidityVersion = SolidityVersion.FROM_0_5_12_TO_0_5_15;
-            metadata = binary.substring(binary.length() - 104);
-            return binary.substring(0, binary.length() - 104);
+            String[] splitString = binary.split("(?<=a265627a7a72315820[0-9a-f]{64}64736f6c6343[0-9a-f]{6}0032)", 2);
+            metadata = splitString[0].substring(splitString[0].length() - 104);
+            return new Pair<>(splitString[0].substring(0, splitString[0].length() - 104), splitString[1]);
         }
 
         // From version solc-0.6.0
@@ -85,10 +92,11 @@ public class Contract {
         // 0x64 'i' 'p' 'f' 's' 0x58 0x22 <34 bytes IPFS hash>
         // 0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
         // 0x00 0x32
-        else if (binary.matches("^[0-9a-f]*a264697066735822[0-9a-f]{68}64736f6c6343[0-9a-f]{6}0032$")){
+        else if (binary.matches("^[0-9a-f]*a264697066735822[0-9a-f]{68}64736f6c6343[0-9a-f]{6}0032[0-9a-f]*$")){
             solidityVersion = SolidityVersion.FROM_0_6_0_TO_0_6_1;
-            metadata = binary.substring(binary.length() - 106);
-            return binary.substring(0, binary.length() - 106);
+            String[] splitString = binary.split("(?<=a264697066735822[0-9a-f]{68}64736f6c6343[0-9a-f]{6}0032)", 2);
+            metadata = splitString[0].substring(splitString[0].length() - 106);
+            return new Pair<>(splitString[0].substring(0, splitString[0].length() - 106), splitString[1]);
         }
 
         // From version solc-0.6.2
@@ -96,14 +104,15 @@ public class Contract {
         // 0x64 'i' 'p' 'f' 's' 0x58 0x22 <34 bytes IPFS hash>
         // 0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
         // 0x00 0x33
-        else if (binary.matches("^[0-9a-f]*a264697066735822[0-9a-f]{68}64736f6c6343[0-9a-f]{6}0033$")){
+        else if (binary.matches("^[0-9a-f]*a264697066735822[0-9a-f]{68}64736f6c6343[0-9a-f]{6}0033[0-9a-f]*$")){
             solidityVersion = SolidityVersion.FROM_0_6_2_TO_LATEST;
-            metadata = binary.substring(binary.length() - 106);
-            return binary.substring(0, binary.length() - 106);
+            String[] splitString = binary.split("(?<=a264697066735822[0-9a-f]{68}64736f6c6343[0-9a-f]{6}0033)", 2);
+            metadata = splitString[0].substring(splitString[0].length() - 106);
+            return new Pair<>(splitString[0].substring(0, splitString[0].length() - 106), splitString[1]);
         }
 
         solidityVersion = SolidityVersion.UNKNOWN;
-        return binary;
+        return new Pair<>(binary, "");
     }
 
     /**
@@ -129,10 +138,6 @@ public class Contract {
     public String getBytes(){
         // TODO big as a house: calculate contract medatata
         return constructor.getBytes() + runtime.getBytes();
-    }
-
-    public Set<BasicBlock> getBasicBlocks() {
-        return basicBlocks;
     }
 
     public String getName() {
@@ -187,5 +192,9 @@ public class Contract {
 
     public Bytecode getRuntime() {
         return runtime;
+    }
+
+    public String getConstructorRemainingData() {
+        return constructorRemainingData;
     }
 }
