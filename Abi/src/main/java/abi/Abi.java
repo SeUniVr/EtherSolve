@@ -1,9 +1,11 @@
 package abi;
 
+import gson.GsonAbi;
+
 import java.util.ArrayList;
 
 public class Abi {
-    private ArrayList<AbiFunction> functions;
+    private final ArrayList<AbiFunction> functions;
 
     public Abi() {
         this.functions = new ArrayList<>();
@@ -22,5 +24,9 @@ public class Abi {
             if (function.getName().equals(name))
                 return function;
         return null;
+    }
+
+    public static Abi fromJson(String src){
+        return new GsonAbi().fromJson(src, Abi.class);
     }
 }

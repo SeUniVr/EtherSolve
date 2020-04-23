@@ -7,10 +7,10 @@ import abi.fields.StateMutability;
 import java.util.ArrayList;
 
 public class AbiFunction {
-    private FunctionType type;
-    private String name;
-    private ArrayList<IOElement> inputs;
-    private ArrayList<IOElement> outputs;
+    private final FunctionType type;
+    private final String name;
+    private final ArrayList<IOElement> inputs;
+    private final ArrayList<IOElement> outputs;
     private StateMutability stateMutability;
 
     public AbiFunction(String name, FunctionType functionType) {

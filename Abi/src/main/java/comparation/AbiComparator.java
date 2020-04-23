@@ -7,6 +7,8 @@ import abi.fields.IOElement;
 import abi.fields.SolidityType;
 import abi.fields.SolidityTypeID;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
+import rebuiltabi.RebuiltAbi;
+import rebuiltabi.RebuiltAbiFunction;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,23 +19,24 @@ public class AbiComparator {
     private static final double PARTIAL_MATCH = 0.5;
     private static final double NO_MATCH = 0;
 
-    public static AbiComparison compare(Abi rebuiltAbi, Abi downloadedAbi){
-        return compare(rebuiltAbi, downloadedAbi, true);
-    }
-
-    public static AbiComparison compare(Abi rebuiltAbi, Abi downloadedAbi, boolean compareOutput){
+    public static AbiComparison compare(RebuiltAbi rebuiltAbi, Abi downloadedAbi){
         AbiComparison result = new AbiComparison();
         for (AbiFunction function : downloadedAbi.getFunctions()){
             String hash = "0x" + keccak256(getSignature(function)).substring(0,8);
-            AbiFunction candidate = rebuiltAbi.getFunction(hash);
+            RebuiltAbiFunction candidate = rebuiltAbi.getFunction(hash);
             if (function.getType() == FunctionType.FALLBACK)
                 candidate = rebuiltAbi.getFunction("");
             double score = 0;
             if (candidate != null)
-                score = compare(candidate, function, compareOutput);
+                score = compare(candidate, function);
             result.addScore(hash, score);
         }
         return result;
+    }
+
+    private static double compare(RebuiltAbiFunction rebuiltAbiFunction, AbiFunction downloadedFunction){
+        // TODO implement comparison
+        return 0;
     }
 
     private static double compare(AbiFunction rebuiltFunction, AbiFunction downloadedFunction, boolean compareOutput){
