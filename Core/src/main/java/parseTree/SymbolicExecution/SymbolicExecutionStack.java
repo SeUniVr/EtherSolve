@@ -1,5 +1,6 @@
 package parseTree.SymbolicExecution;
 
+import opcodes.LogOpcode;
 import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.stackOpcodes.DupOpcode;
@@ -11,7 +12,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class SymbolicExecutionStack {
-    private ArrayList<BigInteger> stack;
+    private final ArrayList<BigInteger> stack;
 
     public SymbolicExecutionStack() {
         this.stack = new ArrayList<>();
@@ -29,6 +30,9 @@ public class SymbolicExecutionStack {
     }
 
     public void executeOpcode(Opcode opcode){
+        /* // The 3rd argument in the stack is the event hash
+        if (opcode instanceof LogOpcode)
+            System.out.println(stack);*/
         if (opcode instanceof PushOpcode)
             executePush((PushOpcode) opcode);
         else if (opcode instanceof DupOpcode)
@@ -37,7 +41,7 @@ public class SymbolicExecutionStack {
             executeSwap((SwapOpcode) opcode);
         else if (opcode instanceof PopOpcode)
             executePop((PopOpcode) opcode);
-        // AND added in order to resolve PushPushAndJump
+        // AndOpcode added in order to resolve PushPushAndJump
         else if (opcode instanceof AndOpcode)
             executeAnd((AndOpcode) opcode);
         else {

@@ -9,7 +9,6 @@ import opcodes.systemOpcodes.ReturnOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
-import utils.Message;
 import utils.Pair;
 import utils.Triplet;
 
@@ -30,6 +29,7 @@ public class Cfg implements Iterable<BasicBlock> {
 
     private final TreeMap<Long, BasicBlock> basicBlocks;
     private final Bytecode mBytecode;
+    private final CfgBuildReport buildReport;
 
     /**
      * Builds a control flow graph from the bytecode in 6 phases:
@@ -45,6 +45,7 @@ public class Cfg implements Iterable<BasicBlock> {
     public Cfg(Bytecode bytecode) {
         basicBlocks = new TreeMap<>();
         mBytecode = bytecode;
+        buildReport = new CfgBuildReport();
         generateBasicBlocks(bytecode);
         calculateSuccessors();
         resolveOrphanJumps();
@@ -92,7 +93,7 @@ public class Cfg implements Iterable<BasicBlock> {
                         BasicBlock destination = basicBlocks.get(destinationOffset);
                         basicBlock.addSuccessor(destination);
                     } else {
-                        Message.printError(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
+                        buildReport.addDirectJumpError(lastOpcode.getOffset(), destinationOffset);
                     }
                 }
                 // Else Unknown
@@ -112,7 +113,7 @@ public class Cfg implements Iterable<BasicBlock> {
                         BasicBlock destination = basicBlocks.get(destinationOffset);
                         basicBlock.addSuccessor(destination);
                     } else {
-                        Message.printError(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
+                        buildReport.addDirectJumpError(lastOpcode.getOffset(), destinationOffset);
                     }
                 }
             }
@@ -154,7 +155,7 @@ public class Cfg implements Iterable<BasicBlock> {
                 stack.executeOpcode(o);
             }
 
-            Opcode lastOpcode = current.getOpcodes().get(current.getOpcodes().size() - 1);
+            Opcode lastOpcode = current.getLastOpcode();
             long nextOffset = 0;
 
             // Check for orphan jump and resolve
@@ -165,10 +166,9 @@ public class Cfg implements Iterable<BasicBlock> {
                     if (nextBB != null)
                         current.addSuccessor(nextBB);
                     else
-                        Message.printError("Trying to resolve orphan jump at " + current.getOpcodes().get(current.getOpcodes().size() - 1) + " with " + nextOffset);
+                        buildReport.addOrphanJumpTargetNullError(lastOpcode.getOffset(), nextOffset);
                 } catch (UnknownStackElementException e) {
-                    Message.printError(stack.toString());
-                    Message.printError("Orphan jump unresolvable at " + current.getOpcodes().get(current.getOpcodes().size() - 1));
+                    buildReport.addOrphanJumpTargetUnknownError(lastOpcode.getOffset(), stack);
                 }
             }
 
@@ -255,7 +255,7 @@ public class Cfg implements Iterable<BasicBlock> {
                 trees++;
         }
         if (trees != 1)
-            Message.printWarning(String.format("Warning: the CFG has %d blocks without predecessors.", trees));
+            buildReport.addMultipleRootNodesError(trees);
     }
 
     @Override
@@ -283,5 +283,9 @@ public class Cfg implements Iterable<BasicBlock> {
 
     public BasicBlock getNextBasicBlock(long offset) {
         return basicBlocks.higherEntry(offset).getValue();
+    }
+
+    public CfgBuildReport getBuildReport() {
+        return buildReport;
     }
 }
