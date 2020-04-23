@@ -27,7 +27,7 @@ public class CFGPrinter {
             from = new GVBlock(bb);
             if (! graph.getBlocks().contains(from))
                 graph.addBlock(from);
-            for (BasicBlock child : bb.getChildren()){
+            for (BasicBlock child : bb.getSuccessors()){
                 to = new GVBlock(child);
                 if (! graph.getBlocks().contains(to))
                     graph.addBlock(to);

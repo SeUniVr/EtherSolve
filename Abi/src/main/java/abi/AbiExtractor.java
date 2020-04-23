@@ -4,7 +4,6 @@ import abi.fields.FunctionType;
 import abi.fields.IOElement;
 import abi.fields.SolidityType;
 import abi.fields.SolidityTypeID;
-import com.google.gson.*;
 import gson.GsonAbi;
 import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
@@ -82,7 +81,7 @@ public class AbiExtractor {
         // The first block is the one with higher offset
         long maxOffset = 0;
         BasicBlock firstArgumentBlock = null;
-        for (BasicBlock candidate : basicBlock.getChildren()){
+        for (BasicBlock candidate : basicBlock.getSuccessors()){
             if (candidate.getOffset() > maxOffset){
                 maxOffset = candidate.getOffset();
                 firstArgumentBlock = candidate;
@@ -127,7 +126,7 @@ public class AbiExtractor {
             }
 
             // Add children
-            current.getChildren().forEach(child -> {
+            current.getSuccessors().forEach(child -> {
                 if (child.getType() == BasicBlockType.DISPATCHER)
                     queue.push(child);
             });
@@ -181,7 +180,7 @@ public class AbiExtractor {
 
             // Add children
             if (addChildren)
-                current.getChildren().forEach(child -> {
+                current.getSuccessors().forEach(child -> {
                     if (child.getType() == BasicBlockType.DISPATCHER)
                         queue.push(child);
                 });

@@ -46,7 +46,7 @@ public class Cfg implements Iterable<BasicBlock> {
         basicBlocks = new TreeMap<>();
         mBytecode = bytecode;
         generateBasicBlocks(bytecode);
-        calculateChildren();
+        calculateSuccessors();
         resolveOrphanJumps();
         removeRemainingData();
         detectDispatcher();
@@ -76,7 +76,7 @@ public class Cfg implements Iterable<BasicBlock> {
             basicBlocks.put(current.getOffset(), current);
     }
 
-    private void calculateChildren() {
+    private void calculateSuccessors() {
         // Iterate over the block sorted by the offset
         basicBlocks.forEach((offset, basicBlock) -> {
             ArrayList<Opcode> opcodes = basicBlock.getOpcodes();
@@ -90,7 +90,7 @@ public class Cfg implements Iterable<BasicBlock> {
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
                     if (basicBlocks.containsKey(destinationOffset)){
                         BasicBlock destination = basicBlocks.get(destinationOffset);
-                        basicBlock.addChild(destination);
+                        basicBlock.addSuccessor(destination);
                     } else {
                         Message.printError(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
                     }
@@ -103,14 +103,14 @@ public class Cfg implements Iterable<BasicBlock> {
                 long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
                 BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);
                 if (nextBasicBlock != null)
-                    basicBlock.addChild(nextBasicBlock);
+                    basicBlock.addSuccessor(nextBasicBlock);
                 // if there is a push before
                 Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
                 if (secondLastOpcode instanceof PushOpcode){
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
                     if (basicBlocks.containsKey(destinationOffset)){
                         BasicBlock destination = basicBlocks.get(destinationOffset);
-                        basicBlock.addChild(destination);
+                        basicBlock.addSuccessor(destination);
                     } else {
                         Message.printError(String.format("Direct jump unresolvable, block %d does not exists", destinationOffset));
                     }
@@ -118,7 +118,7 @@ public class Cfg implements Iterable<BasicBlock> {
             }
             // Other delimiters
             else if (DELIMITERS.contains(lastOpcode.getOpcodeID())){
-                // There is a control flow break, no child added
+                // There is a control flow break, no successor added
             }
             // Exclude the last block which has no sequent
             else if (offset.equals(basicBlocks.lastKey())){
@@ -129,7 +129,7 @@ public class Cfg implements Iterable<BasicBlock> {
                 // It's a common operation, add the next
                 long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
                 BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);
-                basicBlock.addChild(nextBasicBlock);
+                basicBlock.addSuccessor(nextBasicBlock);
             }
         });
     }
@@ -163,7 +163,7 @@ public class Cfg implements Iterable<BasicBlock> {
                     nextOffset = stack.peek().longValue();
                     BasicBlock nextBB = basicBlocks.get(nextOffset);
                     if (nextBB != null)
-                        current.addChild(nextBB);
+                        current.addSuccessor(nextBB);
                     else
                         Message.printError("Trying to resolve orphan jump at " + current.getOpcodes().get(current.getOpcodes().size() - 1) + " with " + nextOffset);
                 } catch (UnknownStackElementException e) {
@@ -178,11 +178,11 @@ public class Cfg implements Iterable<BasicBlock> {
 
             // Add next elements for DFS
             if (! (lastOpcode instanceof JumpOpcode)){
-                for (BasicBlock child : current.getChildren()){
-                    Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), child.getOffset(), stack);
+                for (BasicBlock successor : current.getSuccessors()){
+                    Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), successor.getOffset(), stack);
                     if (! visited.contains(edge)){
                         visited.add(edge);
-                        queue.push(new Pair<>(child, stack.copy()));
+                        queue.push(new Pair<>(successor, stack.copy()));
                     }
                 }
             } else if (nextOffset != 0){
@@ -200,7 +200,7 @@ public class Cfg implements Iterable<BasicBlock> {
         final ArrayList<Long> offsetList = new ArrayList<>();
         basicBlocks.forEach((offset, block) -> offsetList.add(offset));
         for (Long offset : offsetList){
-            if (basicBlocks.get(offset).getParents().isEmpty() && basicBlocks.get(offset).getBytes().equals("fe")){
+            if (basicBlocks.get(offset).getPredecessors().isEmpty() && basicBlocks.get(offset).getBytes().equals("fe")){
                 firstInvalidBlock = offset;
             }
             if (offset >= firstInvalidBlock)
@@ -223,23 +223,23 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
     private void detectFallBack(){
-        // It's the highest child of the highest child
+        // It's the highest successor of the highest successor
         // The fallback function exists iff it ends with a Stop
-        long maxChildOffset = 0;
-        for (BasicBlock child : basicBlocks.firstEntry().getValue().getChildren())
-            if (child.getOffset() > maxChildOffset)
-                maxChildOffset = child.getOffset();
+        long maxSuccessorOffset = 0;
+        for (BasicBlock successor : basicBlocks.firstEntry().getValue().getSuccessors())
+            if (successor.getOffset() > maxSuccessorOffset)
+                maxSuccessorOffset = successor.getOffset();
 
-        long maxGranChildOffset = maxChildOffset;
-        for (BasicBlock granChild : basicBlocks.get(maxChildOffset).getChildren())
-            if (granChild.getOffset() > maxGranChildOffset)
-                maxGranChildOffset = granChild.getOffset();
+        long maxSecondSuccessorOffset = maxSuccessorOffset;
+        for (BasicBlock secondSuccessor : basicBlocks.get(maxSuccessorOffset).getSuccessors())
+            if (secondSuccessor.getOffset() > maxSecondSuccessorOffset)
+                maxSecondSuccessorOffset = secondSuccessor.getOffset();
 
         // If it is a JumpDest only block the skip and mark the next One
         // If the block ends with a Revert then it's not a declared fallback
-        BasicBlock fallbackCandidate = basicBlocks.get(maxGranChildOffset);
+        BasicBlock fallbackCandidate = basicBlocks.get(maxSecondSuccessorOffset);
         if (fallbackCandidate.getLength() == 1)
-            fallbackCandidate.getChildren().forEach(block -> {
+            fallbackCandidate.getSuccessors().forEach(block -> {
                 if (!(block.getLastOpcode() instanceof RevertOpcode))
                     block.setType(BasicBlockType.FALLBACK);
             });
@@ -251,11 +251,11 @@ public class Cfg implements Iterable<BasicBlock> {
         // check whether there is only a tree
         int trees = 0;
         for (long offset : basicBlocks.keySet()){
-            if (basicBlocks.get(offset).getParents().isEmpty())
+            if (basicBlocks.get(offset).getPredecessors().isEmpty())
                 trees++;
         }
         if (trees != 1)
-            Message.printWarning(String.format("Warning: the CFG has %d blocks without parents.", trees));
+            Message.printWarning(String.format("Warning: the CFG has %d blocks without predecessors.", trees));
     }
 
     @Override

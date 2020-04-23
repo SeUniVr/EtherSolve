@@ -21,7 +21,7 @@ public class CFGPrinter {
             from = new BasicBlockCell(bb);
             if (! mModel.getAddedCells().contains(from))
                 mModel.addCell(from);
-            for (BasicBlock child : bb.getChildren()){
+            for (BasicBlock child : bb.getSuccessors()){
                 to = new BasicBlockCell(child);
                 if (! mModel.getAddedCells().contains(to))
                     mModel.addCell(to);

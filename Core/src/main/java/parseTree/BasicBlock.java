@@ -8,8 +8,8 @@ import java.util.List;
 
 public class BasicBlock extends Bytecode {
 
-    private final ArrayList<BasicBlock> parents;
-    private final ArrayList<BasicBlock> children;
+    private final ArrayList<BasicBlock> predecessors;
+    private final ArrayList<BasicBlock> successors;
     private int stackBalance;
     private BasicBlockType type;
 
@@ -27,8 +27,8 @@ public class BasicBlock extends Bytecode {
 
     public BasicBlock(long offset, ArrayList<Opcode> opcodes, String remainingData) {
         super(offset, opcodes, remainingData);
-        this.children = new ArrayList<>();
-        this.parents = new ArrayList<>();
+        this.successors = new ArrayList<>();
+        this.predecessors = new ArrayList<>();
         this.type = BasicBlockType.COMMON;
     }
 
@@ -41,21 +41,21 @@ public class BasicBlock extends Bytecode {
         return balance;
     }
 
-    public ArrayList<BasicBlock> getChildren() {
-        return children;
+    public ArrayList<BasicBlock> getSuccessors() {
+        return successors;
     }
 
-    public ArrayList<BasicBlock> getParents() {
-        return parents;
+    public ArrayList<BasicBlock> getPredecessors() {
+        return predecessors;
     }
 
     public int getStackBalance() {
         return stackBalance;
     }
 
-    public void addChild(BasicBlock next){
-        this.children.add(next);
-        next.parents.add(this);
+    public void addSuccessor(BasicBlock next){
+        this.successors.add(next);
+        next.predecessors.add(this);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class BasicBlock extends Bytecode {
     public boolean hasOrphanJump() {
         ArrayList<Opcode> opcodes = getOpcodes();
         Opcode lastOpcode = opcodes.get(opcodes.size() - 1);
-        return lastOpcode.getOpcodeID() == OpcodeID.JUMP && children.isEmpty();
+        return lastOpcode.getOpcodeID() == OpcodeID.JUMP && successors.isEmpty();
     }
 
     public void setType(BasicBlockType type) {
