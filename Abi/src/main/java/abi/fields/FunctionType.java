@@ -4,5 +4,6 @@ public enum FunctionType {
     FUNCTION,
     CONSTRUCTOR,
     FALLBACK,
-    RECEIVE
+    RECEIVE,
+    EVENT
 }

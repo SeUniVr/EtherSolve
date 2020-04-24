@@ -13,4 +13,8 @@ public class RebuiltIOElement {
     public String toString() {
         return String.format("arg%d: %s", index, type);
     }
+
+    public RebuiltSolidityType getType() {
+        return type;
+    }
 }

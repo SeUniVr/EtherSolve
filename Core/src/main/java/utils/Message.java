@@ -10,10 +10,10 @@ public class Message {
     }
 
     public static void printWarning(String message){
-        System.err.println(ANSI_YELLOW + message + ANSI_RESET);
+        System.out.println(ANSI_YELLOW + message + ANSI_RESET);
     }
 
     public static void printDebug(String message){
-        System.err.println(ANSI_GREY + message + ANSI_RESET);
+        System.out.println(ANSI_GREY + message + ANSI_RESET);
     }
 }

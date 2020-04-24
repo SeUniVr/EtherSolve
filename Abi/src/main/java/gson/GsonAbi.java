@@ -54,8 +54,8 @@ public class GsonAbi {
                 type = FunctionType.RECEIVE;
                 break;
             case "event":
-                // TODO consider the events
-                return null;
+                type = FunctionType.EVENT;
+                break;
             default:
                 throw new IllegalStateException("Unexpected value: " + object.get("type").getAsString());
         }
@@ -70,7 +70,7 @@ public class GsonAbi {
         for (JsonElement ioElement : object.get("inputs").getAsJsonArray()){
             function.addInput(gsonBuilder.create().fromJson(ioElement, IOElement.class));
         }
-        if (type != FunctionType.CONSTRUCTOR)
+        if (type == FunctionType.FUNCTION)
             for (JsonElement ioElement : object.get("outputs").getAsJsonArray()){
                 function.addOutput(gsonBuilder.create().fromJson(ioElement, IOElement.class));
             }
@@ -79,27 +79,32 @@ public class GsonAbi {
 
     private IOElement parseIOElement(JsonElement src, GsonBuilder gsonBuilder){
         JsonObject object = src.getAsJsonObject();
+        String name = object.get("name").getAsString();
+        SolidityTypeID id;
+        int n = 0;
+        boolean isArray;
+        boolean isFixed;
+        int arrayLength = 0;
         String type = object.get("type").getAsString();
-        String[] types = type.split("(?=[0-9])",2);
-        SolidityTypeID id = gsonBuilder.create().fromJson(types[0].toUpperCase(), SolidityTypeID.class);
-        SolidityType solidityType;
+        String[] types = type.split("\\[",2);
         if (types.length == 2){
-            if (types[1].endsWith("]")){
-                // It's Array
-                String[] arrElements = types[1].split("\\[");
-                if (arrElements[1].length() == 1)
-                    solidityType = new SolidityType(id, Integer.parseInt(arrElements[0]), true);
-                else
-                    solidityType = new SolidityType(id, Integer.parseInt(arrElements[0]), true, true, Integer.parseInt(arrElements[1].substring(0, arrElements[1].length() - 1)));
-            } else {
-                // It's not
-                solidityType = new SolidityType(id, Integer.parseInt(types[1]));
+            isArray = true;
+            String arrLen = types[1].substring(0, types[1].length() - 1);
+            if (arrLen.equals(""))
+                isFixed = false;
+            else{
+                isFixed = true;
+                arrayLength = Integer.parseInt(arrLen);
             }
+        } else {
+            isArray = false;
+            isFixed = false;
         }
-        else
-            // Simple type
-            solidityType = new SolidityType(id);
-        return new IOElement(object.get("name").getAsString(), solidityType);
+        String[] simpleTypes = types[0].split("(?=[0-9])", 2);
+        id = gsonBuilder.create().fromJson(simpleTypes[0].toUpperCase(), SolidityTypeID.class);
+        if (simpleTypes.length == 2)
+            n = Integer.parseInt(simpleTypes[1]);
+        return new IOElement(name, new SolidityType(id, n, isArray, isFixed, arrayLength));
     }
 
     public <T> T fromJson(String abi, Class<T> type) {

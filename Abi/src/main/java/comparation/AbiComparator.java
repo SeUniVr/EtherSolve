@@ -9,6 +9,9 @@ import abi.fields.SolidityTypeID;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 import rebuiltabi.RebuiltAbi;
 import rebuiltabi.RebuiltAbiFunction;
+import rebuiltabi.fields.RebuiltSolidityType;
+import rebuiltabi.fields.RebuiltSolidityTypeID;
+import utils.Message;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,65 +25,63 @@ public class AbiComparator {
     public static AbiComparison compare(RebuiltAbi rebuiltAbi, Abi downloadedAbi){
         AbiComparison result = new AbiComparison();
         for (AbiFunction function : downloadedAbi.getFunctions()){
-            String hash = "0x" + keccak256(getSignature(function)).substring(0,8);
-            RebuiltAbiFunction candidate = rebuiltAbi.getFunction(hash);
-            if (function.getType() == FunctionType.FALLBACK)
-                candidate = rebuiltAbi.getFunction("");
-            double score = 0;
-            if (candidate != null)
-                score = compare(candidate, function);
-            result.addScore(hash, score);
+            // Compare only functions and fallback
+            if (function.getType() == FunctionType.FUNCTION || function.getType() == FunctionType.FALLBACK){
+                String hash = "0x" + keccak256(getSignature(function)).substring(0,8);
+                RebuiltAbiFunction candidate = rebuiltAbi.getFunction(hash);
+                if (function.getType() == FunctionType.FALLBACK)
+                    candidate = rebuiltAbi.getFunction("");
+                double score = 0;
+                if (candidate != null)
+                    score = compare(candidate, function);
+                result.addScore(hash, score);
+            }
         }
         return result;
     }
 
     private static double compare(RebuiltAbiFunction rebuiltAbiFunction, AbiFunction downloadedFunction){
-        // TODO implement comparison
-        return 0;
-    }
-
-    private static double compare(AbiFunction rebuiltFunction, AbiFunction downloadedFunction, boolean compareOutput){
-        int comparisons = 1;
-        double score = 0;
-        // Compare type
-        if (rebuiltFunction.getType() == downloadedFunction.getType())
-            score++;
-        // Compare inputs
-        int argMin = Math.min(rebuiltFunction.getInputs().size(), downloadedFunction.getInputs().size());
-        int argMax = Math.max(rebuiltFunction.getInputs().size(), downloadedFunction.getInputs().size());
+        double score = 0.;
+        int comparisons = 0;
+        int argMin = Math.min(rebuiltAbiFunction.getInputs().size(), downloadedFunction.getInputs().size());
+        int argMax = Math.max(rebuiltAbiFunction.getInputs().size(), downloadedFunction.getInputs().size());
+        // If there are no inputs then it's a complete match;
+        if (argMax == 0)
+            return 1;
+        // Else checks for the inputs
         for (int i = 0; i < argMin; i++){
-            score += compareIOElement(rebuiltFunction.getInputs().get(i), downloadedFunction.getInputs().get(i));
+            score += compareIOTypes(rebuiltAbiFunction.getInputs().get(i).getType(), downloadedFunction.getInputs().get(i).getType());
         }
         comparisons += argMax;
-        // Compare outputs
-        if (compareOutput) {
-            argMin = Math.min(rebuiltFunction.getOutputs().size(), downloadedFunction.getOutputs().size());
-            argMax = Math.max(rebuiltFunction.getOutputs().size(), downloadedFunction.getOutputs().size());
-            for (int i = 0; i < argMin; i++) {
-                score += compareIOElement(rebuiltFunction.getOutputs().get(i), downloadedFunction.getOutputs().get(i));
-            }
-            comparisons += argMax;
-        }
         return score / comparisons;
     }
 
-    private static double compareIOElement(IOElement rebuiltIO, IOElement downloadedIO) {
-        // If the type is the same then 1
-        if (rebuiltIO.getType().equals(downloadedIO.getType()))
-            return COMPLETE_MATCH;
-        // If the difference is byte-string or int-uint then 0.5
-        if (rebuiltIO.getType().getSolidityTypeID() == SolidityTypeID.UINT && downloadedIO.getType().getSolidityTypeID() == SolidityTypeID.INT)
-            if (rebuiltIO.getType().getN() == downloadedIO.getType().getN())
-                return PARTIAL_MATCH;
-        if (rebuiltIO.getType().getSolidityTypeID() == SolidityTypeID.INT && downloadedIO.getType().getSolidityTypeID() == SolidityTypeID.UINT)
-            if (rebuiltIO.getType().getN() == downloadedIO.getType().getN())
-                return PARTIAL_MATCH;
-        if (rebuiltIO.getType().getSolidityTypeID() == SolidityTypeID.BYTES && downloadedIO.getType().getSolidityTypeID() == SolidityTypeID.STRING)
-            return PARTIAL_MATCH;
-        if (rebuiltIO.getType().getSolidityTypeID() == SolidityTypeID.STRING && downloadedIO.getType().getSolidityTypeID() == SolidityTypeID.BYTES)
-            return PARTIAL_MATCH;
-        // Else no match
-        return NO_MATCH;
+    private static double compareIOTypes(RebuiltSolidityType candidateType, SolidityType referenceType) {
+        if (candidateType.getTypeID() == RebuiltSolidityTypeID.SIMPLE){
+            switch (referenceType.getSolidityTypeID()){
+                case UINT:
+                case INT:
+                    if (candidateType.getN() == referenceType.getN())
+                        return COMPLETE_MATCH;
+                    else
+                        return PARTIAL_MATCH;
+                case ADDRESS:
+                    // Address is 160 bits
+                    return candidateType.getN() == 160 ? COMPLETE_MATCH : PARTIAL_MATCH;
+                case BOOL:
+                    // Bool is 1 bit
+                    return candidateType.getN() == 1 ? COMPLETE_MATCH : PARTIAL_MATCH;
+                default:
+                    return NO_MATCH;
+            }
+
+        } else if (candidateType.getTypeID() == RebuiltSolidityTypeID.COMPLEX){
+            if (referenceType.isArray() || referenceType.getSolidityTypeID() == SolidityTypeID.STRING)
+                return COMPLETE_MATCH;
+            else
+                return NO_MATCH;
+        } else
+            return NO_MATCH;
     }
 
     private static String getSignature(AbiFunction function) {
