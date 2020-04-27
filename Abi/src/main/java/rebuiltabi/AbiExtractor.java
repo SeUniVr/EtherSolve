@@ -1,6 +1,7 @@
 package rebuiltabi;
 
 import abi.fields.FunctionType;
+import comparation.AbiComparator;
 import opcodes.*;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;

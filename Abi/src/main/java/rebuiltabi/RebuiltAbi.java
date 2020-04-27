@@ -25,4 +25,8 @@ public class RebuiltAbi {
                 return function;
         return null;
     }
+
+    public int getLength() {
+        return functions.size();
+    }
 }

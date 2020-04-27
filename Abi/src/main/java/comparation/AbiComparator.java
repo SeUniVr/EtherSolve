@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 
 public class AbiComparator {
 
-    private static final double COMPLETE_MATCH = 1;
-    private static final double PARTIAL_MATCH = 0.5;
-    private static final double NO_MATCH = 0;
+    public static final double COMPLETE_MATCH = 1;
+    public static final double PARTIAL_MATCH = 0.5;
+    public static final double NO_MATCH = 0;
 
     public static AbiComparison compare(RebuiltAbi rebuiltAbi, Abi downloadedAbi){
         AbiComparison result = new AbiComparison();
@@ -31,29 +31,35 @@ public class AbiComparator {
                 RebuiltAbiFunction candidate = rebuiltAbi.getFunction(hash);
                 if (function.getType() == FunctionType.FALLBACK)
                     candidate = rebuiltAbi.getFunction("");
-                double score = 0;
-                if (candidate != null)
+                double[] score = null;
+                if (candidate != null){
+                    result.addMatch();
                     score = compare(candidate, function);
+                } else {
+                    result.addMismatch();
+                }
                 result.addScore(hash, score);
             }
         }
+        result.addMismatchedRebuiltFunctions(rebuiltAbi.getLength() - result.getMatch());
         return result;
     }
 
-    private static double compare(RebuiltAbiFunction rebuiltAbiFunction, AbiFunction downloadedFunction){
-        double score = 0.;
-        int comparisons = 0;
+    private static double[] compare(RebuiltAbiFunction rebuiltAbiFunction, AbiFunction downloadedFunction){
         int argMin = Math.min(rebuiltAbiFunction.getInputs().size(), downloadedFunction.getInputs().size());
         int argMax = Math.max(rebuiltAbiFunction.getInputs().size(), downloadedFunction.getInputs().size());
         // If there are no inputs then it's a complete match;
         if (argMax == 0)
-            return 1;
+            return new double[0];
         // Else checks for the inputs
+        double[] score = new double[argMax];
         for (int i = 0; i < argMin; i++){
-            score += compareIOTypes(rebuiltAbiFunction.getInputs().get(i).getType(), downloadedFunction.getInputs().get(i).getType());
+            score[i] = compareIOTypes(rebuiltAbiFunction.getInputs().get(i).getType(), downloadedFunction.getInputs().get(i).getType());
         }
-        comparisons += argMax;
-        return score / comparisons;
+        for (int i = argMin; i < argMax; i++){
+            score[i] = NO_MATCH;
+        }
+        return score;
     }
 
     private static double compareIOTypes(RebuiltSolidityType candidateType, SolidityType referenceType) {
@@ -94,7 +100,7 @@ public class AbiComparator {
         return signature.toString();
     }
 
-    private static String keccak256(String input) {
+    public static String keccak256(String input) {
         Keccak.Digest256 keccak = new Keccak.Digest256();
         StringBuilder sb = new StringBuilder();
         for (byte b : keccak.digest(input.getBytes()))
