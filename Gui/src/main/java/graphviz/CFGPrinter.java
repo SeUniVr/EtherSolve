@@ -11,10 +11,11 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class CFGPrinter {
-    private static final String DEFAULT_OUTPUT_PATH = "./reports/";
-    private static final String DEFAULT_TEMPLATE = "./report-template/template.html";
+    private static final String DEFAULT_OUTPUT_PATH = "./outputs/reports/";
+    private static final String DEFAULT_TEMPLATE = "report-template/template.html";
     public static final String PNG_FORMAT = "png";
     public static final String SVG_FORMAT = "svg";
 
@@ -139,7 +140,7 @@ public class CFGPrinter {
         String current_datetime = LocalDateTime.now().toString();
 
         String svg_xml = loadFile(svg_filename);
-        String template = loadFile(DEFAULT_TEMPLATE);
+        String template = loadFile(Objects.requireNonNull(CFGPrinter.class.getClassLoader().getResource(DEFAULT_TEMPLATE)).getPath());
 
         Map<String, String> model = new HashMap<>();
         model.put("svg_xml", svg_xml);

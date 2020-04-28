@@ -1,8 +1,5 @@
 package comparation;
 
-import abi.AbiFunction;
-import rebuiltabi.RebuiltAbiFunction;
-
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -96,5 +93,13 @@ public class AbiComparison {
 
     public void addMismatchedRebuiltFunctions(int i) {
         totalRebuiltFunctions += i;
+    }
+
+    public int getTotalOriginalFunctions() {
+        return totalOriginalFunctions;
+    }
+
+    public int getTotalRebuiltFunctions() {
+        return totalRebuiltFunctions;
     }
 }
