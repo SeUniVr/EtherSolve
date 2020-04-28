@@ -126,8 +126,14 @@ public class Contract {
         // 6080604052 or 6060604052
         // ?= means "keep the regexp on te found match"
         String[] temp = binary.split("(?=60(60|80)604052)", 2);
-        constructorCode = temp[0];
-        runtimeCode = temp[1];
+        if (temp.length == 2) {
+            constructorCode = temp[0];
+            runtimeCode = temp[1];
+        } else {
+            // Only runtime code
+            constructorCode = "";
+            runtimeCode = temp[0];
+        }
     }
 
     @Override

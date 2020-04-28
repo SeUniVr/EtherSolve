@@ -29,19 +29,28 @@ public class AbiExtractor {
         RebuiltAbi rebuiltAbi = new RebuiltAbi();
 
         src.getRuntimeCfg().forEach(basicBlock -> {
-            if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4),
-                    new EQOpcode(0), null, new JumpIOpcode(0)))
-                rebuiltAbi.addFunction(parseFunction(src.getRuntimeCfg(), basicBlock));
-            else if (basicBlock.getType() == BasicBlockType.FALLBACK)
+            if (basicBlock.getType() == BasicBlockType.DISPATCHER) {
+                // Pattern 1: DUP1, PUSH4, EQ, *, JUMPI
+                if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4),
+                        new EQOpcode(0), null, new JumpIOpcode(0))) {
+                    String hash = "0x" + basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 4).getBytes().substring(2);
+                    rebuiltAbi.addFunction(parseFunction(basicBlock, hash));
+                }
+                // Pattern 2: PUSH4, DUP2, EQ, *, JUMPI
+                else if (basicBlock.checkPattern(new PushOpcode(0, 4), new DupOpcode(0, 2),
+                        new EQOpcode(0), null, new JumpIOpcode(0))) {
+                    String hash = "0x" + basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 5).getBytes().substring(2);
+                    rebuiltAbi.addFunction(parseFunction(basicBlock, hash));
+                }
+            } else if (basicBlock.getType() == BasicBlockType.FALLBACK)
                 rebuiltAbi.addFunction(parseFallback(src.getRuntimeCfg(), basicBlock));
         });
 
         return rebuiltAbi;
     }
 
-    private static RebuiltAbiFunction parseFunction(Cfg cfg, BasicBlock root){
+    private static RebuiltAbiFunction parseFunction(BasicBlock root, String hash){
         // Get hash and initialize
-        String hash = "0x" + root.getOpcodes().get(root.getOpcodes().size() - 4).getBytes().substring(2);
         RebuiltAbiFunction rebuiltAbiFunction = new RebuiltAbiFunction(hash, FunctionType.FUNCTION);
 
         // The first block is the successor with higher offset
