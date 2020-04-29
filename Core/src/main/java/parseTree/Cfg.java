@@ -9,7 +9,6 @@ import opcodes.systemOpcodes.ReturnOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
-import utils.Pair;
 import utils.Triplet;
 
 import java.util.*;
@@ -26,6 +25,8 @@ public class Cfg implements Iterable<BasicBlock> {
             OpcodeID.INVALID
     };
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
+    private static final int LOOP_DEPTH = 30;
+    private static final boolean REMOVE_ORPHAN_BLOCKS = true; // TODO experimental
 
     private final TreeMap<Long, BasicBlock> basicBlocks;
     private final Bytecode mBytecode;
@@ -50,6 +51,8 @@ public class Cfg implements Iterable<BasicBlock> {
         calculateSuccessors();
         resolveOrphanJumps();
         removeRemainingData();
+        if (REMOVE_ORPHAN_BLOCKS)
+            removeOrphanBlocks();
         detectDispatcher();
         detectFallBack();
         validateCfg();
@@ -140,13 +143,15 @@ public class Cfg implements Iterable<BasicBlock> {
         HashSet<Triplet<Long, Long, SymbolicExecutionStack>> visited = new HashSet<>();
         BasicBlock current = basicBlocks.firstEntry().getValue();
         SymbolicExecutionStack stack = new SymbolicExecutionStack();
-        Stack<Pair<BasicBlock, SymbolicExecutionStack>> queue = new Stack<>();
-        queue.push(new Pair<>(current, stack));
+        int dfs_depth = 0;
+        Stack<Triplet<BasicBlock, SymbolicExecutionStack, Integer>> queue = new Stack<>();
+        queue.push(new Triplet<>(current, stack, dfs_depth));
 
         while (! queue.isEmpty()){
-            Pair<BasicBlock, SymbolicExecutionStack> element = queue.pop();
-            current = element.getKey();
-            stack = element.getValue();
+            Triplet<BasicBlock, SymbolicExecutionStack, Integer> element = queue.pop();
+            current = element.getElem1();
+            stack = element.getElem2();
+            dfs_depth = element.getElem3();
 
             // Execute all opcodes except for the last
             for (int i = 0; i < current.getOpcodes().size() - 1; i++) {
@@ -177,20 +182,24 @@ public class Cfg implements Iterable<BasicBlock> {
             stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));
 
             // Add next elements for DFS
-            if (! (lastOpcode instanceof JumpOpcode)){
-                for (BasicBlock successor : current.getSuccessors()){
-                    Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), successor.getOffset(), stack);
-                    if (! visited.contains(edge)){
+            if (dfs_depth < LOOP_DEPTH) {
+                if (!(lastOpcode instanceof JumpOpcode)) {
+                    for (BasicBlock successor : current.getSuccessors()) {
+                        Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), successor.getOffset(), stack);
+                        if (!visited.contains(edge)) {
+                            visited.add(edge);
+                            queue.push(new Triplet<>(successor, stack.copy(), dfs_depth + 1));
+                        }
+                    }
+                } else if (nextOffset != 0) {
+                    Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), nextOffset, stack);
+                    if (!visited.contains(edge)) {
                         visited.add(edge);
-                        queue.push(new Pair<>(successor, stack.copy()));
+                        queue.push(new Triplet<>(basicBlocks.get(nextOffset), stack.copy(), dfs_depth + 1));
                     }
                 }
-            } else if (nextOffset != 0){
-                Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), nextOffset, stack);
-                if (! visited.contains(edge)){
-                    visited.add(edge);
-                    queue.push(new Pair<>(basicBlocks.get(nextOffset), stack.copy()));
-                }
+            } else {
+                buildReport.addLoopDepthExceededError(current.getOffset());
             }
         }
     }
@@ -256,6 +265,20 @@ public class Cfg implements Iterable<BasicBlock> {
         }
         if (trees != 1)
             buildReport.addMultipleRootNodesError(trees);
+    }
+
+    private void removeOrphanBlocks(){
+        if (buildReport.getTotalJumpError() == 0) {
+            final ArrayList<Long> offsetList = new ArrayList<>();
+            basicBlocks.forEach((offset, block) -> offsetList.add(offset));
+            long firstOffset = offsetList.get(offsetList.size() - 1);
+            for (Long offset : offsetList) {
+                if (basicBlocks.get(offset).getPredecessors().isEmpty() && offset != 0) {
+                    basicBlocks.remove(offset);
+                }
+            }
+            mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstOffset * 2));
+        }
     }
 
     @Override

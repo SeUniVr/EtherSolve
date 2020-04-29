@@ -8,12 +8,14 @@ public class CfgBuildReport {
     private int directJumpTargetErrors;
     private int orphanJumpTargetNullErrors;
     private int orphanJumpTargetUnknownErrors;
+    private int loopDepthExceededError;
     private int multipleRootNodesError;
 
     public CfgBuildReport(){
         directJumpTargetErrors = 0;
         orphanJumpTargetNullErrors = 0;
         orphanJumpTargetUnknownErrors = 0;
+        loopDepthExceededError = 0;
         multipleRootNodesError = 0;
     }
 
@@ -32,6 +34,11 @@ public class CfgBuildReport {
         Message.printError(String.format("Orphan jump unresolvable at %d, symbolic execution found an unknown value\n%s", offset, stack));
     }
 
+    public void addLoopDepthExceededError(long offset) {
+        loopDepthExceededError++;
+        Message.printWarning(String.format("Loop depth exceeded at %d", offset));
+    }
+
     public void addMultipleRootNodesError(int trees) {
         multipleRootNodesError++;
         Message.printWarning(String.format("Warning: the CFG has %d root nodes (a.k.a. nodes without predecessors)", trees));
@@ -43,5 +50,9 @@ public class CfgBuildReport {
                 "\nOrphan jump target null errors: " + orphanJumpTargetNullErrors +
                 "\nOrphan jump target unknown errors: " + orphanJumpTargetUnknownErrors +
                 "\nMultiple root nodes error: " + multipleRootNodesError;
+    }
+
+    public int getTotalJumpError(){
+        return directJumpTargetErrors + orphanJumpTargetUnknownErrors + orphanJumpTargetNullErrors + loopDepthExceededError;
     }
 }
