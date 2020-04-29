@@ -41,4 +41,12 @@ public class GVBlock {
     public boolean isFallBackBlock() {
         return mBasicBlock.getType() == BasicBlockType.FALLBACK;
     }
+
+    public boolean isRootBlock(){
+        return mBasicBlock.getOffset() == 0;
+    }
+
+    public boolean isLeafBlock() {
+        return mBasicBlock.getSuccessors().size() == 0;
+    }
 }
