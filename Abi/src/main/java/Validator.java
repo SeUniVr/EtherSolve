@@ -11,11 +11,14 @@ import utils.Pair;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class Validator {
     private final static String ADDRESS_CSV = "./inputs/export-verified-contractaddress-opensource-license.csv";
-    private final static String OUTPUT_CSV = "./outputs/abi-comparison/report.csv";
+    private final static String OUTPUT_CSV = "./outputs/abi-comparison/report" +
+            DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
     private final static int N = 100;
 
     public static void main(String[] args) {
@@ -27,10 +30,10 @@ public class Validator {
             String address = entry.getKey();
             if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
                 continue;
-            if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
+            /*if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
                 continue;
             if (address.equals("0x971E89e5202e2E4d4cB16Bc89F742D151931559d"))
-                continue;
+                continue;*/
             String name = entry.getValue();
             System.out.println(String.format("Processing contract %d/%d: %s", i, dataset.size(), address));
             System.out.flush();
@@ -80,7 +83,6 @@ public class Validator {
             sb.append('"');
             sb.append(address);
             sb.append("\",\"");
-            System.out.println(dataset.get(i));
             sb.append(dataset.get(i).getValue());
             sb.append("\",\"");
             sb.append(comparison.getTotalOriginalFunctions());
@@ -99,7 +101,6 @@ public class Validator {
             sb.append("\",\"");
             sb.append(comparison.recall(AbiComparison.FUNCTIONS_INPUTS_SIZE));
             sb.append("\"\n");
-            System.out.println(sb.toString());
         }
         sb.setLength(sb.length() - 1);
         String output = sb.toString();
