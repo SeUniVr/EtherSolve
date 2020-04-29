@@ -43,7 +43,7 @@ public class GVBlock {
     }
 
     public boolean isRootBlock(){
-        return mBasicBlock.getOffset() == 0;
+        return mBasicBlock.getPredecessors().isEmpty();
     }
 
     public boolean isLeafBlock() {

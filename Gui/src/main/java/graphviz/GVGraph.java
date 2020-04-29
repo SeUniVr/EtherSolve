@@ -51,10 +51,10 @@ public class GVGraph {
         // Add nodes
         for (GVBlock block : blocks) {
             s += block;
-            if (block.isRootBlock())
-                s += " [ color=forestgreen ]";
             if (block.isLeafBlock())
                 s += " [ color=red ]";
+            if (block.isRootBlock())
+                s += " [ color=forestgreen ]";
             if(block.isDispatcherBlock())
                 s += " [ fillcolor=lemonchiffon ]";
             if (block.isFallBackBlock())
