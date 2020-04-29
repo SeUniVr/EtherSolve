@@ -186,9 +186,9 @@ public class Contract {
             throw new SolidityVersionUnknownException("Version unknown or before 0.5.9");
         String version = metadata.substring(metadata.length() - 10, metadata.length() - 4);
         int v1, v2, v3;
-        v1 = Integer.parseInt(version.substring(0,2));
-        v2 = Integer.parseInt(version.substring(2,4));
-        v3 = Integer.parseInt(version.substring(4));
+        v1 = Integer.parseInt(version.substring(0,2), 16);
+        v2 = Integer.parseInt(version.substring(2,4), 16);
+        v3 = Integer.parseInt(version.substring(4), 16);
         return String.valueOf(v1) + '.' + v2 + '.' + v3;
     }
 
