@@ -28,8 +28,6 @@ public class AbiExtractor {
         RebuiltAbi rebuiltAbi = new RebuiltAbi();
 
         src.getRuntimeCfg().forEach(basicBlock -> {
-            if (basicBlock.getType() == BasicBlockType.FALLBACK)
-                System.out.println(basicBlock.getOffset() + " <- FALLBACK");
             if (basicBlock.getType() == BasicBlockType.DISPATCHER) {
                 // Pattern 1: DUP1, PUSH4, EQ, *, JUMPI
                 if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4),
@@ -43,6 +41,13 @@ public class AbiExtractor {
                     String hash = "0x" + basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 5).getBytes().substring(2);
                     rebuiltAbi.addFunction(parseFunction(basicBlock, hash));
                 }
+                // Pattern 1: DUP1, PUSH3, EQ, *, JUMPI
+                // If the hash starts with 00 then solc uses a PUSH3 instead of a PUSH4
+                if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 3),
+                        new EQOpcode(0), null, new JumpIOpcode(0))) {
+                    String hash = "0x00" + basicBlock.getOpcodes().get(basicBlock.getOpcodes().size() - 4).getBytes().substring(2);
+                    rebuiltAbi.addFunction(parseFunction(basicBlock, hash));
+                }
             } else if (basicBlock.getType() == BasicBlockType.FALLBACK)
                 rebuiltAbi.addFunction(parseFallback(src.getRuntimeCfg(), basicBlock));
         });
@@ -51,7 +56,6 @@ public class AbiExtractor {
     }
 
     private static RebuiltAbiFunction parseFunction(BasicBlock root, String hash){
-        System.out.println("Parsing " + hash);
         // Get hash and initialize
         RebuiltAbiFunction rebuiltAbiFunction = new RebuiltAbiFunction(hash, FunctionType.FUNCTION);
 
