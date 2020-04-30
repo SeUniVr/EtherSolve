@@ -90,4 +90,12 @@ public class BasicBlock extends Bytecode {
     public BasicBlockType getType() {
         return type;
     }
+
+    @Override
+    public String toString() {
+        if (type == BasicBlockType.EXIT)
+            return getOffset() + ": EXIT BLOCK";
+        else
+            return super.toString();
+    }
 }

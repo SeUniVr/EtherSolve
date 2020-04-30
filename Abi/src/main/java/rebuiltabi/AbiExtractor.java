@@ -1,8 +1,7 @@
 package rebuiltabi;
 
 import abi.fields.FunctionType;
-import comparation.AbiComparator;
-import opcodes.*;
+import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.EQOpcode;
 import opcodes.arithmeticOpcodes.unaryArithmeticOpcodes.IsZeroOpcode;
@@ -29,6 +28,8 @@ public class AbiExtractor {
         RebuiltAbi rebuiltAbi = new RebuiltAbi();
 
         src.getRuntimeCfg().forEach(basicBlock -> {
+            if (basicBlock.getType() == BasicBlockType.FALLBACK)
+                System.out.println(basicBlock.getOffset() + " <- FALLBACK");
             if (basicBlock.getType() == BasicBlockType.DISPATCHER) {
                 // Pattern 1: DUP1, PUSH4, EQ, *, JUMPI
                 if (basicBlock.checkPattern(new DupOpcode(0, 1), new PushOpcode(0, 4),
@@ -50,6 +51,7 @@ public class AbiExtractor {
     }
 
     private static RebuiltAbiFunction parseFunction(BasicBlock root, String hash){
+        System.out.println("Parsing " + hash);
         // Get hash and initialize
         RebuiltAbiFunction rebuiltAbiFunction = new RebuiltAbiFunction(hash, FunctionType.FUNCTION);
 

@@ -5,9 +5,6 @@ import SolidityInfo.SolidityVersionUnknownException;
 import utils.Message;
 import utils.Pair;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class Contract {
     private final String name;
     private Bytecode constructor;
@@ -34,16 +31,24 @@ public class Contract {
         this.metadata = "";
     }
 
-    public Contract(String name, String binary){
+    public Contract(String name, String binary, boolean isOnlyRuntime){
         this(name);
         Pair<String, String> strippedCode = removeCompilationInfo(binary);
         String remainingCode = strippedCode.getKey();
-        splitBytecode(remainingCode);
+        if (isOnlyRuntime){
+            runtimeCode = remainingCode;
+        } else {
+            splitBytecode(remainingCode);
+        }
         constructor = BytecodeParser.getInstance().parse(constructorCode);
         if (constructor.getRemainingData() != null && ! constructor.getRemainingData().equals(""))
             Message.printWarning("Warning: constructor has remaining data");
         constructorRemainingData = strippedCode.getValue();
         runtime = BytecodeParser.getInstance().parse(runtimeCode);
+    }
+
+    public Contract(String name, String binary){
+        this(name, binary, false);
     }
 
     /**

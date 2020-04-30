@@ -25,7 +25,7 @@ public class Cfg implements Iterable<BasicBlock> {
             OpcodeID.INVALID
     };
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
-    private static final int LOOP_DEPTH = 30;
+    private static final int LOOP_DEPTH = 1000;
     private static final boolean REMOVE_ORPHAN_BLOCKS = true; // TODO experimental
 
     private final TreeMap<Long, BasicBlock> basicBlocks;

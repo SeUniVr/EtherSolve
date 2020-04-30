@@ -7,8 +7,6 @@ import parseTree.Contract;
 import rebuiltabi.AbiExtractor;
 import rebuiltabi.RebuiltAbi;
 
-import java.io.IOException;
-
 public class MainAbi {
     public static void main(String[] args) {
         String pippoBytecode = "608060405234801561001057600080fd5b5061020c806100206000396000f3fe608060405234801561001057600080fd5b506004361061005b5760003560e01c80632a1bbc3414610077578063b54ac1d614610095578063d96073cf146100c3578063e7a721cf14610116578063ee7563111461015f5761005c565b5b60006188889050619999811015610074576001810190505b50005b61007f6101a1565b6040518082815260200191505060405180910390f35b6100c1600480360360208110156100ab57600080fd5b81019080803590602001909291905050506101ab565b005b6100f9600480360360408110156100d957600080fd5b8101908080359060200190929190803590602001909291905050506101ae565b604051808381526020018281526020019250505060405180910390f35b6101426004803603602081101561012c57600080fd5b81019080803590602001909291905050506101be565b604051808381526020018281526020019250505060405180910390f35b61018b6004803603602081101561017557600080fd5b81019080803590602001909291905050506101cc565b6040518082815260200191505060405180910390f35b600061cccc905090565b50565b6000808284915091509250929050565b600080828391509150915091565b600081905091905056fea2646970667358221220c15116122aebe72f8b57df60c585f28a1f95a1a181e4997b5f6c30f0a278091d64736f6c63430006060033";
@@ -27,18 +25,19 @@ public class MainAbi {
 
         String address = "0x8A3C03Dfcacc3677E838d4E3159f5fD411156E5f";
         String addressBitnet = "0x6Cf0118ffe40d766f8eF3759ea56A2e31935e2c8";
+        String lowFunction = "0x78a9EBd3703E1439C388a31EBe82239BC6614458";
 
         try {
-            String bytecode = EtherScanDownloader.getContractBytecode(address);
+            String bytecode = EtherScanDownloader.getContractBytecode(lowFunction);
             System.out.println(bytecode);
-            Abi abi = EtherScanDownloader.getContractAbi(address);
+            Abi abi = EtherScanDownloader.getContractAbi(lowFunction);
 
-            Contract contract = new Contract("Pippo", bytecode);
+            Contract contract = new Contract("Pippo", bytecode, true);
             RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
             //abi2 = AbiDownloader.getInstance().getContractAbi(elevateSwapAddress);
 
             System.out.println(new GsonAbi().toJson(rebuiltAbi));
-            System.out.println(new GsonAbi().toJson(abi));
+            //System.out.println(new GsonAbi().toJson(abi));
 
             AbiComparison comparison = AbiComparator.compare(rebuiltAbi, abi);
             System.out.println(comparison);

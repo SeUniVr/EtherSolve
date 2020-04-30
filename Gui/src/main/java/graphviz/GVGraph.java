@@ -43,34 +43,34 @@ public class GVGraph {
 
     @Override
     public String toString() {
-        String s = "digraph " + GRAPH_NAME + " {\n" +
-                PROPRIETIES; //+ "\n" +
+        StringBuilder s = new StringBuilder("digraph " + GRAPH_NAME + " {\n" +
+                PROPRIETIES); //+ "\n" +
                 // "node [shape = point, color=white, fontcolor=white]; start;\n";
 
-        s += "\nnode [" + DEFAULT_NODE_STYLE + "];\n";
+        s.append("\nnode [" + DEFAULT_NODE_STYLE + "];\n");
         // Add nodes
         for (GVBlock block : blocks) {
-            s += block;
+            s.append(block);
             if(block.isDispatcherBlock())
-                s += " [ fillcolor=lemonchiffon ]";
+                s.append(" [ fillcolor=lemonchiffon ]");
 
             if (block.isRootBlock())
-                s += " [ shape=Msquare fillcolor=gold]";
+                s.append(" [ shape=Msquare fillcolor=gold]");
             else if (block.isLeafBlock())
-                s += " [ shape=Msquare color=crimson ]";
+                s.append(" [ shape=Msquare color=crimson ]");
             else if (block.isFallBackBlock())
-                s += " [ fillcolor=orange ]";
+                s.append(" [ fillcolor=orange ]");
             else if (block.isExitBlock())
-                s += " [ fillcolor=crimson ]";
-            s += ";\n";
+                s.append(" [ fillcolor=crimson ]");
+            s.append(";\n");
         }
 
         // Add edges
         for (GVEdge edge : edges) {
-            s += edge;
+            s.append(edge);
         }
 
-        s += "}";
-        return s;
+        s.append("}");
+        return s.toString();
     }
 }
