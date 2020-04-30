@@ -56,6 +56,7 @@ public class Cfg implements Iterable<BasicBlock> {
         detectDispatcher();
         detectFallBack();
         validateCfg();
+        addSuperNode();
     }
 
     private void generateBasicBlocks(Bytecode bytecode) {
@@ -279,6 +280,15 @@ public class Cfg implements Iterable<BasicBlock> {
             }
             mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstOffset * 2));
         }
+    }
+
+    private void addSuperNode(){
+        BasicBlock superNode =  new BasicBlock(basicBlocks.lastKey() + 1);
+        superNode.setType(BasicBlockType.EXIT);
+        for (BasicBlock bb : basicBlocks.values())
+            if(bb.getSuccessors().isEmpty())
+                bb.addSuccessor(superNode);
+        basicBlocks.put(superNode.getOffset(), superNode);
     }
 
     @Override

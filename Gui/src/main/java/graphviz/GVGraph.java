@@ -5,8 +5,8 @@ import java.util.Set;
 
 public class GVGraph {
     private static final String GRAPH_NAME = "G";
-    private static final String PROPRIETIES = "rankdir=UD;";
-    private static final String DEFAULT_NODE_STYLE = "shape=box style=filled color=black fillcolor=gray " +
+    private static final String PROPRIETIES = "bgcolor=transparent rankdir=UD;";
+    private static final String DEFAULT_NODE_STYLE = "shape=box style=filled color=black fillcolor=white " + //snow2
                                                     "fontname=arial fontcolor=black";
     private static final String FINAL_STATE_NODE_STYLE = "shape = doublecircle, color=black, fontcolor=black";
 
@@ -51,14 +51,17 @@ public class GVGraph {
         // Add nodes
         for (GVBlock block : blocks) {
             s += block;
-            if (block.isLeafBlock())
-                s += " [ color=red ]";
-            if (block.isRootBlock())
-                s += " [ color=forestgreen ]";
             if(block.isDispatcherBlock())
                 s += " [ fillcolor=lemonchiffon ]";
-            if (block.isFallBackBlock())
-                s += " [ fillcolor=coral ]";
+
+            if (block.isRootBlock())
+                s += " [ shape=Msquare fillcolor=gold]";
+            else if (block.isLeafBlock())
+                s += " [ shape=Msquare color=crimson ]";
+            else if (block.isFallBackBlock())
+                s += " [ fillcolor=orange ]";
+            else if (block.isExitBlock())
+                s += " [ fillcolor=crimson ]";
             s += ";\n";
         }
 

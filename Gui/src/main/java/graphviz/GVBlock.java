@@ -42,11 +42,16 @@ public class GVBlock {
         return mBasicBlock.getType() == BasicBlockType.FALLBACK;
     }
 
-    public boolean isRootBlock(){
+    public boolean isRootBlock() {
         return mBasicBlock.getPredecessors().isEmpty();
     }
 
     public boolean isLeafBlock() {
-        return mBasicBlock.getSuccessors().size() == 0;
+        return mBasicBlock.getType() != BasicBlockType.EXIT &&
+                mBasicBlock.getSuccessors().get(0).getType() == BasicBlockType.EXIT;
+    }
+
+    public boolean isExitBlock() {
+        return mBasicBlock.getType() == BasicBlockType.EXIT;
     }
 }
