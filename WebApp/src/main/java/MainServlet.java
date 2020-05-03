@@ -16,6 +16,7 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("POST REQUEST " + req);
         String userName = req.getParameter("name").trim();
         if(userName == null || "".equals(userName)){
             userName = "Guest";
