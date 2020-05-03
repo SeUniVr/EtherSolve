@@ -28,9 +28,9 @@ public class Validator {
         int i = 1;
         for (Pair<String, String> entry : dataset){
             String address = entry.getKey();
-            if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
+            /*if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
                 continue;
-            /*if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
+            if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
                 continue;
             if (address.equals("0x971E89e5202e2E4d4cB16Bc89F742D151931559d"))
                 continue;*/
@@ -40,7 +40,7 @@ public class Validator {
             try {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);
-                Contract contract = new Contract(name, bytecode);
+                Contract contract = new Contract(name, bytecode, true);
                 RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));
             } catch (IOException e) {

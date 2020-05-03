@@ -25,7 +25,7 @@ public class Cfg implements Iterable<BasicBlock> {
             OpcodeID.INVALID
     };
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
-    private static final int LOOP_DEPTH = 1000;
+    private static final int LOOP_DEPTH = 100;
     private static final boolean REMOVE_ORPHAN_BLOCKS = true; // TODO experimental
 
     private final TreeMap<Long, BasicBlock> basicBlocks;
@@ -51,7 +51,7 @@ public class Cfg implements Iterable<BasicBlock> {
         calculateSuccessors();
         resolveOrphanJumps();
         removeRemainingData();
-        if (REMOVE_ORPHAN_BLOCKS)
+        //if (REMOVE_ORPHAN_BLOCKS && buildReport.getTotalJumpError() == 0)
             removeOrphanBlocks();
         detectDispatcher();
         detectFallBack();
@@ -269,17 +269,15 @@ public class Cfg implements Iterable<BasicBlock> {
     }
 
     private void removeOrphanBlocks(){
-        if (buildReport.getTotalJumpError() == 0) {
-            final ArrayList<Long> offsetList = new ArrayList<>();
-            basicBlocks.forEach((offset, block) -> offsetList.add(offset));
-            long firstOffset = offsetList.get(offsetList.size() - 1);
-            for (Long offset : offsetList) {
-                if (basicBlocks.get(offset).getPredecessors().isEmpty() && offset != 0) {
-                    basicBlocks.remove(offset);
-                }
+        final ArrayList<Long> offsetList = new ArrayList<>();
+        basicBlocks.forEach((offset, block) -> offsetList.add(offset));
+        long firstOffset = offsetList.get(offsetList.size() - 1);
+        for (Long offset : offsetList) {
+            if (basicBlocks.get(offset).getPredecessors().isEmpty() && offset != 0) {
+                basicBlocks.remove(offset);
             }
-            mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstOffset * 2));
         }
+        mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstOffset * 2));
     }
 
     private void addSuperNode(){

@@ -2,4 +2,5 @@ rootProject.name = 'EtherSolve'
 include 'Gui'
 include 'Core'
 include 'Abi'
+include 'WebApp'
 
