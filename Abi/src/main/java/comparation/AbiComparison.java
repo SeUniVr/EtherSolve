@@ -56,35 +56,43 @@ public class AbiComparison {
     }
 
     private double countCorrectSignatures(int depth){
-        double correctSignature = 0;
+        double correctSignatures = 0;
         switch (depth){
             case 0:
-                correctSignature = foundFunctions;
+                correctSignatures = foundFunctions;
                 break;
             case 1:
                 for (String hash : functionsScore.keySet()) {
+                    boolean isCorrect = true;
                     if (functionsScore.get(hash) != null) {
                         for (double score : functionsScore.get(hash))
-                            if (score == AbiComparator.NO_MATCH)
+                            if (score == AbiComparator.NO_MATCH){
+                                isCorrect = false;
                                 break;
-                        correctSignature++;
+                            }
+                        if (isCorrect)
+                            correctSignatures++;
                     }
                 }
                 break;
             case 2:
                 for (String hash : functionsScore.keySet()) {
+                    boolean isCorrect = true;
                     if (functionsScore.get(hash) != null) {
                         for (double score : functionsScore.get(hash))
-                            if (score != AbiComparator.COMPLETE_MATCH)
+                            if (score != AbiComparator.COMPLETE_MATCH) {
+                                isCorrect = false;
                                 break;
-                        correctSignature++;
+                            }
+                        if (isCorrect)
+                            correctSignatures++;
                     }
                 }
                 break;
             default:
                 throw new IllegalArgumentException("depth must be in range [0-2]");
         }
-        return correctSignature;
+        return correctSignatures;
     }
 
     public int getMatch() {
