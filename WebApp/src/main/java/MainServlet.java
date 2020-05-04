@@ -10,13 +10,11 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setAttribute("name", "Filippo");
-        req.getRequestDispatcher("main.jsp").forward(req, resp);
+        req.getRequestDispatcher("blank.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("POST REQUEST " + req);
         String userName = req.getParameter("name").trim();
         if(userName == null || "".equals(userName)){
             userName = "Guest";
