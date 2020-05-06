@@ -45,12 +45,9 @@ public class CfgBuilder {
         TreeMap<Long, BasicBlock> basicBlocks = generateBasicBlocks(bytecode);
         calculateSuccessors(basicBlocks, buildReport);
         resolveOrphanJumps(basicBlocks, buildReport);
-        // TODO merge them?
         String removedData = removeRemainingData(basicBlocks, buildReport, bytecode);
         if (REMOVE_ORPHAN_BLOCKS) {
-            String orphanBlocksData = removeOrphanBlocks(basicBlocks, buildReport, bytecode);
-            if (orphanBlocksData != null)
-                removedData = orphanBlocksData;
+            removedData = removeOrphanBlocks(basicBlocks, buildReport, bytecode);
         }
         // END_TODO
         detectDispatcher(basicBlocks);
@@ -59,7 +56,7 @@ public class CfgBuilder {
         addSuperNode(basicBlocks);
 
         // CREATE AND RETURN THE CFG
-        return new Cfg(bytecode, basicBlocks, remainingData, buildReport);
+        return new Cfg(bytecode, basicBlocks, removedData + remainingData, buildReport);
     }
 
     private static TreeMap<Long, BasicBlock> generateBasicBlocks(Bytecode bytecode) {
@@ -225,19 +222,19 @@ public class CfgBuilder {
     }
 
     private static String removeOrphanBlocks(TreeMap<Long, BasicBlock> basicBlocks, CfgBuildReport buildReport, Bytecode bytecode){
+        long firstOffset = basicBlocks.lastKey() + basicBlocks.lastEntry().getValue().getLength();
         if (buildReport.getTotalJumpError() == 0) {
             final ArrayList<Long> offsetList = new ArrayList<>();
             basicBlocks.forEach((offset, block) -> offsetList.add(offset));
-            long firstOffset = offsetList.get(offsetList.size() - 1);
             for (Long offset : offsetList) {
                 if (basicBlocks.get(offset).getPredecessors().isEmpty() && offset != 0) {
-                    basicBlocks.remove(offset);
+                    firstOffset = Math.min(firstOffset, offset);
                 }
+                if (offset >= firstOffset)
+                    basicBlocks.remove(offset);
             }
-            return bytecode.getBytes().substring((int) firstOffset * 2);
         }
-        else
-            return null;
+        return bytecode.getBytes().substring((int) firstOffset * 2);
     }
 
     private static void detectDispatcher(TreeMap<Long, BasicBlock> basicBlocks){
@@ -290,7 +287,7 @@ public class CfgBuilder {
     }
 
     private static void addSuperNode(TreeMap<Long, BasicBlock> basicBlocks){
-        BasicBlock superNode =  new BasicBlock(basicBlocks.lastKey() + 1);
+        BasicBlock superNode =  new BasicBlock(basicBlocks.lastKey() + basicBlocks.lastEntry().getValue().getLength());
         superNode.setType(BasicBlockType.EXIT);
         for (BasicBlock bb : basicBlocks.values())
             if(bb.getSuccessors().isEmpty())

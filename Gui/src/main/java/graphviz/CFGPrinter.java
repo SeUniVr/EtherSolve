@@ -131,12 +131,10 @@ public class CFGPrinter {
      * @param svg_filename path of generated cfg
      * @param solidity_version solidity version of the current contract
      * @param elapsed_time elapsed time
-     * @param data_pre_cfg hexadecimal data pre cfg
-     * @param data_post_cfg hexadecimal data post cfg
+     * @param remainingData hexadecimal data
      * @return path of generated report
      */
-    public static String createReport(String svg_filename, String solidity_version, long elapsed_time,
-                                      String data_pre_cfg, String data_post_cfg){
+    public static String createReport(String svg_filename, String solidity_version, long elapsed_time, String remainingData){
         String current_datetime = LocalDateTime.now().toString();
 
         String svg_xml = loadFile(svg_filename);
@@ -147,10 +145,8 @@ public class CFGPrinter {
         model.put("datetime", current_datetime);
         model.put("solidity_version", solidity_version);
         model.put("elapsed_time", elapsed_time + " ms");
-        model.put("data_pre_cfg", data_pre_cfg);
-        model.put("data_post_cfg", data_post_cfg);
-        model.put("decoded_data_pre_cfg", hexToAsciiString(data_pre_cfg));
-        model.put("decoded_data_post_cfg", hexToAsciiString(data_post_cfg));
+        model.put("remaining_data", remainingData);
+        model.put("decoded_remaining_data", hexToAsciiString(remainingData));
 
         for (String key : model.keySet()){
             template = template.replace("%{" + key + "}", model.get(key));
