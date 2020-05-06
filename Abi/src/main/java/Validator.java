@@ -106,8 +106,8 @@ public class Validator {
         sb.setLength(sb.length() - 1);
         String output = sb.toString();
         File file = new File(OUTPUT_CSV);
-        if (! file.getParentFile().mkdirs())
-            Message.printDebug("File already exists: it will be overwritten");
+        if (file.getParentFile().mkdirs())
+            Message.printDebug("Output folder will be created");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
             out.write(output);
         } catch (IOException e) {

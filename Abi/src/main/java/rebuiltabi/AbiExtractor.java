@@ -17,6 +17,7 @@ import parseTree.Contract;
 import rebuiltabi.fields.RebuiltIOElement;
 import rebuiltabi.fields.RebuiltSolidityType;
 import rebuiltabi.fields.RebuiltSolidityTypeID;
+import utils.Message;
 
 import java.util.Stack;
 
@@ -98,8 +99,13 @@ public class AbiExtractor {
                 }
                 // Complex type
                 else if (opcode instanceof CallDataCopyOpcode){
-                    rebuiltAbiFunction.popInput();
-                    rebuiltAbiFunction.popInput();
+                    // TODO consider fixed size arrays e.g. address[3]
+                    try {
+                        rebuiltAbiFunction.popInput();
+                        rebuiltAbiFunction.popInput();
+                    } catch (IndexOutOfBoundsException e){
+                        Message.printWarning("Popping nonexistent input; probably there is a fixed size array");
+                    }
                     argumentCount-=2;
                     rebuiltAbiFunction.addInput(new RebuiltIOElement(argumentCount, new RebuiltSolidityType(RebuiltSolidityTypeID.COMPLEX)));
                     argumentCount++;
