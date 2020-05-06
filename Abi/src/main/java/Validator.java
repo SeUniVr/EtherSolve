@@ -40,13 +40,14 @@ public class Validator {
             try {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);
-                Contract contract = new Contract(name, bytecode);
+                Contract contract = new Contract(name, bytecode, true);
                 RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (Exception e) {
-                Message.printError("Error in contract analysis\n" + e);
+                Message.printError("Error in contract analysis");
+                e.printStackTrace();
             }
             i++;
         }

@@ -11,9 +11,8 @@ import java.util.stream.Collectors;
 
 public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
     private final ArrayList<Opcode> opcodes;
-    private long offset;
+    private final long offset;
     private long length;
-    private String remainingData;
 
     public Bytecode() {
         this(0);
@@ -27,21 +26,15 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
         this(offset, new ArrayList<>());
     }
 
-
-    public Bytecode(long offset, ArrayList<Opcode> opcodes){
-        this(offset, opcodes, "");
-    }
     /**
      * Creates a bytecode with the given opcodes
      * @param opcodes The opcodes of the bytecode
      * @param offset the offset of the bytecode, a.k.a. begin of the code
      */
-    public Bytecode(long offset, ArrayList<Opcode> opcodes, String remainingData) {
+    public Bytecode(long offset, ArrayList<Opcode> opcodes) {
         this.opcodes = opcodes;
         this.offset = offset;
-        this.remainingData = remainingData;
-        // Every 2 character of remaining data forms a byte
-        this.length = remainingData.length() / 2;
+        this.length = 0;
         for (Opcode o : opcodes)
             this.length += o.getLength();
     }
@@ -60,15 +53,12 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
      * @return bytecode string
      */
     public String getBytes(){
-        return opcodes.stream().map(Opcode::getBytes).collect(Collectors.joining()) + remainingData;
+        return opcodes.stream().map(Opcode::getBytes).collect(Collectors.joining());
     }
 
     @Override
     public String toString() {
-        String result = opcodes.stream().map(Opcode::toString).collect(Collectors.joining("\n"));
-        if (! remainingData.equals(""))
-            result += "\nRemaining Data: " + remainingData;
-        return result;
+        return opcodes.stream().map(Opcode::toString).collect(Collectors.joining("\n"));
     }
 
     public void addAll(Opcode... opcodes) {
@@ -76,18 +66,8 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
             addOpcode(o);
     }
 
-    public String getRemainingData() {
-        return remainingData;
-    }
-
     public long getLength() {
         return length;
-    }
-
-    public void setRemainingData(String remainingData) {
-        // Update the length: subtract the old length of remainingData and add the new one
-        this.length = this.length - this.remainingData.length() / 2 + remainingData.length() / 2;
-        this.remainingData = remainingData;
     }
 
     @Override
