@@ -27,22 +27,18 @@ public class Validator {
         final ArrayList<Pair<String, String>> dataset = loadDataset();
         final ArrayList<Pair<String, AbiComparison>> comparisons = new ArrayList<>();
 
-        int i = 1;
+        int i = START;
         for (Pair<String, String> entry : dataset){
             String address = entry.getKey();
-            /*if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
-                continue;*/
-            /*if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
-                continue;
-            if (address.equals("0x971E89e5202e2E4d4cB16Bc89F742D151931559d"))
-                continue;*/
             String name = entry.getValue();
-            System.out.println(String.format("Processing contract %d/%d: %s", i, dataset.size(), address));
+            System.out.println(String.format("Processing contract %d/%d: %s", i, END, address));
             System.out.flush();
             try {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);
                 Contract contract = new Contract(name, bytecode, true);
+                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0)
+                    Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
                 RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));
             } catch (IOException e) {
@@ -65,8 +61,10 @@ public class Validator {
             // Skip the csv header
             br.readLine();
             // Skip the first START lines
-            while (i < START)
+            while (i < START) {
                 br.readLine();
+                i++;
+            }
             while ((line = br.readLine()) != null && i < END) {
                 String[] values = line.split(",");
                 dataset.add(new Pair<>(values[1].substring(1,values[1].length()-1), values[2].substring(1, values[2].length()-1)));

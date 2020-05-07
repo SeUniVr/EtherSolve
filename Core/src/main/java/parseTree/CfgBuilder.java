@@ -23,7 +23,8 @@ public class CfgBuilder {
             OpcodeID.STOP,
             OpcodeID.REVERT,
             OpcodeID.RETURN,
-            OpcodeID.INVALID
+            OpcodeID.INVALID,
+            OpcodeID.SELFDESTRUCT
     };
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
     private static final int LOOP_DEPTH = 1000;
