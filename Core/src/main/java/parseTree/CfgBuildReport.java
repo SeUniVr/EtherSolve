@@ -10,6 +10,7 @@ public class CfgBuildReport {
     private int orphanJumpTargetUnknownErrors;
     private int loopDepthExceededError;
     private int multipleRootNodesError;
+    private int stackExceededError;
 
     public CfgBuildReport(){
         directJumpTargetErrors = 0;
@@ -17,6 +18,7 @@ public class CfgBuildReport {
         orphanJumpTargetUnknownErrors = 0;
         loopDepthExceededError = 0;
         multipleRootNodesError = 0;
+        stackExceededError = 0;
     }
 
     public void addDirectJumpError(long sourceOffset, long destinationOffset) {
@@ -54,5 +56,10 @@ public class CfgBuildReport {
 
     public int getTotalJumpError(){
         return directJumpTargetErrors + orphanJumpTargetUnknownErrors + orphanJumpTargetNullErrors + loopDepthExceededError;
+    }
+
+    public void addStackExceededError(long offset) {
+        stackExceededError++;
+        Message.printWarning(String.format("Symbolic stack exceeded the limit at %d", offset));
     }
 }

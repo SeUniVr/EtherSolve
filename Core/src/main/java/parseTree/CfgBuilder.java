@@ -7,6 +7,7 @@ import opcodes.controlFlowOpcodes.StopOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.systemOpcodes.ReturnOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
+import parseTree.SymbolicExecution.StackExceededException;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
 import utils.Pair;
@@ -160,7 +161,11 @@ public class CfgBuilder {
             for (int i = 0; i < current.getOpcodes().size() - 1; i++) {
                 Opcode o = current.getOpcodes().get(i);
                 // System.out.println(String.format("%20s:%s", o, stack));
-                stack.executeOpcode(o);
+                try {
+                    stack.executeOpcode(o);
+                } catch (StackExceededException e) {
+                    buildReport.addStackExceededError(o.getOffset());
+                }
             }
 
             Opcode lastOpcode = current.getLastOpcode();
@@ -182,7 +187,11 @@ public class CfgBuilder {
 
             // Execute last opcode
             // System.out.println(String.format("%20s:%s", current.getLastOpcode(), stack));
-            stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));
+            try {
+                stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));
+            } catch (StackExceededException e) {
+                buildReport.addStackExceededError(lastOpcode.getOffset());
+            }
 
             // Add next elements for DFS
             if (dfs_depth < LOOP_DEPTH) {

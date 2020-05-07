@@ -19,7 +19,9 @@ public class Validator {
     private final static String ADDRESS_CSV = "./inputs/export-verified-contractaddress-opensource-license.csv";
     private final static String OUTPUT_CSV = "./outputs/abi-comparison/report" +
             DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
-    private final static int N = 100;
+
+    private final static int START = 0;
+    private final static int END = 300;
 
     public static void main(String[] args) {
         final ArrayList<Pair<String, String>> dataset = loadDataset();
@@ -28,8 +30,8 @@ public class Validator {
         int i = 1;
         for (Pair<String, String> entry : dataset){
             String address = entry.getKey();
-            if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
-                continue;
+            /*if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
+                continue;*/
             /*if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
                 continue;
             if (address.equals("0x971E89e5202e2E4d4cB16Bc89F742D151931559d"))
@@ -60,8 +62,12 @@ public class Validator {
         try (BufferedReader br = Files.newBufferedReader(Paths.get(ADDRESS_CSV))) {
             String line;
             int i = 0;
-            br.readLine(); // Skip the csv header
-            while ((line = br.readLine()) != null && i < N) {
+            // Skip the csv header
+            br.readLine();
+            // Skip the first START lines
+            while (i < START)
+                br.readLine();
+            while ((line = br.readLine()) != null && i < END) {
                 String[] values = line.split(",");
                 dataset.add(new Pair<>(values[1].substring(1,values[1].length()-1), values[2].substring(1, values[2].length()-1)));
                 i++;
