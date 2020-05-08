@@ -21,7 +21,7 @@ public class Validator {
             DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
 
     private final static int START = 0;
-    private final static int END = 203;
+    private final static int END = 500;
 
     public static void main(String[] args) {
         final ArrayList<Pair<String, String>> dataset = loadDataset();

@@ -19,6 +19,7 @@ import rebuiltabi.fields.RebuiltSolidityType;
 import rebuiltabi.fields.RebuiltSolidityTypeID;
 import utils.Message;
 
+import java.util.HashSet;
 import java.util.Stack;
 
 /**
@@ -73,10 +74,12 @@ public class AbiExtractor {
         // DFS
         int argumentCount = 0;
         Stack<BasicBlock> queue = new Stack<>();
+        HashSet<BasicBlock> visited = new HashSet<>();
         queue.add(firstArgumentBlock);
 
         while (! queue.isEmpty()) {
             BasicBlock current = queue.pop();
+            visited.add(current);
             // Count
             for (int i = 0; i < current.getOpcodes().size(); i++){
                 Opcode opcode = current.getOpcodes().get(i);
@@ -113,9 +116,10 @@ public class AbiExtractor {
             }
 
             // Add children
-            current.getSuccessors().forEach(child -> {
-                if (child.getType() == BasicBlockType.DISPATCHER)
-                    queue.push(child);
+            current.getSuccessors().forEach(successor -> {
+                if (successor.getType() == BasicBlockType.DISPATCHER)
+                    if (visited.contains(successor))
+                    queue.push(successor);
             });
         }
 

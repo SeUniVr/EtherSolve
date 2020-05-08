@@ -92,7 +92,11 @@ public class GsonAbi {
                 isFixed = false;
             else{
                 isFixed = true;
-                arrayLength = Integer.parseInt(arrLen);
+                try {
+                    arrayLength = Integer.parseInt(arrLen);
+                } catch (NumberFormatException e) {
+                    isFixed = false;
+                }
             }
         } else {
             isArray = false;
