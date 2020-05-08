@@ -231,18 +231,32 @@ public class CfgBuilder {
         return bytecode.getBytes().substring((int) firstInvalidBlock * 2);
     }
 
-    private static String removeOrphanBlocks(TreeMap<Long, BasicBlock> basicBlocks, CfgBuildReport buildReport, Bytecode bytecode){
+    private static String removeOrphanBlocks(TreeMap<Long, BasicBlock> basicBlocks, CfgBuildReport buildReport, Bytecode bytecode) {
         long firstOffset = basicBlocks.lastKey() + basicBlocks.lastEntry().getValue().getLength();
         if (buildReport.getTotalJumpError() == 0) {
-            final ArrayList<Long> offsetList = new ArrayList<>();
-            basicBlocks.forEach((offset, block) -> offsetList.add(offset));
-            for (Long offset : offsetList) {
-                if (basicBlocks.get(offset).getPredecessors().isEmpty() && offset != 0) {
-                    firstOffset = Math.min(firstOffset, offset);
-                }
-                if (offset >= firstOffset)
-                    basicBlocks.remove(offset);
+            // DFS to get the offset of the highest block connected to the root
+            long candidateOffset = 0;
+            HashSet<BasicBlock> visited = new HashSet<>();
+            Stack<BasicBlock> queue = new Stack<>();
+            queue.push(basicBlocks.firstEntry().getValue());
+
+            while (! queue.isEmpty()){
+                BasicBlock candidate = queue.pop();
+                visited.add(candidate);
+                candidateOffset = Math.max(candidate.getOffset(), candidateOffset);
+                for (BasicBlock successor : candidate.getSuccessors())
+                    if (! visited.contains(successor))
+                        queue.push(successor);
             }
+
+            // Every block with an higher offset than the candidate is removed
+            final ArrayList<Long> offsetList = new ArrayList<>(basicBlocks.keySet());
+            for (Long offset : offsetList)
+                if (offset > candidateOffset)
+                    basicBlocks.remove(offset);
+
+            // Update remaining data
+            firstOffset = candidateOffset + basicBlocks.get(candidateOffset).getLength();
         }
         return bytecode.getBytes().substring((int) firstOffset * 2);
     }
