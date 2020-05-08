@@ -21,7 +21,7 @@ public class Validator {
             DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
 
     private final static int START = 0;
-    private final static int END = 300;
+    private final static int END = 203;
 
     public static void main(String[] args) {
         final ArrayList<Pair<String, String>> dataset = loadDataset();
@@ -37,7 +37,7 @@ public class Validator {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);
                 Contract contract = new Contract(name, bytecode, true);
-                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0)
+                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesError() != 0)
                     Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
                 RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));

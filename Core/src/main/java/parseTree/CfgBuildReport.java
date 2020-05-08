@@ -71,6 +71,10 @@ public class CfgBuildReport {
         return directJumpTargetErrors + orphanJumpTargetUnknownErrors + orphanJumpTargetNullErrors + loopDepthExceededError;
     }
 
+    public int getMultipleRootNodesError() {
+        return multipleRootNodesError;
+    }
+
     public String getLog(){
         return errorLog.toString();
     }

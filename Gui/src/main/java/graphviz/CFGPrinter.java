@@ -2,6 +2,7 @@ package graphviz;
 
 import parseTree.BasicBlock;
 import parseTree.Cfg;
+import parseTree.CfgBuildReport;
 
 import java.awt.*;
 import java.io.*;
@@ -132,9 +133,10 @@ public class CFGPrinter {
      * @param solidity_version solidity version of the current contract
      * @param elapsed_time elapsed time
      * @param remainingData hexadecimal data
+     * @param buildReport
      * @return path of generated report
      */
-    public static String createReport(String svg_filename, String solidity_version, long elapsed_time, String remainingData){
+    public static String createReport(String svg_filename, String solidity_version, long elapsed_time, String remainingData, CfgBuildReport buildReport){
         String current_datetime = LocalDateTime.now().toString();
 
         String svg_xml = loadFile(svg_filename);
@@ -147,6 +149,8 @@ public class CFGPrinter {
         model.put("elapsed_time", elapsed_time + " ms");
         model.put("remaining_data", remainingData);
         model.put("decoded_remaining_data", hexToAsciiString(remainingData));
+        model.put("error_log", buildReport.toString().replace("\n", "<br>")
+                + "<br><br>" + buildReport.getLog().replace("\n", "<br>"));
 
         for (String key : model.keySet()){
             template = template.replace("%{" + key + "}", model.get(key));

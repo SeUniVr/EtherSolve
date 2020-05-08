@@ -13,7 +13,8 @@ import java.util.HashSet;
 
 public class SymbolicExecutionStack {
     private static final int MAX_STACK_SIZE = 1024;
-    private static final int STACK_TAIL_SIZE = 16;
+    private static final int STACK_TAIL_SIZE = 48;
+    private static final int STACK_TAIL_THRESHOLD = 500;
     private final ArrayList<BigInteger> stack;
 
     public SymbolicExecutionStack() {
@@ -100,19 +101,21 @@ public class SymbolicExecutionStack {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SymbolicExecutionStack that = (SymbolicExecutionStack) o;
-        if (stack.size() < STACK_TAIL_SIZE && that.stack.size() < STACK_TAIL_SIZE) {
+        int stackTailSize = stack.size() >= STACK_TAIL_THRESHOLD + 100 ? STACK_TAIL_SIZE / ((stack.size() - STACK_TAIL_THRESHOLD) / 100) : STACK_TAIL_SIZE;
+        if (stack.size() < stackTailSize && that.stack.size() < stackTailSize) {
             return stack.equals(that.stack);
         } else {
-            return stack.subList(stack.size() - STACK_TAIL_SIZE, stack.size())
-                    .equals(that.stack.subList(that.stack.size() - STACK_TAIL_SIZE, that.stack.size()));
+            return stack.subList(stack.size() - stackTailSize, stack.size())
+                    .equals(that.stack.subList(that.stack.size() - stackTailSize, that.stack.size()));
         }
     }
 
     @Override
     public int hashCode() {
-        if (stack.size() < STACK_TAIL_SIZE)
+        int stackTailSize = stack.size() >= STACK_TAIL_THRESHOLD + 100 ? STACK_TAIL_SIZE / ((stack.size() - STACK_TAIL_THRESHOLD) / 100) : STACK_TAIL_SIZE;
+        if (stack.size() < stackTailSize)
             return stack.hashCode();
-        return stack.subList(stack.size() - STACK_TAIL_SIZE, stack.size()).hashCode();
+        return stack.subList(stack.size() - stackTailSize, stack.size()).hashCode();
     }
 
     private BigInteger pop(){
