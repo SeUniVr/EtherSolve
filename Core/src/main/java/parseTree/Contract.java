@@ -9,12 +9,14 @@ public class Contract {
     private final String binarySource;
     private String metadata;
     private SolidityVersion solidityVersion;
-    private String constructorRemainingData;
+    private final String constructorRemainingData;
 
-    private Cfg constructorCfg = null;
-    private Cfg runtimeCfg = null;
+    private final Cfg constructorCfg;
+    private final Cfg runtimeCfg;
 
-    public Contract(String name, String binary, boolean isOnlyRuntime){
+    public Contract(String name, String binary, boolean isOnlyRuntime) throws NotSolidityContractException {
+        if (! binary.matches("^60(60|80)604052[0-9a-fA-F]*$"))
+            throw new NotSolidityContractException();
         this.name = name;
         this.binarySource = binary;
         Pair<String, String> strippedCode = removeCompilationInfo(binary);
@@ -33,7 +35,7 @@ public class Contract {
         runtimeCfg = CfgBuilder.buildCfg(runtime);
     }
 
-    public Contract(String name, String binary){
+    public Contract(String name, String binary) throws NotSolidityContractException {
         this(name, binary, false);
     }
 

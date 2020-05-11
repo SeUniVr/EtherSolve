@@ -47,8 +47,8 @@ public class GVBlock {
     }
 
     public boolean isLeafBlock() {
-        return mBasicBlock.getType() != BasicBlockType.EXIT &&
-                mBasicBlock.getSuccessors().get(0).getType() == BasicBlockType.EXIT;
+        return mBasicBlock.getSuccessors().isEmpty() || (mBasicBlock.getType() != BasicBlockType.EXIT &&
+                mBasicBlock.getSuccessors().get(0).getType() == BasicBlockType.EXIT);
     }
 
     public boolean isExitBlock() {

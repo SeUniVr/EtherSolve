@@ -3,6 +3,7 @@ import comparation.AbiComparator;
 import comparation.AbiComparison;
 import etherscan.EtherScanDownloader;
 import parseTree.Contract;
+import parseTree.NotSolidityContractException;
 import rebuiltabi.AbiExtractor;
 import rebuiltabi.RebuiltAbi;
 import utils.Message;
@@ -43,6 +44,8 @@ public class Validator {
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));
             } catch (IOException e) {
                 e.printStackTrace();
+            }  catch (NotSolidityContractException e) {
+                Message.printWarning("Not Solidity contract, skipping...");
             } catch (Exception e) {
                 Message.printError("Error in contract analysis");
                 e.printStackTrace();

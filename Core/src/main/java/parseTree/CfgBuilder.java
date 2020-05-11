@@ -55,7 +55,7 @@ public class CfgBuilder {
         detectDispatcher(basicBlocks);
         detectFallBack(basicBlocks);
         validateCfg(basicBlocks, buildReport);
-        addSuperNode(basicBlocks);
+        //addSuperNode(basicBlocks);
 
         // CREATE AND RETURN THE CFG
         return new Cfg(bytecode, basicBlocks, removedData + remainingData, buildReport);
@@ -107,7 +107,7 @@ public class CfgBuilder {
                 // Else Unknown
             }
             // JumpI
-            else if (lastOpcode.getOpcodeID() == OpcodeID.JUMPI){
+            else if (lastOpcode.getOpcodeID() == OpcodeID.JUMPI && opcodes.size() > 1){
                 // Add the next one
                 long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
                 BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);

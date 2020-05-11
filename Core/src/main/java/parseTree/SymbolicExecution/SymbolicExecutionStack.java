@@ -14,7 +14,7 @@ import java.util.HashSet;
 public class SymbolicExecutionStack {
     private static final int MAX_STACK_SIZE = 1024;
     private static final int STACK_TAIL_SIZE = 48;
-    private static final int STACK_TAIL_THRESHOLD = 500;
+    private static final int STACK_TAIL_THRESHOLD = 200; // Original value: 500
     private final ArrayList<BigInteger> stack;
 
     public SymbolicExecutionStack() {
@@ -33,6 +33,7 @@ public class SymbolicExecutionStack {
     }
 
     public void executeOpcode(Opcode opcode) throws StackExceededException {
+        System.out.println(String.format("%20s: %s", opcode, stack));
         if (stack.size() > MAX_STACK_SIZE) {
             //System.out.println(stack);
             throw new StackExceededException();
