@@ -38,10 +38,10 @@ public class CfgBuilder {
         if (binary == null || binary.equals(""))
             return emptyCfg();
 
+        CfgBuildReport buildReport = new CfgBuildReport();
         Pair<Bytecode, String> sourceParsed = BytecodeParser.parse(binary);
         Bytecode bytecode = sourceParsed.getKey();
         String remainingData = sourceParsed.getValue();
-        CfgBuildReport buildReport = new CfgBuildReport();
 
         // BEGIN BUILDING OPERATIONS
         TreeMap<Long, BasicBlock> basicBlocks = generateBasicBlocks(bytecode);
@@ -63,6 +63,7 @@ public class CfgBuilder {
         //addSuperNode(basicBlocks);
 
         // CREATE AND RETURN THE CFG
+        buildReport.stopTimer();
         return new Cfg(bytecode, basicBlocks, removedData + remainingData, buildReport);
     }
 
@@ -120,9 +121,9 @@ public class CfgBuilder {
                     basicBlock.addSuccessor(nextBasicBlock);
                 // if there is a push before
                 Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
-                if (secondLastOpcode instanceof PushOpcode){
+                if (secondLastOpcode instanceof PushOpcode) {
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
-                    if (basicBlocks.containsKey(destinationOffset)){
+                    if (basicBlocks.containsKey(destinationOffset)) {
                         BasicBlock destination = basicBlocks.get(destinationOffset);
                         basicBlock.addSuccessor(destination);
                     } else {

@@ -22,7 +22,7 @@ public class Validator {
             DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
 
     private final static int START = 0;
-    private final static int END = 500;
+    private final static int END = 1000;
 
     public static void main(String[] args) {
         final ArrayList<Pair<String, String>> dataset = loadDataset();
@@ -34,6 +34,8 @@ public class Validator {
             String name = entry.getValue();
             System.out.println(String.format("Processing contract %d/%d: %s", i, END, address));
             System.out.flush();
+            if (address.equals("0x5eda6d58a96f2994ea836e3f398f4f563ed6fb2b"))
+                continue;
             try {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);

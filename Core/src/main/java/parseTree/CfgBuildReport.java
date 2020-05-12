@@ -15,8 +15,10 @@ public class CfgBuildReport {
     private int stackExceededErrors;
     private int criticalErrors;
     private final StringBuilder errorLog;
+    private long buildTimeMillis;
 
     public CfgBuildReport(){
+        buildTimeMillis = System.currentTimeMillis();
         directJumpTargetErrors = 0;
         orphanJumpTargetNullErrors = 0;
         orphanJumpTargetUnknownErrors = 0;
@@ -70,6 +72,10 @@ public class CfgBuildReport {
         PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
         errorLog.append(sw.toString());
+    }
+
+    public void stopTimer(){
+        buildTimeMillis = System.currentTimeMillis() - buildTimeMillis;
     }
 
     @Override
