@@ -38,7 +38,7 @@ public class Validator {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);
                 Contract contract = new Contract(name, bytecode, true);
-                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesError() != 0)
+                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesErrors() != 0)
                     Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
                 RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));

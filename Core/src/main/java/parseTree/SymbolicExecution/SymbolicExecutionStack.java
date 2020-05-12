@@ -33,14 +33,9 @@ public class SymbolicExecutionStack {
     }
 
     public void executeOpcode(Opcode opcode) throws StackExceededException {
-        System.out.println(String.format("%20s: %s", opcode, stack));
         if (stack.size() > MAX_STACK_SIZE) {
-            //System.out.println(stack);
             throw new StackExceededException();
         }
-        /* // The 3rd argument in the stack is the event hash
-        if (opcode instanceof LogOpcode)
-            System.out.println(stack);*/
         if (opcode instanceof PushOpcode)
             executePush((PushOpcode) opcode);
         else if (opcode instanceof DupOpcode)

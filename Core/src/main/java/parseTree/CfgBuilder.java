@@ -46,7 +46,12 @@ public class CfgBuilder {
         // BEGIN BUILDING OPERATIONS
         TreeMap<Long, BasicBlock> basicBlocks = generateBasicBlocks(bytecode);
         calculateSuccessors(basicBlocks, buildReport);
-        resolveOrphanJumps(basicBlocks, buildReport);
+        try {
+            resolveOrphanJumps(basicBlocks, buildReport);
+        } catch (Exception e){
+            buildReport.addCriticalError(e);
+            e.printStackTrace();
+        }
         String removedData = removeRemainingData(basicBlocks, buildReport, bytecode);
         if (REMOVE_ORPHAN_BLOCKS) {
             removedData = removeOrphanBlocks(basicBlocks, buildReport, bytecode);
