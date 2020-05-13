@@ -6,7 +6,10 @@ import utils.Pair;
 
 public class Contract {
     private final String name;
+    private final String address;
     private final String binarySource;
+    private final String contractHash;
+    private final boolean isOnlyRuntime;
     private String metadata;
     private SolidityVersion solidityVersion;
     private final String constructorRemainingData;
@@ -14,11 +17,14 @@ public class Contract {
     private final Cfg constructorCfg;
     private final Cfg runtimeCfg;
 
-    public Contract(String name, String binary, boolean isOnlyRuntime) throws NotSolidityContractException {
+    public Contract(String name, String binary, boolean isOnlyRuntime, String address) throws NotSolidityContractException {
         if (! binary.matches("^60(60|80)604052[0-9a-fA-F]*$"))
             throw new NotSolidityContractException();
         this.name = name;
+        this.address = address;
         this.binarySource = binary;
+        this.contractHash = String.format("%x", binary.hashCode());
+        this.isOnlyRuntime = isOnlyRuntime;
         Pair<String, String> strippedCode = removeCompilationInfo(binary);
         constructorRemainingData = strippedCode.getValue();
         String remainingCode = strippedCode.getKey();
@@ -37,6 +43,10 @@ public class Contract {
 
     public Contract(String name, String binary) throws NotSolidityContractException {
         this(name, binary, false);
+    }
+
+    public Contract(String name, String binary, boolean isOnlyRuntime) throws NotSolidityContractException {
+        this(name, binary, isOnlyRuntime, "");
     }
 
     /**
@@ -119,6 +129,26 @@ public class Contract {
 
     public String getName() {
         return this.name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getBinarySource() {
+        return binarySource;
+    }
+
+    public String getContractHash() {
+        return contractHash;
+    }
+
+    public boolean isOnlyRuntime() {
+        return isOnlyRuntime;
+    }
+
+    public String getMetadata() {
+        return metadata;
     }
 
     /**

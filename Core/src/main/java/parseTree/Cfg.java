@@ -1,7 +1,6 @@
 package parseTree;
 
-import java.util.Iterator;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Cfg implements Iterable<BasicBlock>{
 
@@ -31,6 +30,17 @@ public class Cfg implements Iterable<BasicBlock>{
 
     public String getRemainingData() {
         return remainingData;
+    }
+
+    public Map<Long, List<Long>> getSuccessorsMap(){
+        Map<Long, List<Long>> successors = new TreeMap<>();
+        for (Long offset : basicBlocks.keySet()){
+            ArrayList<Long> arr = new ArrayList<>();
+            for (BasicBlock successor : basicBlocks.get(offset).getSuccessors())
+                arr.add(successor.getOffset());
+            successors.put(offset, arr);
+        }
+        return successors;
     }
 
     @Override
