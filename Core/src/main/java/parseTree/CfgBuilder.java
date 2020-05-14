@@ -104,8 +104,7 @@ public class CfgBuilder {
                 if (secondLastOpcode instanceof PushOpcode){
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
                     if (basicBlocks.containsKey(destinationOffset)){
-                        BasicBlock destination = basicBlocks.get(destinationOffset);
-                        basicBlock.addSuccessor(destination);
+                        basicBlock.addSuccessor(basicBlocks.get(destinationOffset));
                     } else {
                         buildReport.addDirectJumpError(lastOpcode.getOffset(), destinationOffset);
                     }
@@ -124,8 +123,7 @@ public class CfgBuilder {
                 if (secondLastOpcode instanceof PushOpcode) {
                     long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
                     if (basicBlocks.containsKey(destinationOffset)) {
-                        BasicBlock destination = basicBlocks.get(destinationOffset);
-                        basicBlock.addSuccessor(destination);
+                        basicBlock.addSuccessor(basicBlocks.get(destinationOffset));
                     } else {
                         buildReport.addDirectJumpError(lastOpcode.getOffset(), destinationOffset);
                     }
