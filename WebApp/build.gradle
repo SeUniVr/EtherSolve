@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'war'
-    id 'org.gretty' version '3.0.1'
+    id 'org.gretty' version '3.0.3'
 }
 
 group 'org.example'
@@ -21,7 +21,8 @@ dependencies {
 }
 
 gretty {
-    contextPath = '/EtherSolve'
+    httpPort = 8081
+    contextPath = '/'
     fastReload = true
 }
 
