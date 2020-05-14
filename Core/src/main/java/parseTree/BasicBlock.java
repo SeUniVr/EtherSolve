@@ -22,11 +22,7 @@ public class BasicBlock extends Bytecode {
     }
 
     public BasicBlock(long offset, ArrayList<Opcode> opcodes) {
-        this(offset, opcodes, "");
-    }
-
-    public BasicBlock(long offset, ArrayList<Opcode> opcodes, String remainingData) {
-        super(offset, opcodes, remainingData);
+        super(offset, opcodes);
         this.successors = new ArrayList<>();
         this.predecessors = new ArrayList<>();
         this.type = BasicBlockType.COMMON;

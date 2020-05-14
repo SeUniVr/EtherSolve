@@ -3,6 +3,7 @@ import comparation.AbiComparator;
 import comparation.AbiComparison;
 import etherscan.EtherScanDownloader;
 import parseTree.Contract;
+import parseTree.NotSolidityContractException;
 import rebuiltabi.AbiExtractor;
 import rebuiltabi.RebuiltAbi;
 import utils.Message;
@@ -19,34 +20,37 @@ public class Validator {
     private final static String ADDRESS_CSV = "./inputs/export-verified-contractaddress-opensource-license.csv";
     private final static String OUTPUT_CSV = "./outputs/abi-comparison/report" +
             DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
-    private final static int N = 100;
+
+    private final static int START = 0;
+    private final static int END = 1000;
 
     public static void main(String[] args) {
         final ArrayList<Pair<String, String>> dataset = loadDataset();
         final ArrayList<Pair<String, AbiComparison>> comparisons = new ArrayList<>();
 
-        int i = 1;
+        int i = START;
         for (Pair<String, String> entry : dataset){
             String address = entry.getKey();
-            /*if (address.equals("0x44c099ca88cb2bb98a21658818ff28ef2680f3fb"))
-                continue;
-            if (address.equals("0x0D255d76348D497790761E2F532fd1869Cb74eE1"))
-                continue;
-            if (address.equals("0x971E89e5202e2E4d4cB16Bc89F742D151931559d"))
-                continue;*/
             String name = entry.getValue();
-            System.out.println(String.format("Processing contract %d/%d: %s", i, dataset.size(), address));
+            System.out.println(String.format("Processing contract %d/%d: %s", i, END, address));
             System.out.flush();
+            if (address.equals("0x5eda6d58a96f2994ea836e3f398f4f563ed6fb2b"))
+                continue;
             try {
                 Abi abi = EtherScanDownloader.getContractAbi(address);
                 String bytecode = EtherScanDownloader.getContractBytecode(address);
                 Contract contract = new Contract(name, bytecode, true);
+                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesErrors() != 0)
+                    Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
                 RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
                 comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));
             } catch (IOException e) {
                 e.printStackTrace();
+            }  catch (NotSolidityContractException e) {
+                Message.printWarning("Not Solidity contract, skipping...");
             } catch (Exception e) {
-                Message.printError("Error in contract analysis\n" + e);
+                Message.printError("Error in contract analysis");
+                e.printStackTrace();
             }
             i++;
         }
@@ -59,8 +63,14 @@ public class Validator {
         try (BufferedReader br = Files.newBufferedReader(Paths.get(ADDRESS_CSV))) {
             String line;
             int i = 0;
-            br.readLine(); // Skip the csv header
-            while ((line = br.readLine()) != null && i < N) {
+            // Skip the csv header
+            br.readLine();
+            // Skip the first START lines
+            while (i < START) {
+                br.readLine();
+                i++;
+            }
+            while ((line = br.readLine()) != null && i < END) {
                 String[] values = line.split(",");
                 dataset.add(new Pair<>(values[1].substring(1,values[1].length()-1), values[2].substring(1, values[2].length()-1)));
                 i++;
@@ -105,8 +115,8 @@ public class Validator {
         sb.setLength(sb.length() - 1);
         String output = sb.toString();
         File file = new File(OUTPUT_CSV);
-        if (! file.getParentFile().mkdirs())
-            Message.printDebug("File already exists: it will be overwritten");
+        if (file.getParentFile().mkdirs())
+            Message.printDebug("Output folder will be created");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
             out.write(output);
         } catch (IOException e) {

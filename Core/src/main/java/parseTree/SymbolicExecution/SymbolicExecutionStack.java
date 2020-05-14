@@ -1,6 +1,5 @@
 package parseTree.SymbolicExecution;
 
-import opcodes.LogOpcode;
 import opcodes.Opcode;
 import opcodes.arithmeticOpcodes.binaryArithmeticOpcodes.AndOpcode;
 import opcodes.stackOpcodes.DupOpcode;
@@ -10,8 +9,12 @@ import opcodes.stackOpcodes.SwapOpcode;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class SymbolicExecutionStack {
+    private static final int MAX_STACK_SIZE = 1024;
+    private static final int STACK_TAIL_SIZE = 48;
+    private static final int STACK_TAIL_THRESHOLD = 200; // Original value: 500
     private final ArrayList<BigInteger> stack;
 
     public SymbolicExecutionStack() {
@@ -29,10 +32,10 @@ public class SymbolicExecutionStack {
         return stack.toString();
     }
 
-    public void executeOpcode(Opcode opcode){
-        /* // The 3rd argument in the stack is the event hash
-        if (opcode instanceof LogOpcode)
-            System.out.println(stack);*/
+    public void executeOpcode(Opcode opcode) throws StackExceededException {
+        if (stack.size() > MAX_STACK_SIZE) {
+            throw new StackExceededException();
+        }
         if (opcode instanceof PushOpcode)
             executePush((PushOpcode) opcode);
         else if (opcode instanceof DupOpcode)
@@ -94,17 +97,51 @@ public class SymbolicExecutionStack {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SymbolicExecutionStack that = (SymbolicExecutionStack) o;
-        return stack.equals(that.stack);
+        int stackTailSize = stack.size() >= STACK_TAIL_THRESHOLD + 100 ? STACK_TAIL_SIZE / ((stack.size() - STACK_TAIL_THRESHOLD) / 100) : STACK_TAIL_SIZE;
+        if (stack.size() < stackTailSize && that.stack.size() < stackTailSize) {
+            return stack.equals(that.stack);
+        } else {
+            return stack.subList(stack.size() - stackTailSize, stack.size())
+                    .equals(that.stack.subList(that.stack.size() - stackTailSize, that.stack.size()));
+        }
     }
 
     @Override
     public int hashCode() {
-        return stack.hashCode();
+        int stackTailSize = stack.size() >= STACK_TAIL_THRESHOLD + 100 ? STACK_TAIL_SIZE / ((stack.size() - STACK_TAIL_THRESHOLD) / 100) : STACK_TAIL_SIZE;
+        if (stack.size() < stackTailSize)
+            return stack.hashCode();
+        return stack.subList(stack.size() - stackTailSize, stack.size()).hashCode();
     }
 
     private BigInteger pop(){
         BigInteger value = stack.get(stack.size() - 1);
         stack.remove(stack.size() - 1);
         return value;
+    }
+
+    public static void main(String[] args) {
+        SymbolicExecutionStack s1 = new SymbolicExecutionStack();
+        SymbolicExecutionStack s2 = new SymbolicExecutionStack();
+        try {
+            s1.executeOpcode(new PushOpcode(0, 1, new BigInteger("888")));
+            for (int i = 0; i < 20; i++) {
+                s1.executeOpcode(new PushOpcode(0, 1, new BigInteger("888")));
+                s2.executeOpcode(new PushOpcode(0, 1, new BigInteger("888")));
+            }
+            System.out.println(s1.equals(s2) && s2.equals(s1));
+            System.out.println(s1.stack.subList(s1.stack.size() - 15, s1.stack.size()).hashCode());
+            System.out.println(s2.stack.subList(s2.stack.size() - 15, s2.stack.size()).hashCode());
+            System.out.println(s1.hashCode());
+            System.out.println(s2.hashCode());
+            HashSet<SymbolicExecutionStack> set = new HashSet<>();
+            set.add(s1);
+            for (SymbolicExecutionStack s : set)
+                if (s.equals(s2) && s2.equals(s))
+                    System.out.println("HERE IT IS");
+            System.out.println(set.contains(s2));
+        } catch (StackExceededException e) {
+            e.printStackTrace();
+        }
     }
 }

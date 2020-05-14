@@ -1,322 +1,50 @@
 package parseTree;
 
-import opcodes.Opcode;
-import opcodes.OpcodeID;
-import opcodes.controlFlowOpcodes.JumpOpcode;
-import opcodes.controlFlowOpcodes.StopOpcode;
-import opcodes.stackOpcodes.PushOpcode;
-import opcodes.systemOpcodes.ReturnOpcode;
-import opcodes.systemOpcodes.RevertOpcode;
-import parseTree.SymbolicExecution.SymbolicExecutionStack;
-import parseTree.SymbolicExecution.UnknownStackElementException;
-import utils.Triplet;
-
 import java.util.*;
-import java.util.function.Consumer;
 
-public class Cfg implements Iterable<BasicBlock> {
-
-    private static final OpcodeID[] BASIC_BLOCK_DELIMITERS = new OpcodeID[] {
-            OpcodeID.JUMP,
-            OpcodeID.JUMPI,
-            OpcodeID.STOP,
-            OpcodeID.REVERT,
-            OpcodeID.RETURN,
-            OpcodeID.INVALID
-    };
-    public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
-    private static final int LOOP_DEPTH = 100;
-    private static final boolean REMOVE_ORPHAN_BLOCKS = true; // TODO experimental
+public class Cfg implements Iterable<BasicBlock>{
 
     private final TreeMap<Long, BasicBlock> basicBlocks;
-    private final Bytecode mBytecode;
+    private final Bytecode bytecode;
     private final CfgBuildReport buildReport;
+    private final String remainingData;
 
-    /**
-     * Builds a control flow graph from the bytecode in 6 phases:
-     *
-     * - Basic Block generation
-     * - Simple jump resolver
-     * - Orphan jump resolver with partial symbolic execution
-     * - Unreachable blocks remover
-     * - Dispatcher detector
-     * - Fallback detector
-     * @param bytecode source code
-     */
-    public Cfg(Bytecode bytecode) {
-        basicBlocks = new TreeMap<>();
-        mBytecode = bytecode;
-        buildReport = new CfgBuildReport();
-        generateBasicBlocks(bytecode);
-        calculateSuccessors();
-        resolveOrphanJumps();
-        removeRemainingData();
-        //if (REMOVE_ORPHAN_BLOCKS && buildReport.getTotalJumpError() == 0)
-            removeOrphanBlocks();
-        detectDispatcher();
-        detectFallBack();
-        validateCfg();
-        addSuperNode();
-    }
-
-    private void generateBasicBlocks(Bytecode bytecode) {
-        BasicBlock current = new BasicBlock();
-        for (Opcode o : bytecode) {
-            if (DELIMITERS.contains(o.getOpcodeID())) {
-                // The next one is a new basic block
-                current.addOpcode(o);
-                basicBlocks.put(current.getOffset(), current);
-                current = new BasicBlock(o.getOffset() + 1);
-            } else if (o.getOpcodeID() == OpcodeID.JUMPDEST && current.getLength() != 0) {
-                // This is already a new one, add and create new
-                // If the current length is 0 then do not append empty blocks
-                basicBlocks.put(current.getOffset(), current);
-                current = new BasicBlock(o.getOffset());
-                current.addOpcode(o);
-            } else {
-                current.addOpcode(o);
-            }
-        }
-        if (! current.getOpcodes().isEmpty())
-            basicBlocks.put(current.getOffset(), current);
-    }
-
-    private void calculateSuccessors() {
-        // Iterate over the block sorted by the offset
-        basicBlocks.forEach((offset, basicBlock) -> {
-            ArrayList<Opcode> opcodes = basicBlock.getOpcodes();
-            Opcode lastOpcode = opcodes.get(opcodes.size() - 1);
-
-            // Jump
-            if (lastOpcode.getOpcodeID() == OpcodeID.JUMP && opcodes.size() > 1){
-                // Check if there is a push before
-                Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
-                if (secondLastOpcode instanceof PushOpcode){
-                    long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
-                    if (basicBlocks.containsKey(destinationOffset)){
-                        BasicBlock destination = basicBlocks.get(destinationOffset);
-                        basicBlock.addSuccessor(destination);
-                    } else {
-                        buildReport.addDirectJumpError(lastOpcode.getOffset(), destinationOffset);
-                    }
-                }
-                // Else Unknown
-            }
-            // JumpI
-            else if (lastOpcode.getOpcodeID() == OpcodeID.JUMPI){
-                // Add the next one
-                long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
-                BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);
-                if (nextBasicBlock != null)
-                    basicBlock.addSuccessor(nextBasicBlock);
-                // if there is a push before
-                Opcode secondLastOpcode = opcodes.get(opcodes.size() - 2);
-                if (secondLastOpcode instanceof PushOpcode){
-                    long destinationOffset = ((PushOpcode) secondLastOpcode).getParameter().longValue();
-                    if (basicBlocks.containsKey(destinationOffset)){
-                        BasicBlock destination = basicBlocks.get(destinationOffset);
-                        basicBlock.addSuccessor(destination);
-                    } else {
-                        buildReport.addDirectJumpError(lastOpcode.getOffset(), destinationOffset);
-                    }
-                }
-            }
-            // Other delimiters
-            else if (DELIMITERS.contains(lastOpcode.getOpcodeID())){
-                // There is a control flow break, no successor added
-            }
-            // Exclude the last block which has no sequent
-            else if (offset.equals(basicBlocks.lastKey())){
-                // Skip
-            }
-            // Else
-            else {
-                // It's a common operation, add the next
-                long nextOffset = lastOpcode.getOffset() + lastOpcode.getLength();
-                BasicBlock nextBasicBlock = basicBlocks.get(nextOffset);
-                basicBlock.addSuccessor(nextBasicBlock);
-            }
-        });
-    }
-
-    private void resolveOrphanJumps(){
-        // DFS on nodes visiting each edge only once
-        HashSet<Triplet<Long, Long, SymbolicExecutionStack>> visited = new HashSet<>();
-        BasicBlock current = basicBlocks.firstEntry().getValue();
-        SymbolicExecutionStack stack = new SymbolicExecutionStack();
-        int dfs_depth = 0;
-        Stack<Triplet<BasicBlock, SymbolicExecutionStack, Integer>> queue = new Stack<>();
-        queue.push(new Triplet<>(current, stack, dfs_depth));
-
-        while (! queue.isEmpty()){
-            Triplet<BasicBlock, SymbolicExecutionStack, Integer> element = queue.pop();
-            current = element.getElem1();
-            stack = element.getElem2();
-            dfs_depth = element.getElem3();
-
-            // Execute all opcodes except for the last
-            for (int i = 0; i < current.getOpcodes().size() - 1; i++) {
-                Opcode o = current.getOpcodes().get(i);
-                // System.out.println(String.format("%20s:%s", o, stack));
-                stack.executeOpcode(o);
-            }
-
-            Opcode lastOpcode = current.getLastOpcode();
-            long nextOffset = 0;
-
-            // Check for orphan jump and resolve
-            if (lastOpcode instanceof JumpOpcode){
-                try {
-                    nextOffset = stack.peek().longValue();
-                    BasicBlock nextBB = basicBlocks.get(nextOffset);
-                    if (nextBB != null)
-                        current.addSuccessor(nextBB);
-                    else
-                        buildReport.addOrphanJumpTargetNullError(lastOpcode.getOffset(), nextOffset);
-                } catch (UnknownStackElementException e) {
-                    buildReport.addOrphanJumpTargetUnknownError(lastOpcode.getOffset(), stack);
-                }
-            }
-
-            // Execute last opcode
-            // System.out.println(String.format("%20s:%s", current.getLastOpcode(), stack));
-            stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));
-
-            // Add next elements for DFS
-            if (dfs_depth < LOOP_DEPTH) {
-                if (!(lastOpcode instanceof JumpOpcode)) {
-                    for (BasicBlock successor : current.getSuccessors()) {
-                        Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), successor.getOffset(), stack);
-                        if (!visited.contains(edge)) {
-                            visited.add(edge);
-                            queue.push(new Triplet<>(successor, stack.copy(), dfs_depth + 1));
-                        }
-                    }
-                } else if (nextOffset != 0) {
-                    Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), nextOffset, stack);
-                    if (!visited.contains(edge)) {
-                        visited.add(edge);
-                        queue.push(new Triplet<>(basicBlocks.get(nextOffset), stack.copy(), dfs_depth + 1));
-                    }
-                }
-            } else {
-                buildReport.addLoopDepthExceededError(current.getOffset());
-            }
-        }
-    }
-
-    private void removeRemainingData(){
-        long firstInvalidBlock = basicBlocks.lastKey();
-        final ArrayList<Long> offsetList = new ArrayList<>();
-        basicBlocks.forEach((offset, block) -> offsetList.add(offset));
-        for (Long offset : offsetList){
-            if (basicBlocks.get(offset).getPredecessors().isEmpty() && basicBlocks.get(offset).getBytes().equals("fe")){
-                firstInvalidBlock = offset;
-            }
-            if (offset >= firstInvalidBlock)
-                basicBlocks.remove(offset);
-        }
-        mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstInvalidBlock * 2));
-    }
-
-    private void detectDispatcher(){
-        long lastOffset = 0;
-        for (BasicBlock bb : basicBlocks.values())
-            if (bb.getLastOpcode() instanceof ReturnOpcode || bb.getLastOpcode() instanceof StopOpcode)
-                if (bb.getOffset() > lastOffset)
-                    lastOffset = bb.getOffset();
-        long finalLastBlockOffset = lastOffset;
-        basicBlocks.forEach((offset, basicBlock) -> {
-            if (offset <= finalLastBlockOffset)
-                basicBlock.setType(BasicBlockType.DISPATCHER);
-        });
-    }
-
-    private void detectFallBack(){
-        // It's the highest successor of the highest successor
-        // The fallback function exists iff it ends with a Stop
-        long maxSuccessorOffset = 0;
-        for (BasicBlock successor : basicBlocks.firstEntry().getValue().getSuccessors())
-            if (successor.getOffset() > maxSuccessorOffset)
-                maxSuccessorOffset = successor.getOffset();
-
-        long maxSecondSuccessorOffset = maxSuccessorOffset;
-        for (BasicBlock secondSuccessor : basicBlocks.get(maxSuccessorOffset).getSuccessors())
-            if (secondSuccessor.getOffset() > maxSecondSuccessorOffset)
-                maxSecondSuccessorOffset = secondSuccessor.getOffset();
-
-        // If it is a JumpDest only block the skip and mark the next One
-        // If the block ends with a Revert then it's not a declared fallback
-        BasicBlock fallbackCandidate = basicBlocks.get(maxSecondSuccessorOffset);
-        if (fallbackCandidate.getLength() == 1)
-            fallbackCandidate.getSuccessors().forEach(block -> {
-                if (!(block.getLastOpcode() instanceof RevertOpcode))
-                    block.setType(BasicBlockType.FALLBACK);
-            });
-        else if (!(fallbackCandidate.getLastOpcode() instanceof RevertOpcode))
-            fallbackCandidate.setType(BasicBlockType.FALLBACK);
-    }
-
-    private void validateCfg(){
-        // check whether there is only a tree
-        int trees = 0;
-        for (long offset : basicBlocks.keySet()){
-            if (basicBlocks.get(offset).getPredecessors().isEmpty())
-                trees++;
-        }
-        if (trees != 1)
-            buildReport.addMultipleRootNodesError(trees);
-    }
-
-    private void removeOrphanBlocks(){
-        final ArrayList<Long> offsetList = new ArrayList<>();
-        basicBlocks.forEach((offset, block) -> offsetList.add(offset));
-        long firstOffset = offsetList.get(offsetList.size() - 1);
-        for (Long offset : offsetList) {
-            if (basicBlocks.get(offset).getPredecessors().isEmpty() && offset != 0) {
-                basicBlocks.remove(offset);
-            }
-        }
-        mBytecode.setRemainingData(mBytecode.getBytes().substring((int) firstOffset * 2));
-    }
-
-    private void addSuperNode(){
-        BasicBlock superNode =  new BasicBlock(basicBlocks.lastKey() + 1);
-        superNode.setType(BasicBlockType.EXIT);
-        for (BasicBlock bb : basicBlocks.values())
-            if(bb.getSuccessors().isEmpty())
-                bb.addSuccessor(superNode);
-        basicBlocks.put(superNode.getOffset(), superNode);
-    }
-
-    @Override
-    public Iterator<BasicBlock> iterator() {
-        return basicBlocks.values().iterator();
-    }
-
-    @Override
-    public void forEach(Consumer<? super BasicBlock> action) {
-        basicBlocks.values().forEach(action);
-    }
-
-    @Override
-    public Spliterator<BasicBlock> spliterator() {
-        return basicBlocks.values().spliterator();
+    public Cfg(Bytecode bytecode, TreeMap<Long, BasicBlock> basicBlocks, String remainingData, CfgBuildReport buildReport) {
+        this.bytecode = bytecode;
+        this.basicBlocks = basicBlocks;
+        this.remainingData = remainingData;
+        this.buildReport = buildReport;
     }
 
     public Bytecode getBytecode() {
-        return mBytecode;
+        return bytecode;
     }
 
     public BasicBlock getBasicBlock(long key){
         return basicBlocks.get(key);
     }
 
-    public BasicBlock getNextBasicBlock(long offset) {
-        return basicBlocks.higherEntry(offset).getValue();
-    }
-
     public CfgBuildReport getBuildReport() {
         return buildReport;
+    }
+
+    public String getRemainingData() {
+        return remainingData;
+    }
+
+    public Map<Long, List<Long>> getSuccessorsMap(){
+        Map<Long, List<Long>> successors = new TreeMap<>();
+        for (Long offset : basicBlocks.keySet()){
+            ArrayList<Long> arr = new ArrayList<>();
+            for (BasicBlock successor : basicBlocks.get(offset).getSuccessors())
+                arr.add(successor.getOffset());
+            successors.put(offset, arr);
+        }
+        return successors;
+    }
+
+    @Override
+    public Iterator<BasicBlock> iterator() {
+        return basicBlocks.values().iterator();
     }
 }

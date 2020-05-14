@@ -2,53 +2,51 @@ package parseTree;
 
 import SolidityInfo.SolidityVersion;
 import SolidityInfo.SolidityVersionUnknownException;
-import utils.Message;
 import utils.Pair;
 
 public class Contract {
     private final String name;
-    private Bytecode constructor;
-    private Bytecode runtime;
-    private String constructorCode;
-    private String runtimeCode;
+    private final String address;
+    private final String binarySource;
+    private final String contractHash;
+    private final boolean isOnlyRuntime;
     private String metadata;
     private SolidityVersion solidityVersion;
-    private String constructorRemainingData;
+    private final String constructorRemainingData;
 
-    private Cfg constructorCfg = null;
-    private Cfg runtimeCfg = null;
+    private final Cfg constructorCfg;
+    private final Cfg runtimeCfg;
 
-    private Contract(String name){
-        this(name, new Bytecode(), new Bytecode());
-    }
-
-    private Contract(String name, Bytecode constructor, Bytecode body){
+    public Contract(String name, String binary, boolean isOnlyRuntime, String address) throws NotSolidityContractException {
+        if (! binary.matches("^60(60|80)604052[0-9a-fA-F]*$"))
+            throw new NotSolidityContractException();
         this.name = name;
-        this.constructor = constructor;
-        this.runtime = body;
-        this.constructorCode = "";
-        this.runtimeCode = "";
-        this.metadata = "";
-    }
-
-    public Contract(String name, String binary, boolean isOnlyRuntime){
-        this(name);
+        this.address = address;
+        this.binarySource = binary;
+        this.contractHash = String.format("%x", binary.hashCode());
+        this.isOnlyRuntime = isOnlyRuntime;
         Pair<String, String> strippedCode = removeCompilationInfo(binary);
-        String remainingCode = strippedCode.getKey();
-        if (isOnlyRuntime){
-            runtimeCode = remainingCode;
-        } else {
-            splitBytecode(remainingCode);
-        }
-        constructor = BytecodeParser.getInstance().parse(constructorCode);
-        if (constructor.getRemainingData() != null && ! constructor.getRemainingData().equals(""))
-            Message.printWarning("Warning: constructor has remaining data");
         constructorRemainingData = strippedCode.getValue();
-        runtime = BytecodeParser.getInstance().parse(runtimeCode);
+        String remainingCode = strippedCode.getKey();
+        String constructor, runtime;
+        if (! isOnlyRuntime){
+            String[] splitCode = remainingCode.split("(?=60(60|80)604052)", 2);
+            constructor = splitCode[0];
+            runtime = splitCode[1];
+        } else {
+            constructor = "";
+            runtime = remainingCode;
+        }
+        constructorCfg = CfgBuilder.buildCfg(constructor);
+        runtimeCfg = CfgBuilder.buildCfg(runtime);
     }
 
-    public Contract(String name, String binary){
+    public Contract(String name, String binary) throws NotSolidityContractException {
         this(name, binary, false);
+    }
+
+    public Contract(String name, String binary, boolean isOnlyRuntime) throws NotSolidityContractException {
+        this(name, binary, isOnlyRuntime, "");
     }
 
     /**
@@ -120,39 +118,37 @@ public class Contract {
         return new Pair<>(binary, "");
     }
 
-    /**
-     * Splits the code between constructor and runtime
-     *
-     * It splits the string using the patter 6060604052 or 6080604052
-     * @param binary complete string
-     */
-    private void splitBytecode(String binary) {
-        this.constructor = new Bytecode();
-        // 6080604052 or 6060604052
-        // ?= means "keep the regexp on te found match"
-        String[] temp = binary.split("(?=60(60|80)604052)", 2);
-        if (temp.length == 2) {
-            constructorCode = temp[0];
-            runtimeCode = temp[1];
-        } else {
-            // Only runtime code
-            constructorCode = "";
-            runtimeCode = temp[0];
-        }
-    }
-
     @Override
     public String toString() {
-        return "Constructor:\n" + constructor + "Body:\n" + runtime;
+        return name + "\nCode: " + binarySource;
     }
 
     public String getBytes(){
-        // TODO big as a house: calculate contract medatata
-        return constructor.getBytes() + runtime.getBytes();
+        return binarySource;
     }
 
     public String getName() {
         return this.name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getBinarySource() {
+        return binarySource;
+    }
+
+    public String getContractHash() {
+        return contractHash;
+    }
+
+    public boolean isOnlyRuntime() {
+        return isOnlyRuntime;
+    }
+
+    public String getMetadata() {
+        return metadata;
     }
 
     /**
@@ -160,9 +156,6 @@ public class Contract {
      * @return constructor cfg
      */
     public Cfg getConstructorCfg() {
-        if (constructorCfg == null)
-            constructorCfg = new Cfg(constructor);
-        constructor = constructorCfg.getBytecode();
         return constructorCfg;
     }
 
@@ -171,9 +164,6 @@ public class Contract {
      * @return runtime cfg
      */
     public Cfg getRuntimeCfg() {
-        if (runtimeCfg == null)
-            runtimeCfg = new Cfg(runtime);
-        runtime = runtimeCfg.getBytecode();
         return runtimeCfg;
     }
 
@@ -198,11 +188,11 @@ public class Contract {
     }
 
     public Bytecode getConstructor() {
-        return constructor;
+        return constructorCfg.getBytecode();
     }
 
     public Bytecode getRuntime() {
-        return runtime;
+        return runtimeCfg.getBytecode();
     }
 
     public String getConstructorRemainingData() {

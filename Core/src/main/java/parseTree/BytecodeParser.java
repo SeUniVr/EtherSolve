@@ -17,23 +17,15 @@ import opcodes.controlFlowOpcodes.StopOpcode;
 import opcodes.environmentalOpcodes.*;
 import opcodes.stackOpcodes.*;
 import opcodes.systemOpcodes.*;
+import utils.Pair;
 
 import java.math.BigInteger;
 
 public class BytecodeParser {
 
-    private static final BytecodeParser ilSoloEUnico = new BytecodeParser();
-
-    private BytecodeParser(){
-
-    }
-
-    public static BytecodeParser getInstance(){
-        return ilSoloEUnico;
-    }
-
-    public Bytecode parse(String binary){
-        Bytecode result = new Bytecode();
+    public static Pair<Bytecode, String> parse(String binary){
+        Bytecode bytecode = new Bytecode();
+        String remainingData = "";
         final byte PUSH_OPCODE = OpcodeID.PUSH.getOpcode();
 
         // Read two bytes for each opcode
@@ -46,7 +38,7 @@ public class BytecodeParser {
             // Parse all the opcodes except for the PUSH
             if (byteOpcode < PUSH_OPCODE || byteOpcode > PUSH_OPCODE + 32){
                 // the offset is the half of the string index
-                result.addOpcode(parseOpcode(byteOpcode, i / 2));
+                bytecode.addOpcode(parseOpcode(byteOpcode, i / 2));
             } else {
                 // Treat the PUSH in different ways
                 int argumentNumber = byteOpcode - PUSH_OPCODE + 1;
@@ -54,21 +46,21 @@ public class BytecodeParser {
                 if (i + 2 + argumentNumber * 2 <= binary.length()){
                     String strArgument = binary.substring(i + 2, i + 2 + argumentNumber*2);
                     BigInteger argument = new BigInteger(strArgument, 16);
-                    result.addOpcode(new PushOpcode(i / 2, argumentNumber, argument));
+                    bytecode.addOpcode(new PushOpcode(i / 2, argumentNumber, argument));
                     i += argumentNumber * 2;
                 } else {
                     // The push has not enough data, then all the remaining bytes become remainingData
-                    result.setRemainingData(binary.substring(i));
+                    remainingData = binary.substring(i);
                     // breaks the loop
                     i = binary.length();
                 }
             }
         }
 
-        return result;
+        return new Pair<>(bytecode, remainingData);
     }
 
-    private Opcode parseOpcode(byte byteOpcode, int offset) {
+    private static Opcode parseOpcode(byte byteOpcode, int offset) {
         // System.out.println(String.format("[%2d] 0x%x", offset, byteOpcode));
         // DUP
         if (byteOpcode >= OpcodeID.DUP.getOpcode() && byteOpcode <= OpcodeID.DUP.getOpcode() + 15){

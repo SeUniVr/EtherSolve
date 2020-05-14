@@ -8,8 +8,6 @@ import abi.fields.SolidityType;
 import abi.fields.SolidityTypeID;
 import com.google.gson.*;
 
-import java.util.Arrays;
-
 public class GsonAbi {
 
     private final Gson gson;
@@ -40,7 +38,7 @@ public class GsonAbi {
 
     private AbiFunction parseFunction(JsonElement src, GsonBuilder gsonBuilder){
         JsonObject object = src.getAsJsonObject();
-        FunctionType type = null;
+        FunctionType type;
         switch (object.get("type").getAsString()) {
             case "function":
                 type = FunctionType.FUNCTION;
@@ -60,16 +58,16 @@ public class GsonAbi {
                 throw new IllegalStateException("Unexpected value: " + object.get("type").getAsString());
         }
         String name = "";
-        if (type != FunctionType.CONSTRUCTOR)
+        if (type != FunctionType.CONSTRUCTOR && type != FunctionType.RECEIVE)
             name = object.get("name").getAsString();
 
         AbiFunction function = new AbiFunction(name, type);
 
         // NOTE: Here the parsing can be enhanced with state mutability, payable and more...
-
-        for (JsonElement ioElement : object.get("inputs").getAsJsonArray()){
-            function.addInput(gsonBuilder.create().fromJson(ioElement, IOElement.class));
-        }
+        if (type != FunctionType.RECEIVE)
+            for (JsonElement ioElement : object.get("inputs").getAsJsonArray()){
+                function.addInput(gsonBuilder.create().fromJson(ioElement, IOElement.class));
+            }
         if (type == FunctionType.FUNCTION)
             for (JsonElement ioElement : object.get("outputs").getAsJsonArray()){
                 function.addOutput(gsonBuilder.create().fromJson(ioElement, IOElement.class));
@@ -94,7 +92,11 @@ public class GsonAbi {
                 isFixed = false;
             else{
                 isFixed = true;
-                arrayLength = Integer.parseInt(arrLen);
+                try {
+                    arrayLength = Integer.parseInt(arrLen);
+                } catch (NumberFormatException e) {
+                    isFixed = false;
+                }
             }
         } else {
             isArray = false;
