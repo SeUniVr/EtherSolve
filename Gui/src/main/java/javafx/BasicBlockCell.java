@@ -4,8 +4,8 @@ import com.fxgraph.cells.AbstractCell;
 import com.fxgraph.graph.Graph;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
-import parseTree.BasicBlock;
-import parseTree.BasicBlockType;
+import parseTree.cfg.BasicBlock;
+import parseTree.cfg.BasicBlockType;
 
 public class BasicBlockCell extends AbstractCell {
 

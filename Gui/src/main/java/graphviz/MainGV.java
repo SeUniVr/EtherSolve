@@ -1,9 +1,9 @@
 package graphviz;
 
 import SolidityInfo.SolidityVersionUnknownException;
-import parseTree.Cfg;
 import parseTree.Contract;
 import parseTree.NotSolidityContractException;
+import parseTree.cfg.Cfg;
 
 public class MainGV {
 

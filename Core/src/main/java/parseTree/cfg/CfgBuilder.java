@@ -1,4 +1,4 @@
-package parseTree;
+package parseTree.cfg;
 
 import opcodes.Opcode;
 import opcodes.OpcodeID;
@@ -7,6 +7,8 @@ import opcodes.controlFlowOpcodes.StopOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.systemOpcodes.ReturnOpcode;
 import opcodes.systemOpcodes.RevertOpcode;
+import parseTree.Bytecode;
+import parseTree.BytecodeParser;
 import parseTree.SymbolicExecution.StackExceededException;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
@@ -26,14 +28,41 @@ public class CfgBuilder {
             OpcodeID.INVALID,
             OpcodeID.SELFDESTRUCT
     };
+    /**
+     * Set of delimiters: the Opcodes ID which represents the end of a basic block
+     */
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
     private static final int LOOP_DEPTH = 1000;
     private static final boolean REMOVE_ORPHAN_BLOCKS = true; // TODO experimental
 
+    /**
+     * Builds an empty cfg
+     * @return an empty cfg
+     */
     public static Cfg emptyCfg(){
         return new Cfg(new Bytecode(), new TreeMap<>(), "", new CfgBuildReport());
     }
 
+    /**
+     * Builds a cfg from the opcodes.
+     * <br>
+     * The process to generate it consists of this phases:
+     * <ul>
+     *     <li>Bytecode parsing</li>
+     *     <li>Basic block generation</li>
+     *     <li>Fist successors calculation, for easy resolvable jumps</li>
+     *     <li>Advanced successors calculation, with the symbolic execution stack</li>
+     *     <li>Remaining data removal</li>
+     *     <li>Detached blocks removal</li>
+     *     <li>Dispatcher detection</li>
+     *     <li>Fallback function detection</li>
+     *     <li>Super node creation</li>
+     *     <li>Cfg validation</li>
+     * </ul>
+     * The built cfg contains also a build report, which counts all the errors occurred during the building process.
+     * @param binary hexadecimal string representing the bytecode
+     * @return the built cfg
+     */
     public static Cfg buildCfg(String binary){
         if (binary == null || binary.equals(""))
             return emptyCfg();
@@ -60,7 +89,7 @@ public class CfgBuilder {
         detectDispatcher(basicBlocks);
         detectFallBack(basicBlocks);
         validateCfg(basicBlocks, buildReport);
-        //addSuperNode(basicBlocks);
+        addSuperNode(basicBlocks);
 
         // CREATE AND RETURN THE CFG
         buildReport.stopTimer();

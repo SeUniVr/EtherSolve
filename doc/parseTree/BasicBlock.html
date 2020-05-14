@@ -127,7 +127,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li><a href="Bytecode.html" title="class in parseTree">parseTree.Bytecode</a></li>
 <li>
 <ul class="inheritance">
-<li>parseTree.BasicBlock</li>
+<li>parseTree.cfg.BasicBlock</li>
 </ul>
 </li>
 </ul>
@@ -216,7 +216,7 @@ extends <a href="Bytecode.html" title="class in parseTree">Bytecode</a></pre>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addSuccessor(parseTree.BasicBlock)">addSuccessor</a></span>&#8203;(<a href="BasicBlock.html" title="class in parseTree">BasicBlock</a>&nbsp;next)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addSuccessor(parseTree.cfg.BasicBlock)">addSuccessor</a></span>&#8203;(<a href="BasicBlock.html" title="class in parseTree">BasicBlock</a>&nbsp;next)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
@@ -246,7 +246,7 @@ extends <a href="Bytecode.html" title="class in parseTree">Bytecode</a></pre>
 </tr>
 <tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setType(parseTree.BasicBlockType)">setType</a></span>&#8203;(<a href="BasicBlockType.html" title="enum in parseTree">BasicBlockType</a>&nbsp;type)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setType(parseTree.cfg.BasicBlockType)">setType</a></span>&#8203;(<a href="BasicBlockType.html" title="enum in parseTree">BasicBlockType</a>&nbsp;type)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
@@ -352,7 +352,7 @@ extends <a href="Bytecode.html" title="class in parseTree">Bytecode</a></pre>
 <pre class="methodSignature">public&nbsp;int&nbsp;getStackBalance()</pre>
 </li>
 </ul>
-<a id="addSuccessor(parseTree.BasicBlock)">
+<a id="addSuccessor(parseTree.cfg.BasicBlock)">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -421,7 +421,7 @@ extends <a href="Bytecode.html" title="class in parseTree">Bytecode</a></pre>
 <pre class="methodSignature">public&nbsp;boolean&nbsp;hasOrphanJump()</pre>
 </li>
 </ul>
-<a id="setType(parseTree.BasicBlockType)">
+<a id="setType(parseTree.cfg.BasicBlockType)">
 <!--   -->
 </a>
 <ul class="blockList">

@@ -1,7 +1,7 @@
 package graphviz;
 
-import parseTree.BasicBlock;
-import parseTree.BasicBlockType;
+import parseTree.cfg.BasicBlock;
+import parseTree.cfg.BasicBlockType;
 
 public class GVBlock {
     private final BasicBlock mBasicBlock;

@@ -1,4 +1,4 @@
-package parseTree;
+package parseTree.cfg;
 
 public enum BasicBlockType {
     COMMON,

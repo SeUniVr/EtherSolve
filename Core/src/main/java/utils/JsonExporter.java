@@ -3,9 +3,9 @@ package utils;
 import SolidityInfo.SolidityVersion;
 import SolidityInfo.SolidityVersionUnknownException;
 import com.google.gson.*;
-import parseTree.BasicBlock;
-import parseTree.Cfg;
 import parseTree.Contract;
+import parseTree.cfg.BasicBlock;
+import parseTree.cfg.Cfg;
 
 /**
  * Wrapper for an instance of <a href="https://github.com/google/gson">Gson</a> with the custom serializer for Contract
