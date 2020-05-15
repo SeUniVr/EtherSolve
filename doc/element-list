@@ -18,6 +18,7 @@ opcodes.environmentalOpcodes
 opcodes.stackOpcodes
 opcodes.systemOpcodes
 parseTree
+parseTree.cfg
 parseTree.SymbolicExecution
 rebuiltabi
 rebuiltabi.fields
