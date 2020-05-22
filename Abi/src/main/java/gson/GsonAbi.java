@@ -8,10 +8,16 @@ import abi.fields.SolidityType;
 import abi.fields.SolidityTypeID;
 import com.google.gson.*;
 
+/**
+ * Utility class to read and write Abi and Rebuilt ABI into Json files
+ */
 public class GsonAbi {
 
     private final Gson gson;
 
+    /**
+     * Constructor which registers type adapters
+     */
     public GsonAbi(){
         GsonBuilder gsonBuilder = new GsonBuilder();
         // Deserializers
@@ -109,10 +115,22 @@ public class GsonAbi {
         return new IOElement(name, new SolidityType(id, n, isArray, isFixed, arrayLength));
     }
 
+    /**
+     * Reads an abi from Json
+     * @param abi json source
+     * @param type output class
+     * @param <T> Output class
+     * @return Instance of class T obtained by the json source
+     */
     public <T> T fromJson(String abi, Class<T> type) {
         return gson.fromJson(abi, type);
     }
 
+    /**
+     * Prints an object to Json representation
+     * @param src object to print
+     * @return json representation
+     */
     public String toJson(Object src){
         return gson.toJson(src);
     }

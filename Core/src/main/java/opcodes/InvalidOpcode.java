@@ -2,7 +2,7 @@ package opcodes;
 
 public class InvalidOpcode extends Opcode {
 
-    private byte realOpcode;
+    private final byte realOpcode;
 
     public InvalidOpcode(long offset, byte realOpcode) {
         super(OpcodeID.INVALID);

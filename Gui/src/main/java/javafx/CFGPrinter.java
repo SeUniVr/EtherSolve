@@ -5,8 +5,8 @@ import com.fxgraph.graph.Model;
 import com.fxgraph.layout.AbegoTreeLayout;
 import javafx.scene.layout.Pane;
 import org.abego.treelayout.Configuration;
-import parseTree.BasicBlock;
-import parseTree.Cfg;
+import parseTree.cfg.BasicBlock;
+import parseTree.cfg.Cfg;
 
 public class CFGPrinter {
     public static Pane print(Cfg cfg) {

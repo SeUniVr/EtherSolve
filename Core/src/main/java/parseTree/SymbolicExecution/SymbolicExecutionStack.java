@@ -33,6 +33,7 @@ public class SymbolicExecutionStack {
     }
 
     public void executeOpcode(Opcode opcode) throws StackExceededException {
+        // System.out.println(String.format("%20s: %s", opcode, stack));
         if (stack.size() > MAX_STACK_SIZE) {
             throw new StackExceededException();
         }

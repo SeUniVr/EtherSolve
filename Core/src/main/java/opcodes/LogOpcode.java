@@ -2,15 +2,7 @@ package opcodes;
 
 public class LogOpcode extends Opcode {
 
-    private int topicNumber;
-
-    /**
-     * Constructor for default case with 0 topics.
-     * @param offset the offset in the bytecode, expressed in bytes.
-     */
-    public LogOpcode(long offset) {
-        this(offset, 0);
-    }
+    private final int topicNumber;
 
     /**
      * Basic constructor for all LOG opcodes.

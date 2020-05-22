@@ -61,6 +61,11 @@ public class PushOpcode extends StackOpcode {
         return String.format("%x%s", opcode, "0".repeat(zeros) + argument);
     }
 
+    /**
+     * Two pushOpcode are considered the same opcode if they have the same parameter length, ignoring the argument
+     * @param other opcode to test
+     * @return if they are both push of the same length (e.g. PUSH1 != PUSH20)
+     */
     @Override
     public boolean isSameOpcode(Opcode other) {
         // Ignore the parameter value

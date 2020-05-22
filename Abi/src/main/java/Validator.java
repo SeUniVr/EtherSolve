@@ -34,28 +34,29 @@ public class Validator {
             String name = entry.getValue();
             System.out.println(String.format("Processing contract %d/%d: %s", i, END, address));
             System.out.flush();
-            if (address.equals("0x5eda6d58a96f2994ea836e3f398f4f563ed6fb2b"))
-                continue;
+            // This contract went into infinite loop, until block limit has been implemented. 0x5eda6d58a96f2994ea836e3f398f4f563ed6fb2b
+            // Alternative to block limit is time limit of 60 seconds. See ExecutorService and Future<T>
             try {
-                Abi abi = EtherScanDownloader.getContractAbi(address);
-                String bytecode = EtherScanDownloader.getContractBytecode(address);
-                Contract contract = new Contract(name, bytecode, true);
-                if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesErrors() != 0)
-                    Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
-                RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
-                comparisons.add(new Pair<>(address, AbiComparator.compare(rebuiltAbi, abi)));
+                comparisons.add(new Pair<>(address, analyzeSingleContract(name, address)));
             } catch (IOException e) {
                 e.printStackTrace();
-            }  catch (NotSolidityContractException e) {
+            } catch (NotSolidityContractException e) {
                 Message.printWarning("Not Solidity contract, skipping...");
-            } catch (Exception e) {
-                Message.printError("Error in contract analysis");
-                e.printStackTrace();
             }
             i++;
         }
         
         writeOutput(dataset, comparisons);
+    }
+
+    private static AbiComparison analyzeSingleContract(String name, String address) throws IOException, NotSolidityContractException {
+        Abi abi = EtherScanDownloader.getContractAbi(address);
+        String bytecode = EtherScanDownloader.getContractBytecode(address);
+        Contract contract = new Contract(name, bytecode, true);
+        if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesErrors() != 0)
+            Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
+        RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
+        return AbiComparator.compare(rebuiltAbi, abi);
     }
 
     private static ArrayList<Pair<String, String>> loadDataset(){

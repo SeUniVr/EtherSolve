@@ -23,6 +23,13 @@ import java.math.BigInteger;
 
 public class BytecodeParser {
 
+    /**
+     * Parse a string with the hexadecimal representation of the bytecode and generates both bytecode and remaining data
+     *
+     * If there is a PUSH-n but not enough bytes to build the argument then they become remaining data
+     * @param binary the hexadecimal code
+     * @return A pair with the bytecode and the remaining data
+     */
     public static Pair<Bytecode, String> parse(String binary){
         Bytecode bytecode = new Bytecode();
         String remainingData = "";

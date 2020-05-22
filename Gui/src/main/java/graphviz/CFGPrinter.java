@@ -1,8 +1,8 @@
 package graphviz;
 
-import parseTree.BasicBlock;
-import parseTree.Cfg;
-import parseTree.CfgBuildReport;
+import parseTree.cfg.BasicBlock;
+import parseTree.cfg.Cfg;
+import parseTree.cfg.CfgBuildReport;
 
 import java.awt.*;
 import java.io.*;
