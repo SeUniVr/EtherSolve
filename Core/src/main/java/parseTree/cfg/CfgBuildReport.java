@@ -13,6 +13,7 @@ public class CfgBuildReport {
     private int loopDepthExceededErrors;
     private int multipleRootNodesErrors;
     private int stackExceededErrors;
+    private int blockLimitErrors;
     private int criticalErrors;
     private final StringBuilder errorLog;
     private long buildTimeMillis;
@@ -28,6 +29,7 @@ public class CfgBuildReport {
         loopDepthExceededErrors = 0;
         multipleRootNodesErrors = 0;
         stackExceededErrors = 0;
+        blockLimitErrors = 0;
         criticalErrors = 0;
         errorLog = new StringBuilder();
     }
@@ -96,6 +98,15 @@ public class CfgBuildReport {
     }
 
     /**
+     * Adds a block limit error. It's caused if the DFS explores too many nodes
+     * @param blockLimit the number of explored blocks
+     */
+    public void addBlockLimitError(int blockLimit) {
+        blockLimitErrors++;
+        errorLog.append(String.format("Symbolic execution explored too many blocks: %d\n", blockLimit));
+    }
+
+    /**
      * Adds a critical error. They are caused by any exception
      * @param exception the critical error
      */
@@ -126,6 +137,7 @@ public class CfgBuildReport {
                 "\nOrphan jump target unknown errors: " + orphanJumpTargetUnknownErrors +
                 "\nMultiple root nodes errors: " + multipleRootNodesErrors +
                 "\nSymbolic execution stack limit exceeded errors: " + stackExceededErrors +
+                "\nBlock limit errors: " + blockLimitErrors +
                 "\nCritical errors: " + criticalErrors;
     }
 
@@ -152,4 +164,5 @@ public class CfgBuildReport {
     public String getLog(){
         return errorLog.toString();
     }
+
 }

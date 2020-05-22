@@ -34,6 +34,7 @@ public class CfgBuilder {
     public static final Set<OpcodeID> DELIMITERS = new HashSet<>(Arrays.asList(BASIC_BLOCK_DELIMITERS));
     private static final int LOOP_DEPTH = 1000;
     private static final boolean REMOVE_ORPHAN_BLOCKS = true; // TODO experimental
+    private static final int BLOCK_LIMIT = 200000; // TODO experimental: if a contract is too big we run the symbolic execution at most on this number of blocks
 
     /**
      * Builds an empty cfg
@@ -177,6 +178,7 @@ public class CfgBuilder {
     }
 
     private static void resolveOrphanJumps(TreeMap<Long, BasicBlock> basicBlocks, CfgBuildReport buildReport){
+        int blockCount = 0;
         // DFS on nodes visiting each edge only once
         HashSet<Triplet<Long, Long, SymbolicExecutionStack>> visited = new HashSet<>();
         BasicBlock current = basicBlocks.firstEntry().getValue();
@@ -220,7 +222,11 @@ public class CfgBuilder {
             }
 
             // Execute last opcode
-            // System.out.println(String.format("%20s:%s", current.getLastOpcode(), stack));
+            //System.out.println(String.format("%20s: %s", current.getLastOpcode(), stack));
+            blockCount++;
+            if (blockCount >= BLOCK_LIMIT) {
+                buildReport.addBlockLimitError(BLOCK_LIMIT);
+            }
             try {
                 stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));
             } catch (StackExceededException e) {
