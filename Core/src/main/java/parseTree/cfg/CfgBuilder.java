@@ -247,7 +247,9 @@ public class CfgBuilder {
                     Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), nextOffset, stack);
                     if (!visited.contains(edge)) {
                         visited.add(edge);
-                        queue.push(new Triplet<>(basicBlocks.get(nextOffset), stack.copy(), dfs_depth + 1));
+                        BasicBlock nextBB = basicBlocks.get(nextOffset);
+                        if (nextBB != null)
+                            queue.push(new Triplet<>(nextBB, stack.copy(), dfs_depth + 1));
                     }
                 }
             } else {
