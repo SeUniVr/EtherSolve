@@ -7,6 +7,9 @@ import parseTree.Contract;
 import parseTree.cfg.BasicBlock;
 import parseTree.cfg.Cfg;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Wrapper for an instance of <a href="https://github.com/google/gson">Gson</a> with the custom serializer for Contract
  */
@@ -64,22 +67,35 @@ public class JsonExporter {
         JsonObject result = new JsonObject();
         result.add("bytecode", new JsonPrimitive(cfg.getBytecode().getBytes()));
         result.add("remainingData", new JsonPrimitive(cfg.getRemainingData()));
-        JsonObject nodes = new JsonObject();
+        JsonArray nodes = new JsonArray();
         for (BasicBlock node : cfg)
-            nodes.add(String.valueOf(node.getOffset()), nodeJsonWriter(node));
+            nodes.add(nodeJsonWriter(node));
         result.add("nodes", nodes);
-        result.add("successors", new Gson().toJsonTree(cfg.getSuccessorsMap()));
+        result.add("successors", successorsJsonWriter(cfg.getSuccessorsMap()));
         result.add("buildReport", new Gson().toJsonTree(cfg.getBuildReport()));
         return result;
     }
 
     private JsonObject nodeJsonWriter(BasicBlock node) {
         JsonObject result = new JsonObject();
+        result.add("offset", new JsonPrimitive(node.getOffset()));
         result.add("length", new JsonPrimitive(node.getLength()));
         result.add("type", new JsonPrimitive(node.getType().toString().toLowerCase()));
         result.add("stackBalance", new JsonPrimitive(node.getStackBalance()));
         result.add("bytecodeHex", new JsonPrimitive(node.getBytes()));
         result.add("parsedOpcodes", new JsonPrimitive(node.toString()));
+        return result;
+    }
+
+    private JsonArray successorsJsonWriter(Map<Long, List<Long>> successorsMap){
+        JsonArray result = new JsonArray();
+        Gson tmpGson = new Gson();
+        successorsMap.forEach((offset, successors) -> {
+            JsonObject elem = new JsonObject();
+            elem.add("from", new JsonPrimitive(offset));
+            elem.add("to", tmpGson.toJsonTree(successors));
+            result.add(elem);
+        });
         return result;
     }
 
@@ -100,21 +116,29 @@ public class JsonExporter {
      *     constructorCfg: {
      *         bytecode: "36791369985...",
      *         remainingData: "fe14515...",
-     *         nodes: {
-     *             0: {
+     *         nodes: [
+     *             {
+     *                 offset: 0,
      *                 length: 12,
      *                 type: "dispatcher",
      *                 stackBalance: +2,
      *                 bytecodeHex: "608060",
      *                 parsedOpcodes: "0: PUSH1 0x60\n2: PUSH1"
      *             },
-     *             12: {
+     *             {
+     *                 offset: 12,
      *             }
-     *         },
-     *         successors: {
-     *             0: [12, 18],
-     *             12: [18, 45, 23]
-     *         },
+     *         ],
+     *         successors: [
+     *             {
+     *                 from: 0,
+     *                 to: [12, 18]
+     *             },
+     *             {
+     *                 from: 12,
+     *                 to: [18, 45, 23]
+     *             }
+     *         ],
      *         buildReport: {
      *             directJumpTargetErrors: 0,
      *             orphanJumpTargetNullErrors: 2,
