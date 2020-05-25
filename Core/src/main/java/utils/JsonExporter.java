@@ -162,4 +162,8 @@ public class JsonExporter {
     public String toJson(Object src){
         return gson.toJson(src);
     }
+
+    public JsonElement getJsonTree(Contract contract) {
+        return gson.toJsonTree(contract);
+    }
 }
