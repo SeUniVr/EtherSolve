@@ -40,6 +40,8 @@ public class EtherScanDownloader {
         String bytecodeRequest = request("proxy", "eth_getCode", address);
         Gson gson = new Gson();
         EtherscanResponse response = gson.fromJson(bytecodeRequest, EtherscanResponse.class);
+        if (response.getResult() == null)
+            throw new IOException("Error in contract download");
         return response.getResult().substring(2);
     }
 

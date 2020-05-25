@@ -30,7 +30,11 @@ public class ApiController {
 
     @GetMapping
     public String getRequest(@RequestParam String address, @RequestParam(required = false) String name){
-        return "{result:\"Banana\"}";
+        Response response;
+        if (name == null)
+            name = "Contract" + CONTACT_COUNTER.getAndIncrement();
+        response = AddressProcessor.process(name, address);
+        return gson.toJson(response);
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
@@ -55,12 +59,7 @@ public class ApiController {
         return gson.toJson(response);
     }
 
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public String exceptionHandler(){
-        return "error";
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
+    @ExceptionHandler({MissingServletRequestParameterException.class, IllegalStateException.class})
     public String requestFormatError() {
         return gson.toJson(MISSING_INVALID_PARAMS_ERROR);
     }
