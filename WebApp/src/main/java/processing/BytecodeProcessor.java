@@ -18,17 +18,23 @@ public class BytecodeProcessor {
             bytecode = bytecode.substring(2);
         try {
             Contract contract = new Contract(name, bytecode, isOnlyRuntime, address);
+            new Thread(() -> buildCfgSvg(contract)).start();
             return new Response("1",
                     "Analysis completed",
                     new JsonExporter().getJsonTree(contract));
         } catch (NotSolidityContractException e) {
             return NOT_SOLIDITY_CONTRACT_ERROR;
         } catch (Exception e) {
+            e.printStackTrace();
             return CONTRACT_ANALYSIS_ERROR;
         }
     }
 
+    private static void buildCfgSvg(Contract contract) {
+
+    }
+
     public static Response process(String name, String bytecode, boolean isOnlyRuntime){
-        return process(name, bytecode, isOnlyRuntime, null);
+        return process(name, bytecode, isOnlyRuntime, "");
     }
 }
