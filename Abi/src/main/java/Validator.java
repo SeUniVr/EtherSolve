@@ -55,6 +55,8 @@ public class Validator {
         Contract contract = new Contract(name, bytecode, true);
         if (contract.getRuntimeCfg().getBuildReport().getTotalJumpError() != 0 || contract.getRuntimeCfg().getBuildReport().getMultipleRootNodesErrors() != 0)
             Message.printWarning(contract.getRuntimeCfg().getBuildReport().toString());
+        if (contract.getRuntimeCfg().getBuildReport().getBlockLimitErrors() != 0)
+            Message.printWarning(String.format("Contract %s reached block limit", address));
         RebuiltAbi rebuiltAbi = AbiExtractor.getAbiFromContract(contract);
         return AbiComparator.compare(rebuiltAbi, abi);
     }

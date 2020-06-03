@@ -157,6 +157,10 @@ public class CfgBuildReport {
         return multipleRootNodesErrors;
     }
 
+    public int getBlockLimitErrors() {
+        return blockLimitErrors;
+    }
+
     /**
      * Gets the complete error log
      * @return complete error log

@@ -226,6 +226,7 @@ public class CfgBuilder {
             blockCount++;
             if (blockCount >= BLOCK_LIMIT) {
                 buildReport.addBlockLimitError(BLOCK_LIMIT);
+                return;
             }
             try {
                 stack.executeOpcode(current.getOpcodes().get(current.getOpcodes().size() - 1));

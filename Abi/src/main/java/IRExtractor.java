@@ -20,7 +20,7 @@ public class IRExtractor {
     private final static String ADDRESS_CSV = "./inputs/export-verified-contractaddress-opensource-license.csv";
     private final static String OUTPUT_FOLDER = "./outputs/cfgs/";
 
-    private final static int START = 0;
+    private final static int START = 322;
     private final static int END = 1000;
 
     public static void main(String[] args) {
