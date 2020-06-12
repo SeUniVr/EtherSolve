@@ -145,4 +145,8 @@ public class SymbolicExecutionStack {
             e.printStackTrace();
         }
     }
+
+    public int currentSize() {
+        return stack.size();
+    }
 }

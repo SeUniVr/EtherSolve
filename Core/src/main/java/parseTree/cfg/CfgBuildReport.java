@@ -146,7 +146,7 @@ public class CfgBuildReport {
      * @return the sum of the errors
      */
     public int getTotalJumpError(){
-        return directJumpTargetErrors + orphanJumpTargetUnknownErrors + orphanJumpTargetNullErrors + loopDepthExceededErrors;
+        return directJumpTargetErrors + orphanJumpTargetUnknownErrors + orphanJumpTargetNullErrors + loopDepthExceededErrors + blockLimitErrors;
     }
 
     /**
@@ -161,6 +161,10 @@ public class CfgBuildReport {
         return blockLimitErrors;
     }
 
+    public int getCriticalErrors() {
+        return criticalErrors;
+    }
+
     /**
      * Gets the complete error log
      * @return complete error log
@@ -168,5 +172,4 @@ public class CfgBuildReport {
     public String getLog(){
         return errorLog.toString();
     }
-
 }

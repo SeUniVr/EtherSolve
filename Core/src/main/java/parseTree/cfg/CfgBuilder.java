@@ -224,6 +224,8 @@ public class CfgBuilder {
             // Execute last opcode
             //System.out.println(String.format("%20s: %s", current.getLastOpcode(), stack));
             blockCount++;
+            /*if (blockCount % 1000 == 0)
+                System.out.println("New Block " + blockCount + " - stack size: " + stack.currentSize());*/
             if (blockCount >= BLOCK_LIMIT) {
                 buildReport.addBlockLimitError(BLOCK_LIMIT);
                 return;

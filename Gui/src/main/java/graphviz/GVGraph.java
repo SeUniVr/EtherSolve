@@ -56,12 +56,12 @@ public class GVGraph {
 
             if (block.isRootBlock())
                 s.append(" [ shape=Msquare fillcolor=gold]");
+            else if (block.isExitBlock())
+                s.append(" [ fillcolor=crimson ]");
             else if (block.isLeafBlock())
                 s.append(" [ shape=Msquare color=crimson ]");
             else if (block.isFallBackBlock())
                 s.append(" [ fillcolor=orange ]");
-            else if (block.isExitBlock())
-                s.append(" [ fillcolor=crimson ]");
             s.append(";\n");
         }
 

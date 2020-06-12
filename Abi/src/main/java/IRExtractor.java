@@ -74,6 +74,10 @@ public class IRExtractor {
             Contract contract = new Contract(name, bytecode, true);
             result.setTimeMillis(System.currentTimeMillis() - startTime);
             Cfg runtimeCfg = contract.getRuntimeCfg();
+            if (runtimeCfg.getBuildReport().getBlockLimitErrors() != 0)
+                Message.printWarning("Block limit reached");
+            if (runtimeCfg.getBuildReport().getCriticalErrors() != 0)
+                Message.printWarning("Critical errors:\n" + runtimeCfg.getBuildReport());
             for (BasicBlock node : runtimeCfg) {
                 if (node.getType() != BasicBlockType.EXIT) {
                     result.addNode(node.getOffset());
