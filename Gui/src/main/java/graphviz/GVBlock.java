@@ -29,9 +29,31 @@ public class GVBlock {
 
     @Override
     public String toString() {
-        return "\"" +
-                mBasicBlock.toString().replace("\n", "\\l") + "\\l" +
-                "\"";
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getId());
+
+        sb.append(" [");
+        sb.append("label=\"");
+        sb.append(mBasicBlock.toString().replace("\n", "\\l"));
+        sb.append("\\l\" ");
+
+        if(this.isDispatcherBlock())
+            sb.append("fillcolor=lemonchiffon ");
+        if (this.isRootBlock())
+            sb.append("shape=Msquare fillcolor=gold ");
+        else if (this.isExitBlock())
+            sb.append("fillcolor=crimson ");
+        else if (this.isLeafBlock())
+            sb.append("shape=Msquare color=crimson ");
+        else if (this.isFallBackBlock())
+            sb.append("fillcolor=orange ");
+
+        sb.append("]");
+        return sb.toString();
+    }
+
+    public String getId(){
+        return String.valueOf(mBasicBlock.getOffset());
     }
 
     public boolean isDispatcherBlock() {

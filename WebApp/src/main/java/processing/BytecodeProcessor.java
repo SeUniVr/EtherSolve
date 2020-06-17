@@ -1,5 +1,9 @@
 package processing;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import graphviz.CFGPrinter;
 import json_utils.Response;
 import parseTree.Contract;
 import parseTree.NotSolidityContractException;
@@ -18,20 +22,17 @@ public class BytecodeProcessor {
             bytecode = bytecode.substring(2);
         try {
             Contract contract = new Contract(name, bytecode, isOnlyRuntime, address);
-            new Thread(() -> buildCfgSvg(contract)).start();
+            JsonObject contractJson = (JsonObject) new JsonExporter().getJsonTree(contract);
+            contractJson.add("dotNotation", new JsonPrimitive(CFGPrinter.getDotNotation(contract.getRuntimeCfg())));
             return new Response("1",
                     "Analysis completed",
-                    new JsonExporter().getJsonTree(contract));
+                    contractJson);
         } catch (NotSolidityContractException e) {
             return NOT_SOLIDITY_CONTRACT_ERROR;
         } catch (Exception e) {
             e.printStackTrace();
             return CONTRACT_ANALYSIS_ERROR;
         }
-    }
-
-    private static void buildCfgSvg(Contract contract) {
-
     }
 
     public static Response process(String name, String bytecode, boolean isOnlyRuntime){

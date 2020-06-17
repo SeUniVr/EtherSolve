@@ -28,7 +28,7 @@ public class CFGPrinter {
      * @param cfg input cfg
      * @return dot notation string
      */
-    private static String getDotNotation(Cfg cfg) {
+    public static String getDotNotation(Cfg cfg) {
         GVGraph graph = new GVGraph();
 
         GVBlock from, to;
@@ -50,7 +50,7 @@ public class CFGPrinter {
      * Save the rendered graph
      *
      * @param cfg graph to save
-     * @return file path of saved graph
+     * @return privatefile path of saved graph
      */
     public static String save(Cfg cfg){
         String dot = getDotNotation(cfg);

@@ -32,7 +32,7 @@ public class GVEdge{
 
     @Override
     public String toString() {
-        return from + " -> " + to + ";\n";
+        return from.getId() + " -> " + to.getId();
     }
 
 }

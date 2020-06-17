@@ -51,23 +51,13 @@ public class GVGraph {
         // Add nodes
         for (GVBlock block : blocks) {
             s.append(block);
-            if(block.isDispatcherBlock())
-                s.append(" [ fillcolor=lemonchiffon ]");
-
-            if (block.isRootBlock())
-                s.append(" [ shape=Msquare fillcolor=gold]");
-            else if (block.isExitBlock())
-                s.append(" [ fillcolor=crimson ]");
-            else if (block.isLeafBlock())
-                s.append(" [ shape=Msquare color=crimson ]");
-            else if (block.isFallBackBlock())
-                s.append(" [ fillcolor=orange ]");
             s.append(";\n");
         }
 
         // Add edges
         for (GVEdge edge : edges) {
             s.append(edge);
+            s.append(";\n");
         }
 
         s.append("}");

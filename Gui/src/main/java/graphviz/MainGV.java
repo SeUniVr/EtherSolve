@@ -32,7 +32,7 @@ public class MainGV {
         long pre = System.currentTimeMillis();
         Contract contract = null;
         try {
-            contract = new Contract("OttOtt", abiTestRuntime, true);
+            contract = new Contract("OttOtt", pippo, false);
         } catch (NotSolidityContractException e) {
             e.printStackTrace();
             return;
