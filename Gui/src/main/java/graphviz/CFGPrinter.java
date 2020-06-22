@@ -10,17 +10,19 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class CFGPrinter {
     private static final String DEFAULT_OUTPUT_PATH = "./outputs/reports/";
+    private static final String DEFAULT_TEMP_OUTPUT_PATH = "./outputs/reports/";
     private static final String DEFAULT_TEMPLATE = "report-template/template.html";
+
     public static final String PNG_FORMAT = "png";
     public static final String SVG_FORMAT = "svg";
-
-    private static final String CURRENT_FORMAT = SVG_FORMAT;
+    private static final String DEFAULT_FORMAT = SVG_FORMAT;
 
     /**
      * Create the dot notation from the cfg
@@ -47,23 +49,87 @@ public class CFGPrinter {
     }
 
     /**
-     * Save the rendered graph
+     * This method:
+     *  - creates the Dot notation file
+     *  - renders Dot notation file into the relative image
      *
-     * @param cfg graph to save
-     * @return privatefile path of saved graph
+     * @param dotString dot notation string
+     * @param format Graphviz rendering output
+     * @param temp if true instead of saving files return render file as string
+     * @return file path of saved graph image
      */
-    public static String save(Cfg cfg){
-        String dot = getDotNotation(cfg);
-        return renderGraph(dot, CURRENT_FORMAT);
+    private static String renderGraph(String dotString, String format, boolean temp) {
+        try {
+            String outputPath = !temp ? DEFAULT_OUTPUT_PATH : DEFAULT_TEMP_OUTPUT_PATH;
+
+            // Creation of the dot file
+            LocalDateTime datetime = LocalDateTime.now();
+            DateTimeFormatter datetime_format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+            String fileName = datetime_format.format(datetime);
+            String dotFilePath = outputPath + datetime_format.format(datetime) + ".dot";
+            writeFile(dotFilePath, dotString);
+
+            // Rendering of the dot file
+            String imageFilePath = outputPath + fileName + "." + format;
+            String command = "dot " + dotFilePath + " -T" + format + " -o " + imageFilePath;
+            System.out.println(command);
+            executeCommand(command);
+
+            if (!temp)
+                return imageFilePath;
+            else {
+                String svgString = loadFile(imageFilePath);
+                new File(dotFilePath).delete();
+                new File(imageFilePath).delete();
+                return svgString;
+            }
+        } catch (Exception e) {
+            System.out.println("renderGraph: Error");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
-     * Save the rendered graph and show it graphically
+     * Render cfg into an svg image and return it as string
+     *
+     * @param cfg cfg to render
+     * @return svg string of rendered cfg
+     */
+    public static String renderAsSvgString(Cfg cfg){
+        String dot = getDotNotation(cfg);
+        return renderGraph(dot, SVG_FORMAT, true);
+    }
+
+    /**
+     * Render cfg into an image with a specific format and save it
+     *
+     * @param cfg cfg to render
+     * @param format render image format
+     * @return path of rendered image
+     */
+    public static String renderAndSave(Cfg cfg, String format){
+        String dot = getDotNotation(cfg);
+        return renderGraph(dot, format, false);
+    }
+
+    /**
+     * Render cfg into an image with default format and save it
+     *
+     * @param cfg cfg to render
+     * @return path of rendered image
+     */
+    public static String renderAndSave(Cfg cfg){
+        return renderAndSave(cfg, DEFAULT_FORMAT);
+    }
+
+    /**
+     * Save the rendered graph and show it graphically with EOG
      * @param cfg graph to save and show
      * @return the path of the cfg generated
      */
-    public static String saveAndShow(Cfg cfg) {
-        String filepath = save(cfg);
+    public static String renderSaveAndShow(Cfg cfg) {
+        String filepath = renderAndSave(cfg);
 
         new Thread(() -> { // New Thread
             try {
@@ -81,34 +147,6 @@ public class CFGPrinter {
         }).start();
 
         return filepath;
-    }
-
-    /**
-     * This method:
-     *  - creates the Dot notation file
-     *  - compiles Dot notation file into the relative image
-     *
-     * @param s Dot Notation String
-     * @return file path of saved graph
-     */
-    private static String renderGraph(String s, String format) {
-        try {
-            new File(DEFAULT_OUTPUT_PATH).mkdirs();
-            String fileName = LocalDateTime.now().toString();
-            writeFile(DEFAULT_OUTPUT_PATH + fileName + ".dot", s);
-
-            String command = "dot " + DEFAULT_OUTPUT_PATH + fileName + ".dot" +
-                    " -T" + format + " -o " +
-                    DEFAULT_OUTPUT_PATH + fileName + "." + format;
-            System.out.println(command);
-            executeCommand(command);
-
-            return DEFAULT_OUTPUT_PATH + fileName + "." + format;
-        } catch (Exception e) {
-            System.out.println("renderGraph: Error");
-            e.printStackTrace();
-            return null;
-        }
     }
 
     /**
@@ -137,14 +175,14 @@ public class CFGPrinter {
      * @return path of generated report
      */
     public static String createReport(String svg_filename, String solidity_version, long elapsed_time, String remainingData, CfgBuildReport buildReport){
-        String current_datetime = LocalDateTime.now().toString();
+        LocalDateTime datetime = LocalDateTime.now();
 
         String svg_xml = loadFile(svg_filename);
         String template = loadFile(Objects.requireNonNull(CFGPrinter.class.getClassLoader().getResource(DEFAULT_TEMPLATE)).getPath());
 
         Map<String, String> model = new HashMap<>();
         model.put("svg_xml", svg_xml);
-        model.put("datetime", current_datetime);
+        model.put("datetime", datetime.toString());
         model.put("solidity_version", solidity_version);
         model.put("elapsed_time", elapsed_time + " ms");
         model.put("remaining_data", remainingData);
@@ -156,9 +194,10 @@ public class CFGPrinter {
             template = template.replace("%{" + key + "}", model.get(key));
         }
 
-        String output_fileName = DEFAULT_OUTPUT_PATH + current_datetime + ".html";
-        writeFile(output_fileName, template);
-        return output_fileName;
+        DateTimeFormatter datetime_format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+        String fileName = DEFAULT_OUTPUT_PATH + datetime_format.format(datetime) + ".html";
+        writeFile(fileName, template);
+        return fileName;
     }
 
     /**
@@ -245,6 +284,7 @@ public class CFGPrinter {
      */
     private static void writeFile(String path, String text) {
         File file = new File(path);
+        new File(file.getParent()).mkdir(); // create the directory if it does not exist
         try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
             out.write(text);
         } catch (IOException e) {

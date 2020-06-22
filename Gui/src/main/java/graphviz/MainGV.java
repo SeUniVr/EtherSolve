@@ -32,7 +32,7 @@ public class MainGV {
         long pre = System.currentTimeMillis();
         Contract contract = null;
         try {
-            contract = new Contract("OttOtt", abiTestRuntime, true);
+            contract = new Contract("OttOtt", pippo, false);
         } catch (NotSolidityContractException e) {
             e.printStackTrace();
             return;
@@ -55,8 +55,8 @@ public class MainGV {
         System.out.println("Runtime CFG build report:\n\t" + contract.getRuntimeCfg().getBuildReport().toString().replace("\n", "\n\t"));
         // System.out.println("Runtime CFG error log:\n\t" + contract.getRuntimeCfg().getBuildReport().getLog().replace("\n", "\n\t"));
 
-        // CFGPrinter.saveAndShow(contract.getRuntimeCfg());
-        String svgPath = CFGPrinter.save(generated_cfg);
+        //CFGPrinter.renderSaveAndShow(contract.getRuntimeCfg());
+        String svgPath = CFGPrinter.renderAndSave(generated_cfg);
         String reportPath = CFGPrinter.createReport(svgPath, solidity_version, post-pre, generated_cfg.getRemainingData(), generated_cfg.getBuildReport());
         CFGPrinter.openHtmlReport(reportPath);
     }
