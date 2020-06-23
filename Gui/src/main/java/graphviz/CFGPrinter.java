@@ -283,7 +283,7 @@ public class CFGPrinter {
      */
     private static void writeFile(String path, String text) {
         File file = new File(path);
-        new File(file.getParent()).mkdir(); // create the directory if it does not exist
+        file.getParentFile().mkdirs(); // create the directory if it does not exist
         try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
             out.write(text);
         } catch (IOException e) {
