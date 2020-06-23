@@ -93,12 +93,11 @@ public class CFGPrinter {
     /**
      * Render cfg into an svg image and return it as string
      *
-     * @param cfg cfg to render
+     * @param dotNotation dotNotation of cfg
      * @return svg string of rendered cfg
      */
-    public static String renderAsSvgString(Cfg cfg){
-        String dot = getDotNotation(cfg);
-        return renderGraph(dot, SVG_FORMAT, true);
+    public static String renderDotToSvgString(String dotNotation){
+        return renderGraph(dotNotation, SVG_FORMAT, true);
     }
 
     /**
