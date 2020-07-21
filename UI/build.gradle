@@ -1,7 +1,5 @@
 plugins {
     id 'java'
-    id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 group 'org.example'
@@ -11,18 +9,11 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile project(':Core')
-    implementation 'com.github.VersusF:fxgraph:master-SNAPSHOT'
+    compile 'info.picocli:picocli:4.4.0'
+    annotationProcessor 'info.picocli:picocli-codegen:4.4.0'
 }
-
-javafx {
-    version = "13"
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
-}
-
-mainClassName = 'javafx.MainFx'

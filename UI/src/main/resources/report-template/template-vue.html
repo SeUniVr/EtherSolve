@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>%{contractName}%</title>
+
+    <script src="https://kit.fontawesome.com/24e2a9042b.js" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=B612+Mono&display=swap');
+
+        #app {
+            width: 100vw;
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        :root {
+            font-size: 16px;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 500;
+            --text-accent: #f0f0f0;
+            --text-main: black;
+            --bg-main: #e0e0e0;
+            --bg-accent: #222222;
+            --bg-accent-hover: #101010;
+            --sidebar-width: 15rem;
+            --sidebar-position: 0;
+            --transition-speed: .5s;
+        }
+        .card {
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+
+        .component {
+            width: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .contractName {
+            margin: 1rem;
+            display: inline-block;
+            font-size: 2.5em;
+        }
+        .contractAddress {
+            display: inline-block;
+            opacity: 0.5;
+            font-size: 1.3em;
+        }
+        .gridLayout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: auto;
+            grid-template-areas:
+                "cfg cfg cfg inf"
+                "clp clp rdt rdt";
+        }
+        .cfg {
+            grid-area: cfg;
+        }
+        .info {
+            grid-area: inf;
+        }
+        .collapsibles {
+            grid-area: clp;
+        }
+        .remainingData {
+            grid-area: rdt;
+        }
+
+        .content{
+            width: auto;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            padding: 0;
+            margin: 0;
+        }
+        .title {
+            margin: .3em 0 .5em 0;
+            text-align: center;
+            width: 100%;
+            font-size: 1.5em;
+            font-weight: bold;
+            opacity: .5;
+        }
+        .otherInfo{
+            background-color: #2196F3;
+            color: #fff;
+            border-radius: 5px;
+            margin: .5em;
+            padding: .5em;
+        }
+        .otherInfo li{
+            opacity: .7;
+            margin: 8px 0;
+        }
+        .otherInfo i {
+            margin: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1 class="contractName">%{contractName}%</h1>
+        <div class="gridLayout">
+            <div class = "cfg">
+            </div>
+            <div class="info">
+                <ul>
+                    <li class="otherInfo card">
+                        <p class="title">Contract info</p>
+                        <ul>
+                            <li>
+                                <i class="fas fa-code-branch"></i>
+                                <strong>Solidity Version:</strong>
+                                %{solidityVersion}%
+                            </li>
+                            <li>
+                                <i class="fas fa-stopwatch"></i>
+                                <strong>Build time:</strong>
+                                %{buildTimeMillis}% ms
+                            </li>
+                            <li>
+                                <i class="fas fa-hashtag"></i>
+                                <strong>Source code hash:</strong>
+                                %{contractHash}%
+                            </li>
+                            <li>
+                                <i class="fas fa-check-square"></i>
+                                <strong>Runtime code only:</strong>
+                                %{isOnlyRuntime}%
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="collapsibles">
+                <div class="errorLog">
+
+                </div>
+                <div class="sourceCode">
+
+                </div>
+            </div>
+            <div class="remainingData">
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
