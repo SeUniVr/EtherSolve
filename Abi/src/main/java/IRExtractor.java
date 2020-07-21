@@ -36,7 +36,7 @@ public class IRExtractor {
                         edges.add(jsonEdge);
                     }
                     obj.add("edges", edges);
-                    obj.add("version", new JsonPrimitive(src.getVersion()));
+                    obj.add("computedVersion", new JsonPrimitive(src.getVersion()));
                     obj.add("timeMillis", new JsonPrimitive(src.getTimeMillis()));
                     return obj;
                 })

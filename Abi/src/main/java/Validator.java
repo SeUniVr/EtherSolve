@@ -17,7 +17,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class Validator {
-    private final static String ADDRESS_CSV = "./inputs/export-verified-contractaddress-opensource-license.csv";
+    // private final static String ADDRESS_CSV = "./inputs/export-verified-contractaddress-opensource-license.csv";
+    private final static String ADDRESS_CSV = "./inputs/dataset.csv";
     private final static String OUTPUT_CSV = "./outputs/abi-comparison/report" +
             DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss").format(LocalDateTime.now()) + ".csv";
 
@@ -42,6 +43,8 @@ public class Validator {
                 e.printStackTrace();
             } catch (NotSolidityContractException e) {
                 Message.printWarning("Not Solidity contract, skipping...");
+            } catch (Exception e) {
+                Message.printError("Error during contract validation, skipping...");
             }
             i++;
         }
@@ -75,7 +78,7 @@ public class Validator {
             }
             while ((line = br.readLine()) != null && i < END) {
                 String[] values = line.split(",");
-                dataset.add(new Pair<>(values[1].substring(1,values[1].length()-1), values[2].substring(1, values[2].length()-1)));
+                dataset.add(new Pair<>(values[1], values[0]));
                 i++;
             }
         } catch (IOException e) {

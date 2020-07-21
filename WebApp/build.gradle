@@ -17,7 +17,7 @@ dependencies {
 
     compile project(':Core')
     compile project(':Abi')
-    compile project(':Gui')
+    compile project(':UI')
 
     implementation 'com.google.code.gson:gson:2.8.6'
 
