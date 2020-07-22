@@ -129,9 +129,10 @@ public class MainCLI implements Callable<Integer> {
         else
             extension += "out";
 
+        String absolutePath = System.getProperty("user.dir") + "/";
         if (filename == null)
-            return new File(contractName + extension);
-        return new File(filename);
+            return new File(absolutePath + contractName + extension);
+        return new File(absolutePath + filename);
     }
 
     private String getOutputFileContent(OutputType outputType, Contract contract) {

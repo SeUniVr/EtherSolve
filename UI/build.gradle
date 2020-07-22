@@ -17,3 +17,10 @@ dependencies {
     compile 'info.picocli:picocli:4.4.0'
     annotationProcessor 'info.picocli:picocli-codegen:4.4.0'
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'cli.MainCLI'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}

@@ -6,7 +6,7 @@ package utils;
 public class Message {
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_YELLOW = "\u001B[33m";
-    private static boolean printDebug = true;
+    private static boolean printDebug = false;
 
     /**
      * Prints an error to the stderr

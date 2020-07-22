@@ -6,6 +6,7 @@ import opcodes.stackOpcodes.PopOpcode;
 import opcodes.stackOpcodes.PushOpcode;
 import opcodes.stackOpcodes.SwapOpcode;
 import org.junit.jupiter.api.Test;
+import parseTree.SymbolicExecution.StackExceededException;
 import parseTree.SymbolicExecution.SymbolicExecutionStack;
 import parseTree.SymbolicExecution.UnknownStackElementException;
 
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class SymbolicExecutionStackTest {
 
     @Test
-    void executeOpcodeAdd() {
+    void executeOpcodeAdd() throws StackExceededException {
         SymbolicExecutionStack stack = new SymbolicExecutionStack();
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("8")));
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("2")));
@@ -26,7 +27,7 @@ class SymbolicExecutionStackTest {
     }
 
     @Test
-    void executeOpcodePush() {
+    void executeOpcodePush() throws StackExceededException {
         SymbolicExecutionStack stack = new SymbolicExecutionStack();
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("8")));
         try {
@@ -37,7 +38,7 @@ class SymbolicExecutionStackTest {
     }
 
     @Test
-    void executeOpcodeDup() {
+    void executeOpcodeDup() throws StackExceededException {
         SymbolicExecutionStack stack = new SymbolicExecutionStack();
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("8")));
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("7")));
@@ -51,7 +52,7 @@ class SymbolicExecutionStackTest {
     }
 
     @Test
-    void executeOpcodeSwap() {
+    void executeOpcodeSwap() throws StackExceededException {
         SymbolicExecutionStack stack = new SymbolicExecutionStack();
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("8")));
         stack.executeOpcode(new PushOpcode(0, 4, new BigInteger("7")));

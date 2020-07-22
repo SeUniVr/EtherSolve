@@ -5,6 +5,7 @@ import parseTree.Contract;
 import parseTree.cfg.BasicBlock;
 import parseTree.cfg.Cfg;
 import parseTree.cfg.CfgBuildReport;
+import utils.Message;
 
 import java.awt.*;
 import java.io.*;
@@ -75,7 +76,7 @@ public class CFGPrinter {
             // Rendering of the dot file
             String imageFilePath = outputPath + fileName + "." + format;
             String command = "dot " + dotFilePath + " -T" + format + " -o " + imageFilePath;
-            System.out.println(command);
+            Message.printDebug(command);
             executeCommand(command);
 
             if (!temp)
@@ -296,7 +297,7 @@ public class CFGPrinter {
     }
 
     public static String getHtmlReport(Contract contract) {
-        String template = loadFile(Objects.requireNonNull(CFGPrinter.class.getClassLoader().getResource(NEW_TEMPLATE)).getPath());
+        String template = loadResource(NEW_TEMPLATE);
 
         Cfg cfg = contract.getRuntimeCfg();
         CfgBuildReport report = cfg.getBuildReport();
@@ -336,5 +337,20 @@ public class CFGPrinter {
         }
 
         return template;
+    }
+
+    private static String loadResource(String resourceName){
+        StringBuilder sb = new StringBuilder();
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(CFGPrinter.class.getClassLoader().getResourceAsStream(resourceName))))){
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading resource " + resourceName);
+        }
+
+        return sb.toString();
     }
 }
