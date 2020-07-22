@@ -5,6 +5,7 @@
     <title>%{contractName}%</title>
 
     <script src="https://kit.fontawesome.com/24e2a9042b.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.5.0/dist/svg-pan-zoom.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=B612+Mono&display=swap');
@@ -49,6 +50,12 @@
         }
         .cfg {
             grid-area: cfg;
+        }
+        .cfgContent {
+            background-color: #ececec;
+            width: 100%;
+            height: 600px;
+            border: thin solid #ccc;
         }
         .info {
             grid-area: inf;
@@ -242,6 +249,9 @@
         <h1 class="contractName">%{contractName}%</h1>
         <div class="gridLayout">
             <div class="cfg gridElement">
+                <div class="cfgContent">
+                    %{svgXml}%
+                </div>
             </div>
             <div class="info gridElement">
                 <ul>
@@ -434,8 +444,29 @@
         document.getElementById("decodedData").innerText = str;
     }
 
+    function loadSvgPanZoom() {
+        window.zoomTiger = svgPanZoom('#svg_xml_graph', {
+            zoomEnabled: true,
+            minZoom: 1,
+            maxZoom: 100,
+            zoomScaleSensitivity: 0.4,
+            controlIconsEnabled: true,
+            fit: true,
+            center: true,
+        });
+    }
+
+    function configureSvg() {
+        var svg = document.getElementsByTagName('svg')[0];
+        svg.setAttribute('width', '100%'); //NB!
+        svg.setAttribute('height', '100%'); //NB!
+        svg.setAttribute("id", "svg_xml_graph");
+    }
+
     showMessageCards();
     translateRemainingData();
+    configureSvg();
+    loadSvgPanZoom();
 
 </script>
 

@@ -328,6 +328,7 @@ public class CFGPrinter {
         model.put("loopDepthExceededErrors", String.valueOf(report.getLoopDepthExceededErrors()));
         model.put("multipleRootNodesErrors", String.valueOf(report.getMultipleRootNodesErrors()));
         model.put("stackExceededErrors", String.valueOf(report.getStackExceededErrors()));
+        model.put("svgXml", renderDotToSvgString(getDotNotation(cfg)));
 
 
         for (String key : model.keySet()){
