@@ -32,21 +32,10 @@
             box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
         }
 
-        .component {
-            width: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
         .contractName {
             margin: 1rem;
             display: inline-block;
             font-size: 2.5em;
-        }
-        .contractAddress {
-            display: inline-block;
-            opacity: 0.5;
-            font-size: 1.3em;
         }
         .gridLayout {
             display: grid;
@@ -108,6 +97,44 @@
         }
         .otherInfo i {
             margin: 2px 5px;
+        }
+
+        .messageCard{
+            width: auto;
+            margin: .5em;
+            border-radius: 5px;
+            color: #fff;
+            position: relative;
+        }
+        .messageCard i {
+            font-size: 4em;
+            opacity: .2;
+            padding: 1% 1% 1% 4%;
+        }
+        .number {
+            display: block;
+            position: absolute;
+            top: 0;
+            right: 10%;
+            font-size: 2em;
+        }
+        .message {
+            display: block;
+            opacity: .7;
+            position: absolute;
+            bottom: 5px;
+            right: 10%;
+            text-align: right;
+            max-width: 60%;
+        }
+        .error {
+            background-color: #f44336;
+        }
+        .warning {
+            background-color: #ff9800;
+        }
+        .success {
+            background-color: #4CAF50;
         }
 
         /*******************************************************************************************************************************/
@@ -198,6 +225,10 @@
             word-break: break-all;
         }
 
+        #sourceCodeText {
+            word-break: break-all;
+        }
+
         /*******************************************************************************************************************************/
     </style>
 </head>
@@ -209,6 +240,69 @@
             </div>
             <div class="info gridElement">
                 <ul>
+                    <li id="successCard">
+                        <div class="card messageCard success">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="number"></span>
+                            <span class="message">No errors occurred</span>
+                        </div>
+                    </li>
+                    <li id="criticalErrors">
+                        <div class="card messageCard error">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="number">%{criticalErrors}%</span>
+                            <span class="message">Critical errors</span>
+                        </div>
+                    </li>
+                    <li id="blockLimitErrors">
+                        <div class="card messageCard error">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="number">%{blockLimitErrors}%</span>
+                            <span class="message">Block limit errors</span>
+                        </div>
+                    </li>
+                    <li id="orphanJumpTargetUnknownErrors">
+                        <div class="card messageCard error">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="number">%{orphanJumpTargetUnknownErrors}%</span>
+                            <span class="message">Orphan jump target unknown errors</span>
+                        </div>
+                    </li>
+                    <li id="directJumpTargetErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{directJumpTargetErrors}%</span>
+                            <span class="message">Direct jump target errors</span>
+                        </div>
+                    </li>
+                    <li id="orphanJumpTargetNullErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{orphanJumpTargetNullErrors}%</span>
+                            <span class="message">Orphan jump target null errors</span>
+                        </div>
+                    </li>
+                    <li id="loopDepthExceededErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{loopDepthExceededErrors}%</span>
+                            <span class="message">Loop depth exceeded errors</span>
+                        </div>
+                    </li>
+                    <li id="multipleRootNodesErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{multipleRootNodesErrors}%</span>
+                            <span class="message">Multiple root nodes errors</span>
+                        </div>
+                    </li>
+                    <li id="stackExceededErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{stackExceededErrors}%</span>
+                            <span class="message">Stack exceeded errors</span>
+                        </div>
+                    </li>
                     <li class="otherInfo card">
                         <p class="titleInfo">Contract info</p>
                         <ul>
@@ -264,9 +358,9 @@
                 </h2>
                 <div class="collapsible">
                     <h4>Hex format:</h4>
-                    <p>%{remainingData}%</p>
+                    <p id="remainingData">%{remainingData}%</p>
                     <h4>String format:</h4>
-                    <p>%{decodedData}%</p>
+                    <p id="decodedData"></p>
                 </div>
             </div>
         </div>
@@ -290,6 +384,50 @@
             textCopiedAlert.classList.add("alertHidden");
         }, 3000);
     }
+
+    function showMessageCards() {
+        var successCard = document.getElementById("successCard");
+        var criticalErrorsCard = document.getElementById("criticalErrors");
+        var blockLimitErrorsCard = document.getElementById("blockLimitErrors");
+        var orphanJumpTargetUnknownErrors = document.getElementById("orphanJumpTargetUnknownErrors");
+        var directJumpTargetErrors = document.getElementById("directJumpTargetErrors");
+        var orphanJumpTargetNullErrors = document.getElementById("orphanJumpTargetNullErrors");
+        var loopDepthExceededErrors = document.getElementById("loopDepthExceededErrors");
+        var multipleRootNodesErrors = document.getElementById("multipleRootNodesErrors");
+        var stackExceededErrors = document.getElementById("stackExceededErrors");
+
+        if (%{errorsCount}% != 0)
+            successCard.style.display = "None";
+        if (%{criticalErrors}% == 0)
+            criticalErrorsCard.style.display = "None";
+        if (%{blockLimitErrors}% == 0)
+            blockLimitErrorsCard.style.display = "None";
+        if (%{orphanJumpTargetUnknownErrors}% == 0)
+            orphanJumpTargetUnknownErrors.style.display = "None";
+        if (%{directJumpTargetErrors}% == 0)
+            directJumpTargetErrors.style.display = "None";
+        if (%{orphanJumpTargetNullErrors}% == 0)
+            orphanJumpTargetNullErrors.style.display = "None";
+        if (%{loopDepthExceededErrors}% == 0)
+            loopDepthExceededErrors.style.display = "None";
+        if (%{multipleRootNodesErrors}% == 0)
+            multipleRootNodesErrors.style.display = "None";
+        if (%{stackExceededErrors}% == 0)
+            stackExceededErrors.style.display = "None";
+
+    }
+
+    function translateRemainingData() {
+        var data = document.getElementById("remainingData").innerText;
+        var str = '';
+        for (var n = 0; n < data.length; n += 2) {
+            str += String.fromCharCode(parseInt(data.substr(n, 2), 16));
+        }
+        document.getElementById("decodedData").innerText = str;
+    }
+
+    showMessageCards();
+    translateRemainingData();
 
 </script>
 

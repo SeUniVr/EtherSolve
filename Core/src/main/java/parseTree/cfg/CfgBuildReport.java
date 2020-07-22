@@ -146,7 +146,22 @@ public class CfgBuildReport {
      * @return the sum of the errors
      */
     public int getTotalJumpError(){
-        return directJumpTargetErrors + orphanJumpTargetUnknownErrors + orphanJumpTargetNullErrors + loopDepthExceededErrors + blockLimitErrors;
+        return directJumpTargetErrors +
+                orphanJumpTargetUnknownErrors +
+                orphanJumpTargetNullErrors +
+                loopDepthExceededErrors +
+                blockLimitErrors;
+    }
+
+    public int getTotalErrors(){
+        return directJumpTargetErrors +
+                orphanJumpTargetNullErrors +
+                orphanJumpTargetUnknownErrors +
+                loopDepthExceededErrors +
+                multipleRootNodesErrors +
+                stackExceededErrors +
+                criticalErrors +
+                blockLimitErrors;
     }
 
     /**
@@ -163,6 +178,30 @@ public class CfgBuildReport {
 
     public int getCriticalErrors() {
         return criticalErrors;
+    }
+
+    public long getBuildTimeMillis() {
+        return buildTimeMillis;
+    }
+
+    public int getDirectJumpTargetErrors() {
+        return directJumpTargetErrors;
+    }
+
+    public int getOrphanJumpTargetNullErrors() {
+        return orphanJumpTargetNullErrors;
+    }
+
+    public int getOrphanJumpTargetUnknownErrors() {
+        return orphanJumpTargetUnknownErrors;
+    }
+
+    public int getLoopDepthExceededErrors() {
+        return loopDepthExceededErrors;
+    }
+
+    public int getStackExceededErrors() {
+        return stackExceededErrors;
     }
 
     /**

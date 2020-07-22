@@ -12,6 +12,8 @@ import utils.JsonExporter;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Callable;
 
 @Command(name = "ethersolve", mixinStandardHelpOptions = true, description = "EtherSolve, build an accurate CFG from Ethereum bytecode", version = "1.0")
@@ -55,10 +57,13 @@ public class MainCLI implements Callable<Integer> {
     public Integer call() throws Exception {
         try {
             String bytecode = getBytecodeFromSource(source);
-            String contractName = String.valueOf(bytecode.hashCode());
+            DateTimeFormatter datetime_format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+            String contractName = "Analysis_" + datetime_format.format(LocalDateTime.now());
             Contract contract = new Contract(contractName, bytecode, contractType.runtime);
             File outputFile = getOutputFile(outputFilename, contractName, outputType);
             String content = getOutputFileContent(outputType, contract);
+
+            outputFile.getParentFile().mkdirs();
             try (BufferedWriter out = new BufferedWriter(new FileWriter(outputFile))) {
                 out.write(content);
             } catch (IOException e) {
@@ -137,7 +142,7 @@ public class MainCLI implements Callable<Integer> {
         else if (outputType.svg)
             return CFGPrinter.renderDotToSvgString(CFGPrinter.getDotNotation(contract.getRuntimeCfg()));
         else if (outputType.html)
-            return "";
+            return CFGPrinter.getHtmlReport(contract);
         else
             return "";
     }

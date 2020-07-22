@@ -1,5 +1,7 @@
 package graphviz;
 
+import SolidityInfo.SolidityVersionUnknownException;
+import parseTree.Contract;
 import parseTree.cfg.BasicBlock;
 import parseTree.cfg.Cfg;
 import parseTree.cfg.CfgBuildReport;
@@ -19,6 +21,7 @@ public class CFGPrinter {
     private static final String DEFAULT_OUTPUT_PATH = "./outputs/reports/";
     private static final String DEFAULT_TEMP_OUTPUT_PATH = "./outputs/reports/";
     private static final String DEFAULT_TEMPLATE = "report-template/template.html";
+    private static final String NEW_TEMPLATE = "report-template/template-vue.html";
 
     public static final String PNG_FORMAT = "png";
     public static final String SVG_FORMAT = "svg";
@@ -290,5 +293,47 @@ public class CFGPrinter {
             System.err.format("Error writing file %s: %s%n", path, e);
             e.printStackTrace();
         }
+    }
+
+    public static String getHtmlReport(Contract contract) {
+        String template = loadFile(Objects.requireNonNull(CFGPrinter.class.getClassLoader().getResource(NEW_TEMPLATE)).getPath());
+
+        Cfg cfg = contract.getRuntimeCfg();
+        CfgBuildReport report = cfg.getBuildReport();
+        String solidityVersion;
+        try {
+            solidityVersion = contract.getExactSolidityVersion();
+        } catch (SolidityVersionUnknownException e) {
+            solidityVersion = "Unknown or < 0.5.9";
+        }
+        String errorsLog = report.getLog();
+        if (errorsLog.equals(""))
+            errorsLog = "Nothing to show";
+
+        Map<String, String> model = new HashMap<>();
+        model.put("contractName", contract.getName());
+        model.put("solidityVersion", solidityVersion);
+        model.put("buildTimeMillis", String.valueOf(report.getBuildTimeMillis()));
+        model.put("contractHash", contract.getContractHash());
+        model.put("isOnlyRuntime", String.valueOf(contract.isOnlyRuntime()));
+        model.put("outputLog", errorsLog);
+        model.put("sourceCode", contract.getBinarySource());
+        model.put("remainingData", cfg.getRemainingData());
+        model.put("errorsCount", String.valueOf(report.getTotalErrors()));
+        model.put("criticalErrors", String.valueOf(report.getCriticalErrors()));
+        model.put("blockLimitErrors", String.valueOf(report.getBlockLimitErrors()));
+        model.put("orphanJumpTargetUnknownErrors", String.valueOf(report.getOrphanJumpTargetUnknownErrors()));
+        model.put("orphanJumpTargetNullErrors", String.valueOf(report.getOrphanJumpTargetNullErrors()));
+        model.put("directJumpTargetErrors", String.valueOf(report.getDirectJumpTargetErrors()));
+        model.put("loopDepthExceededErrors", String.valueOf(report.getLoopDepthExceededErrors()));
+        model.put("multipleRootNodesErrors", String.valueOf(report.getMultipleRootNodesErrors()));
+        model.put("stackExceededErrors", String.valueOf(report.getStackExceededErrors()));
+
+
+        for (String key : model.keySet()){
+            template = template.replace("%{" + key + "}%", model.get(key));
+        }
+
+        return template;
     }
 }
