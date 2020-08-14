@@ -23,4 +23,5 @@ jar {
         attributes 'Main-Class': 'cli.MainCLI'
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    baseName 'EtherSolve'
 }
