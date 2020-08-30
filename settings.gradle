@@ -3,4 +3,5 @@ include 'Core'
 include 'Abi'
 include 'WebApp'
 include 'UI'
+include 'SecurityAnalysis'
 
