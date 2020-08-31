@@ -8,8 +8,13 @@ import opcodes.stackOpcodes.SLoadOpcode;
 import opcodes.stackOpcodes.SStoreOpcode;
 import opcodes.systemOpcodes.CallOpcode;
 import parseTree.Contract;
+import parseTree.SymbolicExecution.StackExceededException;
+import parseTree.SymbolicExecution.SymbolicExecutionStack;
+import parseTree.SymbolicExecution.UnknownStackElementException;
 import parseTree.cfg.BasicBlock;
+import parseTree.cfg.BasicBlockType;
 import parseTree.cfg.Cfg;
+import utils.Message;
 
 import java.util.HashSet;
 import java.util.Stack;
@@ -24,7 +29,7 @@ public class StoreAccessAfterUnsafeCall {
         Cfg runtimeCfg = contract.getRuntimeCfg();
         // Gather the blocks containing the CALL opcode
         for (BasicBlock bb : runtimeCfg){
-            if (bb.checkPattern(new CallOpcode(0))){
+            if (bb.checkPattern(new CallOpcode(0)) && bb.getType() == BasicBlockType.COMMON){
                 // Check if it is an unsafe call
                 if (isUnsafeCall(bb)){
                     // Check if it can reach an SSTORE or an SLOAD opcode through DFS
@@ -52,7 +57,7 @@ public class StoreAccessAfterUnsafeCall {
                         }
 
                         for (BasicBlock successor : currentBlock.getSuccessors())
-                            if (! visited.contains(successor))
+                            if (! visited.contains(successor) && successor.getType() == BasicBlockType.COMMON)
                                 queue.add(successor);
                     }
                 }
@@ -63,7 +68,24 @@ public class StoreAccessAfterUnsafeCall {
     }
 
     private static boolean isUnsafeCall(BasicBlock bb) {
-        // TODO implement this with symbolic stack execution
+        SymbolicExecutionStack stack = new SymbolicExecutionStack();
+        for (Opcode o : bb){
+            if (o instanceof CallOpcode){
+                try {
+                    stack.peek(1);
+                    return false;
+                } catch (UnknownStackElementException e) {
+                    return true;
+                }
+            } else {
+                try {
+                    stack.executeOpcode(o);
+                } catch (StackExceededException | IndexOutOfBoundsException e) {
+                    Message.printWarning("Cannot determine safeness of block " + bb.getOffset());
+                    return true;
+                }
+            }
+        }
         return true;
     }
 }

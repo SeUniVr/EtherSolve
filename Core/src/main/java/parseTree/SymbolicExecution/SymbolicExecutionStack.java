@@ -85,12 +85,16 @@ public class SymbolicExecutionStack {
             stack.add(null);
     }
 
-    public BigInteger peek() throws UnknownStackElementException {
-        BigInteger value = stack.get(stack.size() - 1);
+    public BigInteger peek(int position) throws UnknownStackElementException {
+        BigInteger value = stack.get(stack.size() - 1 - position);
         if (value != null)
             return value;
         else
             throw new UnknownStackElementException();
+    }
+
+    public BigInteger peek() throws UnknownStackElementException {
+        return peek(0);
     }
 
     @Override
