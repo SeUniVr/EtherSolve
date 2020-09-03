@@ -42,4 +42,13 @@ public class SecurityAnalysisReport {
                 ",\n\tanalysisTimeMillis=" + analysisTimeMillis +
                 "\n}";
     }
+
+    public int countVulnerabilities(SecurityVulnerability... vulnerabilities) {
+        int count = 0;
+        for (SecurityDetection d : this.vulnerabilities)
+            for (SecurityVulnerability v : vulnerabilities)
+                if (d.getVulnerability() == v)
+                    count++;
+        return count;
+    }
 }

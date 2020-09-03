@@ -14,7 +14,6 @@ import parseTree.SymbolicExecution.UnknownStackElementException;
 import parseTree.cfg.BasicBlock;
 import parseTree.cfg.BasicBlockType;
 import parseTree.cfg.Cfg;
-import utils.Message;
 
 import java.util.HashSet;
 import java.util.Stack;
@@ -81,7 +80,7 @@ public class StoreAccessAfterUnsafeCall {
                 try {
                     stack.executeOpcode(o);
                 } catch (StackExceededException | IndexOutOfBoundsException e) {
-                    Message.printWarning("Cannot determine safeness of block " + bb.getOffset());
+                    //Message.printWarning("Cannot determine safeness of block " + bb.getOffset());
                     return true;
                 }
             }
