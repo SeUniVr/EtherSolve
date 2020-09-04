@@ -3,24 +3,27 @@ package main;
 import parseTree.Contract;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
-public class SecurityAnalysisReport {
+public class SecurityAnalysisReport implements Iterable<SecurityDetection> {
     private final Contract contract;
-    private final HashSet<SecurityDetection> vulnerabilities;
+    private final HashSet<SecurityDetection> detections;
     private long analysisTimeMillis;
 
     public SecurityAnalysisReport(Contract contract) {
         this.contract = contract;
         this.analysisTimeMillis = System.currentTimeMillis();
-        this.vulnerabilities = new HashSet<>();
+        this.detections = new HashSet<>();
     }
 
     public Contract getContract() {
         return contract;
     }
 
-    public HashSet<SecurityDetection> getVulnerabilities() {
-        return vulnerabilities;
+    public HashSet<SecurityDetection> getDetections() {
+        return detections;
     }
 
     public long getAnalysisTimeMillis() {
@@ -28,7 +31,7 @@ public class SecurityAnalysisReport {
     }
 
     public void addDetection(SecurityDetection detection){
-        this.vulnerabilities.add(detection);
+        this.detections.add(detection);
     }
 
     public void stopTimer(){
@@ -38,17 +41,32 @@ public class SecurityAnalysisReport {
     @Override
     public String toString() {
         return "main.SecurityAnalysisReport{\n\t" +
-                "vulnerabilities=" + vulnerabilities +
+                "detections=" + detections +
                 ",\n\tanalysisTimeMillis=" + analysisTimeMillis +
                 "\n}";
     }
 
-    public int countVulnerabilities(SecurityVulnerability... vulnerabilities) {
+    public int countDetections(SecurityVulnerability... vulnerabilities) {
         int count = 0;
-        for (SecurityDetection d : this.vulnerabilities)
+        for (SecurityDetection d : this.detections)
             for (SecurityVulnerability v : vulnerabilities)
                 if (d.getVulnerability() == v)
                     count++;
         return count;
+    }
+
+    @Override
+    public Iterator<SecurityDetection> iterator() {
+        return detections.iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super SecurityDetection> action) {
+        detections.forEach(action);
+    }
+
+    @Override
+    public Spliterator<SecurityDetection> spliterator() {
+        return detections.spliterator();
     }
 }

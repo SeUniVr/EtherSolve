@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Stack;
 
 public class StoreAccessAfterUnsafeCall {
-    private static final String SLOAD_MESSAGE = "Store access in write mode after an unsafe call";
+    private static final String SLOAD_MESSAGE = "Store access in read mode after an unsafe call";
     private static final String SSTORE_MESSAGE = "Store access in write mode after an unsafe call; this could bring to a re-entrancy vulnerability";
 
 

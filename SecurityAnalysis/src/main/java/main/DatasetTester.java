@@ -55,8 +55,8 @@ public class DatasetTester {
         int originalVulnerabilitiesSum = 0;
         int buggyVulnerabilitiesSum = 0;
         for (int i = 0; i < N; i++){
-            int originalVulnerabilities = originalEvmReports.get(i).countVulnerabilities(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
-            int buggyVulnerabilities = buggyEvmReports.get(i).countVulnerabilities(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
+            int originalVulnerabilities = originalEvmReports.get(i).countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
+            int buggyVulnerabilities = buggyEvmReports.get(i).countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
             originalVulnerabilitiesSum += originalVulnerabilities;
             buggyVulnerabilitiesSum += buggyVulnerabilities;
             System.out.format("%d,%d,%d\n", i+1, originalVulnerabilities, buggyVulnerabilities);
