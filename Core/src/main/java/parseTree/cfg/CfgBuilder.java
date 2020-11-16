@@ -69,9 +69,19 @@ public class CfgBuilder {
             return emptyCfg();
 
         CfgBuildReport buildReport = new CfgBuildReport();
-        Pair<Bytecode, String> sourceParsed = BytecodeParser.parse(binary);
+        // REMOVE CHILD CONTRACTS
+        String libraryPrefix = "";
+        if (binary.matches("^73[0-9a-fA-F]{40}3014[0-9a-fA-F]*$")){
+            libraryPrefix = binary.substring(0, 46);
+            binary = binary.substring(46);
+        }
+        String[] binarySegments = binary.split("(?=(60(60|80)604052))", 2);
+        String childrenContracts = binarySegments.length > 1 ? binarySegments[1] : "";
+
+        // PARSE AND GET REMAINING DATA
+        Pair<Bytecode, String> sourceParsed = BytecodeParser.parse(libraryPrefix + binarySegments[0]);
         Bytecode bytecode = sourceParsed.getKey();
-        String remainingData = sourceParsed.getValue();
+        String remainingData = sourceParsed.getValue() + childrenContracts;
 
         // BEGIN BUILDING OPERATIONS
         TreeMap<Long, BasicBlock> basicBlocks = generateBasicBlocks(bytecode);
