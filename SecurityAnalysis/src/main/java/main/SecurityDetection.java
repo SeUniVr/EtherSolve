@@ -2,7 +2,7 @@ package main;
 
 import opcodes.Opcode;
 
-public class SecurityDetection {
+public class SecurityDetection implements Comparable<SecurityDetection> {
     private final SecurityVulnerability vulnerability;
     private final Opcode location;
     private final String message;
@@ -32,5 +32,10 @@ public class SecurityDetection {
     @Override
     public String toString() {
         return String.format("%s at opcode %s - %s", vulnerability.getName(), location, message);
+    }
+
+    @Override
+    public int compareTo(SecurityDetection other) {
+        return Long.compare(this.location.getOffset(), other.location.getOffset());
     }
 }

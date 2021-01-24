@@ -1,6 +1,9 @@
 package cli;
 
+import analysers.StoreAccessAfterUnsafeCall;
 import graphviz.CFGPrinter;
+import main.SecurityAnalysisReport;
+import main.SecurityDetection;
 import parseTree.Contract;
 import parseTree.NotSolidityContractException;
 import picocli.CommandLine;
@@ -14,6 +17,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 @Command(name = "ethersolve", mixinStandardHelpOptions = true, description = "EtherSolve, build an accurate CFG from Ethereum bytecode", version = "1.0")
@@ -53,6 +57,9 @@ public class MainCLI implements Callable<Integer> {
     @Option(names = {"-o", "--output"}, description = "Output file")
     private String outputFilename;
 
+    @Option(names = {"--re-entrancy"}, description = "Execute re-entrancy detector and save output")
+    private boolean reEntrancyFilename;
+
     @Override
     public Integer call() throws Exception {
         try {
@@ -69,6 +76,18 @@ public class MainCLI implements Callable<Integer> {
             } catch (IOException e) {
                 System.err.format("Error writing file %s: %s%n", outputFile.getName(), e);
             }
+
+            if (reEntrancyFilename) {
+                String absolutePath = System.getProperty("user.dir") + "/";
+                File reEntrancyFile = new File(absolutePath + contractName + "-re-entrancy.csv");
+                String reEntrancyContent = runReEntrancyDetector(contract);
+                try (BufferedWriter out = new BufferedWriter(new FileWriter(reEntrancyFile))) {
+                    out.write(reEntrancyContent);
+                } catch (IOException e) {
+                    System.err.format("Error writing file %s: %s%n", reEntrancyFile.getName(), e);
+                }
+            }
+
             return 0;
         } catch (IllegalArgumentException e){
             System.err.println(e.getMessage());
@@ -146,5 +165,23 @@ public class MainCLI implements Callable<Integer> {
             return CFGPrinter.getHtmlReport(contract);
         else
             return "";
+    }
+
+    private String runReEntrancyDetector(Contract contract) {
+        SecurityAnalysisReport report = new SecurityAnalysisReport(contract);
+        StoreAccessAfterUnsafeCall.analyse(contract, report);
+        report.stopTimer();
+        TreeSet<SecurityDetection> sortedDetections = new TreeSet<>(report.getDetections());
+
+        StringBuilder result = new StringBuilder("offset,opcode,detection\n");
+        for (SecurityDetection securityDetection : sortedDetections) {
+            result.append(securityDetection.getLocation().getOffset())
+                    .append(',')
+                    .append(securityDetection.getLocation())
+                    .append(',')
+                    .append(securityDetection.getVulnerability().getName())
+                    .append('\n');
+        }
+        return result.toString();
     }
 }
