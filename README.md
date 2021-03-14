@@ -40,3 +40,5 @@ The following command is used to analyse the bytecode in the `example007.evm` fi
 ## Dataset
 
 The file `dataset.csv` contains the smart contracts used in the experimental validation.
+
+The full repication package can be found [here](https://github.com/SeUniVr/EtherSolve_ICPC2021_ReplicationPackage)
