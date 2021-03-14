@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>%{contractName}%</title>
+
+    <script src="https://kit.fontawesome.com/24e2a9042b.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.5.0/dist/svg-pan-zoom.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=B612+Mono&display=swap');
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            width: 100%;
+            background: #fefefe;
+        }
+
+        :root {
+            font-size: 16px;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 500;
+            --text-accent: #f0f0f0;
+            --text-main: black;
+            --bg-main: #e0e0e0;
+            --bg-accent: #222222;
+            --bg-accent-hover: #101010;
+            --sidebar-width: 15rem;
+            --sidebar-position: 0;
+            --transition-speed: .5s;
+        }
+        .card {
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+
+        .contractName {
+            margin: 1rem;
+            display: inline-block;
+            font-size: 2.5em;
+        }
+        .gridLayout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: auto;
+            grid-template-areas:
+                "cfg cfg cfg inf"
+                "err err rdt rdt"
+                "src src dcd dcd";
+        }
+        .cfg {
+            grid-area: cfg;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+        }
+        .cfgContent {
+            background-color: #ececec;
+            width: 100%;
+            height: 70vh;
+            border: thin solid #ccc;
+            flex-grow: 1;
+        }
+        .info {
+            grid-area: inf;
+        }
+        .remainingData {
+            grid-area: rdt;
+        }
+        .decodedData {
+            grid-area: dcd;
+        }
+        .errorLog {
+            grid-area: err;
+        }
+        .sourceCode {
+            grid-area: src;
+        }
+        .gridElement{
+            width: auto;
+            position: relative;
+            margin: .5em;
+        }
+
+        /*******************************************************************************************************************************/
+        .content{
+            width: auto;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            padding: 0;
+            margin: 0;
+        }
+        .titleInfo {
+            margin: .3em 0 .5em 0;
+            text-align: center;
+            width: 100%;
+            font-size: 1.5em;
+            font-weight: bold;
+            opacity: .5;
+        }
+        .otherInfo{
+            background-color: #2196F3;
+            color: #fff;
+            border-radius: 5px;
+            padding: .5em;
+        }
+        .otherInfo li{
+            opacity: .7;
+            margin: 8px 0;
+        }
+        .otherInfo i {
+            margin: 2px 5px;
+        }
+        .infoList li {
+            margin: 0 .5em .5em .5em;
+        }
+
+        .messageCard{
+            width: auto;
+            border-radius: 5px;
+            color: #fff;
+            position: relative;
+        }
+        .messageCard i {
+            font-size: 4em;
+            opacity: .2;
+            padding: 1% 1% 1% 4%;
+        }
+        .number {
+            display: block;
+            position: absolute;
+            top: 0;
+            right: 10%;
+            font-size: 2em;
+        }
+        .message {
+            display: block;
+            opacity: .7;
+            position: absolute;
+            bottom: 5px;
+            right: 10%;
+            text-align: right;
+            max-width: 60%;
+        }
+        .error {
+            background-color: #f44336;
+        }
+        .warning {
+            background-color: #ff9800;
+        }
+        .success {
+            background-color: #4CAF50;
+        }
+
+        /*******************************************************************************************************************************/
+
+        .collapsibleHeader {
+            width: auto;
+            font-size: 1.5em;
+            font-weight: bold;
+            border: none;
+            text-align: left;
+            padding: .5rem;
+            background: #ccc;
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        .icon {
+            position: absolute;
+            right: 2%;
+            opacity: .5;
+            font-size: .8em;
+        }
+        .iconCopy {
+            cursor: pointer;
+        }
+        .collapsible {
+            border: 1px solid #ccc;
+            background: #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            max-height: 20em;
+            overflow: hidden;
+            overflow-y: scroll;
+        }
+        .collapsibleContent {
+            padding: .5rem;
+            display: block;
+            white-space: pre-wrap;
+        }
+        .collapsibleFill{
+            flex-grow: 1;
+        }
+        .errorContent {
+            color: #f44336;
+        }
+        .alertBox {
+            position: fixed;
+            width: fit-content;
+            bottom: 20px;
+            left: 50vw;
+            right: 50vw;
+            transform: translateX(-50%);
+            transition: all 1s ease-in-out;
+            background-color: #2196F3;
+            color: #fff;
+            font-weight: bold;
+            margin: 10px;
+            padding: 1%;
+            border-radius: 10px;
+        }
+        .alertBox p {
+            opacity: .7;
+            padding: 0;
+            margin: 0;
+        }
+        .alertActive{
+            bottom: 3%;
+            z-index: 100;
+        }
+        .alertHidden{
+            bottom: -100px;
+            z-index: 100;
+        }
+
+        .remainingData {
+            display: flex;
+            flex-flow: column;
+            height: calc(100% - 1em);
+        }
+        .remainingData p, .decodedData p {
+            font-family: "B612 Mono", monospace, sans-serif;
+            margin: .5rem;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        #sourceCodeText {
+            word-break: break-all;
+        }
+
+        /*******************************************************************************************************************************/
+
+        #logo {
+            position: relative;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        #logoSvg {
+            height: 5rem;
+            width: 5rem;
+        }
+
+        .logoTitle {
+            display: block;
+        }
+
+        .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        /*******************************************************************************************************************************/
+
+        footer {
+            padding: 0.5em;
+            text-align: center;
+            width: 100%;
+            color: #6e6e6e;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="header">
+            <h1 class="contractName">%{contractName}%</h1>
+            <div id="logo">
+                <svg id="logoSvg" width="210mm" height="210mm" enable-background="new" version="1.1" viewBox="0 0 210 210" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+                    <defs>
+                        <linearGradient id="linearGradient877">
+                            <stop stop-color="#ff8b1c" offset="0"/>
+                            <stop stop-color="#fff01c" offset="1"/>
+                        </linearGradient>
+                        <linearGradient id="linearGradient871" x1="18.168" x2="141.16" y1="99.942" y2="220.83" gradientTransform="translate(18.548 24.903)" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#ff2d33" offset="0"/>
+                            <stop stop-color="#ff842d" offset="1"/>
+                        </linearGradient>
+                        <linearGradient id="linearGradient879-3" x1="74.072" x2="195.66" y1="160.04" y2="281.63" gradientTransform="translate(-24.368 -24.302)" gradientUnits="userSpaceOnUse" xlink:href="#linearGradient877"/>
+                        <linearGradient id="linearGradient870" x1="74.072" x2="195.66" y1="160.04" y2="281.63" gradientTransform="translate(-24.368 -24.302)" gradientUnits="userSpaceOnUse" xlink:href="#linearGradient877"/>
+                    </defs>
+                    <metadata>
+                        <rdf:RDF>
+                            <cc:Work rdf:about="">
+                                <dc:format>image/svg+xml</dc:format>
+                                <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+                                <dc:title/>
+                            </cc:Work>
+                        </rdf:RDF>
+                    </metadata>
+                    <g transform="translate(0,-87)">
+                        <g>
+                            <rect id="YellowSquare1" x="49.703" y="135.74" width="121.59" height="121.59" enable-background="new" fill="url(#linearGradient879-3)"/>
+                            <rect id="RedSquare" x="36.716" y="124.84" width="122.99" height="120.89" fill="url(#linearGradient871)"/>
+                            <rect id="YellowSquare2" x="49.703" y="135.74" width="121.59" height="121.59" enable-background="new" fill="url(#linearGradient870)" opacity=".721"/>
+                        </g>
+                        <g id="LetterE" transform="matrix(.13332 0 0 .13859 31.332 141.96)">
+                            <g transform="translate(1.6822e-6 1.2158e-5)">
+                                <path transform="rotate(90.136 751.75 66.009)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" fill-opacity=".8"/>
+                                <path transform="rotate(-89.864 610.44 144.38)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".8902"/>
+                                <path transform="rotate(90.136 626.73 99.63)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".6"/>
+                                <path transform="rotate(90.136 501.71 133.25)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".8"/>
+                                <g fill-opacity=".78039">
+                                    <path transform="rotate(-89.864 677.84 395.02)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new"/>
+                                    <path transform="rotate(-89.864 644.14 269.7)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new"/>
+                                    <path transform="rotate(-89.864 702.12 52.538)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new"/>
+                                </g>
+                                <path transform="rotate(-89.864 769.52 303.17)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".8902"/>
+                                <path transform="rotate(90.136 593.34 224.71)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".6"/>
+                                <path transform="rotate(90.136 376.69 166.87)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".6"/>
+                                <path transform="rotate(-89.864 711.54 520.34)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".8902"/>
+                                <path transform="rotate(90.136 251.67 200.5)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".8"/>
+                                <path transform="rotate(-89.864 745.24 645.65)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".6"/>
+                                <path transform="rotate(-89.864 836.92 553.81)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".78039"/>
+                                <path transform="rotate(90.136 343.3 291.96)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".8902"/>
+                                <path transform="rotate(90.136 843.38 157.47)" d="m640.79 38.448 158.94 91.319-158.55 91.986z" enable-background="new" fill-opacity=".6"/>
+                            </g>
+                        </g>
+                    </g>
+                </svg>
+                <h1 class="logoTitle">
+                    EtherSolve
+                </h1>
+            </div>
+        </div>
+        <div class="gridLayout">
+            <div class="cfg gridElement">
+                <div class="cfgContent">
+                    %{svgXml}%
+                </div>
+            </div>
+            <div class="info gridElement">
+                <ul class="infoList">
+                    <li id="successCard">
+                        <div class="card messageCard success">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="number"></span>
+                            <span class="message">No errors occurred</span>
+                        </div>
+                    </li>
+                    <li id="criticalErrors">
+                        <div class="card messageCard error">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="number">%{criticalErrors}%</span>
+                            <span class="message">Critical errors</span>
+                        </div>
+                    </li>
+                    <li id="blockLimitErrors">
+                        <div class="card messageCard error">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="number">%{blockLimitErrors}%</span>
+                            <span class="message">Block limit errors</span>
+                        </div>
+                    </li>
+                    <li id="orphanJumpTargetUnknownErrors">
+                        <div class="card messageCard error">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="number">%{orphanJumpTargetUnknownErrors}%</span>
+                            <span class="message">Orphan jump target unknown errors</span>
+                        </div>
+                    </li>
+                    <li id="directJumpTargetErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{directJumpTargetErrors}%</span>
+                            <span class="message">Direct jump target errors</span>
+                        </div>
+                    </li>
+                    <li id="orphanJumpTargetNullErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{orphanJumpTargetNullErrors}%</span>
+                            <span class="message">Orphan jump target null errors</span>
+                        </div>
+                    </li>
+                    <li id="loopDepthExceededErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{loopDepthExceededErrors}%</span>
+                            <span class="message">Loop depth exceeded errors</span>
+                        </div>
+                    </li>
+                    <li id="multipleRootNodesErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{multipleRootNodesErrors}%</span>
+                            <span class="message">Multiple root nodes errors</span>
+                        </div>
+                    </li>
+                    <li id="stackExceededErrors">
+                        <div class="card messageCard warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="number">%{stackExceededErrors}%</span>
+                            <span class="message">Stack exceeded errors</span>
+                        </div>
+                    </li>
+                    <li class="otherInfo card">
+                        <p class="titleInfo">Contract info</p>
+                        <ul>
+                            <li>
+                                <i class="fas fa-code-branch"></i>
+                                <strong>Solidity Version:</strong>
+                                %{solidityVersion}%
+                            </li>
+                            <li>
+                                <i class="fas fa-stopwatch"></i>
+                                <strong>Build time:</strong>
+                                %{buildTimeMillis}% ms
+                            </li>
+                            <li>
+                                <i class="fas fa-hashtag"></i>
+                                <strong>Source code hash:</strong>
+                                %{contractHash}%
+                            </li>
+                            <li>
+                                <i class="fas fa-check-square"></i>
+                                <strong>Runtime code only:</strong>
+                                %{isOnlyRuntime}%
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="errorLog gridElement">
+                <h2 class="collapsibleHeader">
+                    Errors log
+                </h2>
+                <div class="collapsible collapsibleFixedHeight">
+                    <div class="collapsibleContent errorContent">%{outputLog}%</div>
+                </div>
+            </div>
+            <div class="sourceCode gridElement">
+                <h2 class="collapsibleHeader">
+                    Source code
+                    <i class="fas fa-copy icon iconCopy" onclick="copyTextToClipboard()"></i>
+                </h2>
+                <div class="collapsible collapsibleFixedHeight">
+                    <div class="collapsibleContent" id="sourceCodeText">%{sourceCode}%</div>
+                </div>
+                <div class="alertBox card alertHidden" id="textCopiedAlert">
+                    <p>Source code copied to clipboard</p>
+                </div>
+            </div>
+            <div class="remainingData gridElement">
+                <h2 class="collapsibleHeader">
+                    Remaining data hex format:
+                </h2>
+                <div class="collapsible collapsibleFill">
+                    <p id="remainingData">%{remainingData}%</p>
+                </div>
+            </div>
+            <div class="decodedData gridElement">
+                <h2 class="collapsibleHeader">
+                    Remaining data decoded:
+                </h2>
+                <div class="collapsible collapsibleFill">
+                    <p id="decodedData"></p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            Report generated with EtherSolve&#169; 2020
+        </footer>
+    </div>
+</body>
+
+<script>
+    function copyTextToClipboard() {
+        var textCopiedAlert = document.getElementById("textCopiedAlert");
+        var dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = document.getElementById("sourceCodeText").innerText;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        // Show alert
+        textCopiedAlert.classList.remove("alertHidden");
+        textCopiedAlert.classList.add("alertActive")
+        setTimeout(() => {
+            textCopiedAlert.classList.remove("alertActive");
+            textCopiedAlert.classList.add("alertHidden");
+        }, 3000);
+    }
+
+    function showMessageCards() {
+        var successCard = document.getElementById("successCard");
+        var criticalErrorsCard = document.getElementById("criticalErrors");
+        var blockLimitErrorsCard = document.getElementById("blockLimitErrors");
+        var orphanJumpTargetUnknownErrors = document.getElementById("orphanJumpTargetUnknownErrors");
+        var directJumpTargetErrors = document.getElementById("directJumpTargetErrors");
+        var orphanJumpTargetNullErrors = document.getElementById("orphanJumpTargetNullErrors");
+        var loopDepthExceededErrors = document.getElementById("loopDepthExceededErrors");
+        var multipleRootNodesErrors = document.getElementById("multipleRootNodesErrors");
+        var stackExceededErrors = document.getElementById("stackExceededErrors");
+
+        if (%{errorsCount}% != 0)
+            successCard.style.display = "None";
+        if (%{criticalErrors}% == 0)
+            criticalErrorsCard.style.display = "None";
+        if (%{blockLimitErrors}% == 0)
+            blockLimitErrorsCard.style.display = "None";
+        if (%{orphanJumpTargetUnknownErrors}% == 0)
+            orphanJumpTargetUnknownErrors.style.display = "None";
+        if (%{directJumpTargetErrors}% == 0)
+            directJumpTargetErrors.style.display = "None";
+        if (%{orphanJumpTargetNullErrors}% == 0)
+            orphanJumpTargetNullErrors.style.display = "None";
+        if (%{loopDepthExceededErrors}% == 0)
+            loopDepthExceededErrors.style.display = "None";
+        if (%{multipleRootNodesErrors}% == 0)
+            multipleRootNodesErrors.style.display = "None";
+        if (%{stackExceededErrors}% == 0)
+            stackExceededErrors.style.display = "None";
+
+    }
+
+    function translateRemainingData() {
+        var data = document.getElementById("remainingData").innerText;
+        var str = '';
+        for (var n = 0; n < data.length; n += 2) {
+            str += String.fromCharCode(parseInt(data.substr(n, 2), 16));
+        }
+        document.getElementById("decodedData").innerText = str;
+    }
+
+    function loadSvgPanZoom() {
+        window.zoomTiger = svgPanZoom('#svg_xml_graph', {
+            zoomEnabled: true,
+            minZoom: 1,
+            maxZoom: 100,
+            zoomScaleSensitivity: 0.4,
+            controlIconsEnabled: true,
+            fit: true,
+            center: true,
+        });
+    }
+
+    function configureSvg() {
+        var svg = document.getElementsByTagName('svg')[1];
+        svg.setAttribute('width', '100%'); //NB!
+        svg.setAttribute('height', '100%'); //NB!
+        svg.setAttribute("id", "svg_xml_graph");
+    }
+
+    showMessageCards();
+    translateRemainingData();
+    configureSvg();
+    loadSvgPanZoom();
+
+</script>
+
+</html>
