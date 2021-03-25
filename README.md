@@ -5,25 +5,21 @@ EtherSolve is a tool for the control-flow graph extraction from Ethereum bytecod
 
 ## Usage
 
-To run the tool please use the provided JAR
-
-`java -jar EtherSolve.jar --help`
-
-```bash
-Usage: ethersolve [-hV] [-o=<outputFilename>] (-c | -r) (-j | -H | -s | -d)
-                  <source>
+```
+Usage: ethersolve [-hV] [--re-entrancy] [-o=<outputFilename>] (-c | -r) (-j | -H | -s | -d) <source>
 EtherSolve, build an accurate CFG from Ethereum bytecode
-      <source>     Bytecode string or file containing it
-  -c, --creation   Parse bytecode as creation code
-  -d, --dot        Export a dot-notation file
-  -h, --help       Show this help message and exit.
-  -H, --html       Export a graphic HTML report. Graphviz is required!
-  -j, --json       Export a Json report
+      <source>        Bytecode string or file containing it
+  -c, --creation      Parse bytecode as creation code
+  -d, --dot           Export a dot-notation file
+  -h, --help          Show this help message and exit.
+  -H, --html          Export a graphic HTML report. Graphviz is required!
+  -j, --json          Export a Json report
   -o, --output=<outputFilename>
-                   Output file
-  -r, --runtime    Parse bytecode as runtime code
-  -s, --svg        Export a graphic SVG image. Graphviz is required!
-  -V, --version    Print version information and exit.
+                      Output file
+  -r, --runtime       Parse bytecode as runtime code
+      --re-entrancy   Execute re-entrancy detector and save output
+  -s, --svg           Export a graphic SVG image. Graphviz is required!
+  -V, --version       Print version information and exit.
 ```
 
 The source can be both the bytecode or a path to a file containing it.
@@ -31,12 +27,32 @@ Specify if the bytecode is creation code or runtime code, and the desired output
 
 The tool has been tested on Linux x64 with Java 11.0.8. To produce a graphical output (Html or Svg) [Graphviz](https://graphviz.org/) is required.
 
-#### Example
+To run the re-entrancy validator add the `--re-entrancy` option. The tool will create a CSV file containing the detections and their location in the code. Note that the re-entrancy corresponds to a "Store write after unsafe call".
 
-The following command is used to analyse the bytecode in the `example007.evm` file as a creation code and to produce the html report in the desired file.
+#### Examples
 
-`java -jar EtherSolve.jar -c -H -o index.html example_1.evm`
+To analise the bytecode of a certain file, the commands may be the following:
+
+```bash
+# Generate HTML report for creation-code source file
+java -jar EtherSolve.jar -c -H path/to/bytecode/file.evm
+```
+
+```bash
+# Generate JSON report in "report.json" for creation-code source file
+java -jar EtherSolve.jar -c -j -o report.json path/to/bytecode/file.evm
+```
+
+```bash
+# Generate HTML report in "index.html" for runtime-code source file
+java -jar EtherSolve.jar -r -H -o index.html path/to/bytecode/file.evm
+```
+
+```bash
+# Generate HTML report in "index.html" for creation-code source file with re-entrancy detection analysis
+java -jar EtherSolve.jar -c -H -o index.html --re-entrancy path/to/bytecode/file.evm
+```
 
 ## Dataset
 
-The file `dataset.csv` contains the smart contracts used in the experimental validation.
+The full repication package can be found [here](https://github.com/SeUniVr/EtherSolve_ICPC2021_ReplicationPackage)
