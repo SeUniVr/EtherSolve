@@ -5,7 +5,7 @@ EtherSolve is a tool for the control-flow graph extraction from Ethereum bytecod
 
 ## Usage
 
-```
+```bash
 Usage: ethersolve [-hV] [--re-entrancy] [-o=<outputFilename>] (-c | -r) (-j | -H | -s | -d) <source>
 EtherSolve, build an accurate CFG from Ethereum bytecode
       <source>        Bytecode string or file containing it
@@ -23,7 +23,7 @@ EtherSolve, build an accurate CFG from Ethereum bytecode
 ```
 
 The source can be both the bytecode or a path to a file containing it.
-Specify if the bytecode is creation code or runtime code, and the desired output type.
+Specify if the bytecode is creation code (`-c`) or runtime code (`-r`), and the desired output type.
 
 The tool has been tested on Linux x64 with Java 11.0.8. To produce a graphical output (Html or Svg) [Graphviz](https://graphviz.org/) is required.
 
