@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class CFGPrinter {
-    private static final String DEFAULT_OUTPUT_PATH = "./outputs/reports/";
-    private static final String DEFAULT_TEMP_OUTPUT_PATH = "./";
+    private static final String DEFAULT_OUTPUT_PATH = "../outputs/reports/";
+    private static final String DEFAULT_TEMP_OUTPUT_PATH = "../";
     private static final String DEFAULT_TEMPLATE = "report-template/template.html";
     private static final String NEW_TEMPLATE = "report-template/template-vue.html";
 
