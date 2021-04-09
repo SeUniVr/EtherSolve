@@ -13,3 +13,10 @@ dependencies {
     compile project(':Core')
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
+
+task runSecurityAnalyser(type: JavaExec) {
+    group = "Execution"
+    description = "Run the main class of Core module, which analyses a sample bytecode"
+    classpath = sourceSets.main.runtimeClasspath
+    main = "main.SecurityAnalyser"
+}

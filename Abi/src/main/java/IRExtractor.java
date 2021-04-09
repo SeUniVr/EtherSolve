@@ -16,8 +16,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class IRExtractor {
-    private final static String ADDRESS_CSV = "./inputs/dataset.csv";
-    private final static String OUTPUT_FOLDER = "./outputs/cfgs/";
+    private final static String ADDRESS_CSV = "../inputs/dataset.csv";
+    private final static String OUTPUT_FOLDER = "../outputs/cfgs/";
 
     private final static int START = 0;
     private final static int END = 1000;

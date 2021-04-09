@@ -18,3 +18,10 @@ dependencies {
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.65'
     compile project(':Core')
 }
+
+task runIRExtractor(type: JavaExec) {
+    group = "Execution"
+    description = "Run the extractor to get the intermediate representation used for automatic analysis"
+    classpath = sourceSets.main.runtimeClasspath
+    main = "IRExtractor"
+}

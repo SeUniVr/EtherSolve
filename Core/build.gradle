@@ -20,3 +20,10 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+task runCoreMain(type: JavaExec) {
+    group = "Execution"
+    description = "Run the main class of Core module, which analyses a sample bytecode"
+    classpath = sourceSets.main.runtimeClasspath
+    main = "Main"
+}

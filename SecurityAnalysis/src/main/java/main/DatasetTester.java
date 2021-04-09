@@ -18,11 +18,14 @@ public class DatasetTester {
     private static final int N = 50;
 
     public static void main(String[] args) {
-        //analyseOneForFile();
-        analyseAll();
+        if (args.length > 0 && args[1].equals("all")) {
+            analyseAll();
+        } else {
+            analyseOneForFile();
+        }
     }
 
-    private static void analyseAll(){
+    private static void analyseAll() {
         ArrayList<SecurityAnalysisReport> originalReports = new ArrayList<>();
         ArrayList<SecurityAnalysisReport> infectedReports = new ArrayList<>();
 
