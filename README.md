@@ -78,10 +78,10 @@ EtherSolve is divided into modules. The project structure is the following:
 
 The tasks to run the modules are:
 - `bootRun`: Runs the project as a Spring Boot application.
-- `runCoreMain`: Run the main class of Core module, which analyses a sample bytecode.
+- `runCoreMain`: Run the main class of Core module, which analyses a sample bytecode written in the `Main` class producing a JSON output.
 - `runIRExtractor`: Run the extractor to get the intermediate representation used for automatic analysis.
 - `runSecurityAnalyser`: Run the main class of Core module, which analyses a sample bytecode.
-- `jar`: Builds a JAR for each module. The only one with an entry point is the one of the UI module, which is also the provided one.
+- `jar`: Builds a JAR for each module. The only one with an entry point is the one of the UI module, which is also the provided one. The output is in `UI/build/libs`
 
 For the full list run `gradle tasks`.
 
