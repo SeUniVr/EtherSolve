@@ -48,7 +48,7 @@ public class JsonExporter {
         result.add("binarySource", new JsonPrimitive(contract.getBinarySource()));
         result.add("binaryHash", new JsonPrimitive(contract.getContractHash()));
         result.add("isOnlyRuntime", new JsonPrimitive(contract.isOnlyRuntime()));
-        result.add("metadata", new JsonPrimitive(contract.getMetadata()));
+        result.add("metadata", new JsonPrimitive(contract.getMetadata() == null ? "" : contract.getMetadata()))
         try {
             result.add("solidityVersion", new JsonPrimitive(contract.getExactSolidityVersion()));
         } catch (SolidityVersionUnknownException e) {
