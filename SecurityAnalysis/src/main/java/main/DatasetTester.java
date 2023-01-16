@@ -11,21 +11,18 @@ import java.util.ArrayList;
 
 public class DatasetTester {
 
-    private static final String ORIGINAL_EVM_FOLDER = "outputs/re-entrancy_dataset/original_evm/";
-    private static final String BUGGY_EVM_FOLDER = "outputs/re-entrancy_dataset/buggy_evm/";
-    private static final String ALL_EVM_FOLDER = "outputs/re-entrancy_dataset/all_evm/";
-    private static final String ALL_ORIGINAL_EVM_FOLDER = "outputs/re-entrancy_dataset/all_original_evm/";
+    private static final String ORIGINAL_EVM_FOLDER = "outputs/tx.origin_dataset/original_evm/";
+    private static final String BUGGY_EVM_FOLDER = "outputs/tx.origin_dataset/buggy_evm/";
+    private static final String ALL_EVM_FOLDER = "outputs/tx.origin_dataset/all_evm/";
+    private static final String ALL_ORIGINAL_EVM_FOLDER = "outputs/tx.origin_dataset/all_original_evm/";
     private static final int N = 50;
 
     public static void main(String[] args) {
-        if (args.length > 0 && args[1].equals("all")) {
-            analyseAll();
-        } else {
-            analyseOneForFile();
-        }
+        //analyseOneForFile();
+        analyseAll();
     }
 
-    private static void analyseAll() {
+    private static void analyseAll(){
         ArrayList<SecurityAnalysisReport> originalReports = new ArrayList<>();
         ArrayList<SecurityAnalysisReport> infectedReports = new ArrayList<>();
 
@@ -59,8 +56,8 @@ public class DatasetTester {
             SecurityAnalysisReport originalReport = originalReports.get(i);
             System.out.format("%s,%d,%d\n",
                     report.getContract().getName(),
-                    originalReport.countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL),
-                    report.countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL)
+                    originalReport.countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION),
+                    report.countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION)
             );
         }
     }
@@ -105,8 +102,8 @@ public class DatasetTester {
         int originalVulnerabilitiesSum = 0;
         int buggyVulnerabilitiesSum = 0;
         for (int i = 0; i < N; i++) {
-            int originalVulnerabilities = originalEvmReports.get(i).countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
-            int buggyVulnerabilities = buggyEvmReports.get(i).countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
+            int originalVulnerabilities = originalEvmReports.get(i).countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION);
+            int buggyVulnerabilities = buggyEvmReports.get(i).countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION);
             originalVulnerabilitiesSum += originalVulnerabilities;
             buggyVulnerabilitiesSum += buggyVulnerabilities;
             System.out.format("%d,%d,%d\n", i + 1, originalVulnerabilities, buggyVulnerabilities);
