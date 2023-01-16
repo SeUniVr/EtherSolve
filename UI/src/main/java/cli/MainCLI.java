@@ -1,6 +1,7 @@
 package cli;
 
 import analysers.StoreAccessAfterUnsafeCall;
+import analysers.TxOrigin;
 import graphviz.CFGPrinter;
 import main.SecurityAnalysisReport;
 import main.SecurityDetection;
@@ -60,6 +61,9 @@ public class MainCLI implements Callable<Integer> {
     @Option(names = {"--re-entrancy"}, description = "Execute re-entrancy detector and save output")
     private boolean reEntrancyFilename;
 
+    @Option(names = {"--tx-origin"}, description = "Execute tx-origin detector and save output")
+    private boolean txOriginFilename;
+
     @Override
     public Integer call() throws Exception {
         try {
@@ -77,6 +81,7 @@ public class MainCLI implements Callable<Integer> {
                 System.err.format("Error writing file %s: %s%n", outputFile.getName(), e);
             }
 
+            // re-entrancy detection
             if (reEntrancyFilename) {
                 String absolutePath = System.getProperty("user.dir") + "/";
                 File reEntrancyFile = new File(absolutePath + contractName + "-re-entrancy.csv");
@@ -85,6 +90,18 @@ public class MainCLI implements Callable<Integer> {
                     out.write(reEntrancyContent);
                 } catch (IOException e) {
                     System.err.format("Error writing file %s: %s%n", reEntrancyFile.getName(), e);
+                }
+            }
+
+            // tx-origin detection
+            if (txOriginFilename) {
+                String absolutePath = System.getProperty("user.dir") + "/";
+                File txOriginFile = new File(absolutePath + contractName + "-tx-origin.csv");
+                String txOriginContent = runTxOriginDetector(contract);
+                try (BufferedWriter out = new BufferedWriter(new FileWriter(txOriginFile))) {
+                    out.write(txOriginContent);
+                } catch (IOException e) {
+                    System.err.format("Error writing file %s: %s%n", txOriginFile.getName(), e);
                 }
             }
 
@@ -171,6 +188,25 @@ public class MainCLI implements Callable<Integer> {
         SecurityAnalysisReport report = new SecurityAnalysisReport(contract);
         StoreAccessAfterUnsafeCall.analyse(contract, report);
         report.stopTimer();
+        TreeSet<SecurityDetection> sortedDetections = new TreeSet<>(report.getDetections());
+
+        StringBuilder result = new StringBuilder("offset,opcode,detection\n");
+        for (SecurityDetection securityDetection : sortedDetections) {
+            result.append(securityDetection.getLocation().getOffset())
+                    .append(',')
+                    .append(securityDetection.getLocation())
+                    .append(',')
+                    .append(securityDetection.getVulnerability().getName())
+                    .append('\n');
+        }
+        return result.toString();
+    }
+
+    private String runTxOriginDetector(Contract contract) {
+        SecurityAnalysisReport report = new SecurityAnalysisReport(contract);
+        TxOrigin.analyse(contract, report);
+        report.stopTimer();
+        System.out.println(report.getDetections());
         TreeSet<SecurityDetection> sortedDetections = new TreeSet<>(report.getDetections());
 
         StringBuilder result = new StringBuilder("offset,opcode,detection\n");

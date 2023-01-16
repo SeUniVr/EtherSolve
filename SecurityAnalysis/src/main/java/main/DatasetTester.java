@@ -11,15 +11,21 @@ import java.util.ArrayList;
 
 public class DatasetTester {
 
-    private static final String ORIGINAL_EVM_FOLDER = "outputs/tx.origin_dataset/original_evm/";
-    private static final String BUGGY_EVM_FOLDER = "outputs/tx.origin_dataset/buggy_evm/";
-    private static final String ALL_EVM_FOLDER = "outputs/tx.origin_dataset/all_evm/";
-    private static final String ALL_ORIGINAL_EVM_FOLDER = "outputs/tx.origin_dataset/all_original_evm/";
+    private static final String ORIGINAL_EVM_FOLDER = "outputs/vulnerabilities_dataset/original_evm/";
+    private static final String ALL_ORIGINAL_EVM_FOLDER = "outputs/vulnerabilities_dataset/all_original_evm/";
+    private static final String BUGGY_REENTRANCY_EVM_FOLDER = "outputs/vulnerabilities_dataset/buggy_reentrancy_evm/";
+    private static final String ALL_BUGGY_REENTRANCY_EVM_FOLDER = "outputs/vulnerabilities_dataset/all_buggy_reentrancy_evm/";
+    private static final String BUGGY_TXORIGIN_EVM_FOLDER = "outputs/vulnerabilities_dataset/buggy_txorigin_evm/";
+    private static final String ALL_BUGGY_TXORIGIN_EVM_FOLDER = "outputs/vulnerabilities_dataset/all_buggy_txorigin_evm/";
+
     private static final int N = 50;
 
     public static void main(String[] args) {
-        //analyseOneForFile();
-        analyseAll();
+        if (args.length > 0 && args[0].equals("all")) {
+            analyseAll();
+        } else {
+            analyseOneForFile();
+        }
     }
 
     private static void analyseAll(){
@@ -28,19 +34,24 @@ public class DatasetTester {
 
         for (int i = 1; i <= N; i++) {
             for (int j = 0; j <= 10; j++) {
-                String bytecode, originalBytecode;
-                try (BufferedReader br = Files.newBufferedReader(Paths.get(ALL_EVM_FOLDER + i + "_" + j + ".evm"))) {
-                    BufferedReader bro = Files.newBufferedReader(Paths.get(ALL_ORIGINAL_EVM_FOLDER + i + "_" + j + ".evm"));
-                    bytecode = br.readLine();
-                    originalBytecode = bro.readLine();
+                String reentrancyBytecode, txoriginBytecode, originalBytecode;
+                try (BufferedReader brR = Files.newBufferedReader(Paths.get(ALL_BUGGY_REENTRANCY_EVM_FOLDER + i + "_" + j + ".evm"))) {
+                    BufferedReader brT = Files.newBufferedReader(Paths.get(ALL_BUGGY_TXORIGIN_EVM_FOLDER + i + "_" + j + ".evm"));
+                    BufferedReader brO = Files.newBufferedReader(Paths.get(ALL_ORIGINAL_EVM_FOLDER + i + "_" + j + ".evm"));
+                    reentrancyBytecode = brR.readLine();
+                    txoriginBytecode = brT.readLine();
+                    originalBytecode = brO.readLine();
                 } catch (IOException e) {
                     break;
                 }
                 try {
                     // Analyse the contract
-                    Contract contract = new Contract(i + "_" + j, bytecode, false);
-                    SecurityAnalysisReport report = SecurityAnalyser.analyse(contract);
-                    infectedReports.add(report);
+                    Contract reentrancyContract = new Contract(i + "_" + j, reentrancyBytecode, false);
+                    SecurityAnalysisReport reportR = SecurityAnalyser.analyse(reentrancyContract);
+                    infectedReports.add(reportR);
+                    Contract txoriginContract = new Contract(i + "_" + j, txoriginBytecode, false);
+                    SecurityAnalysisReport reportT = SecurityAnalyser.analyse(txoriginContract);
+                    infectedReports.add(reportT);
                     Contract originalContract = new Contract(i + "_" + j, originalBytecode, false);
                     SecurityAnalysisReport originalReport = SecurityAnalyser.analyse(originalContract);
                     originalReports.add(originalReport);
@@ -50,14 +61,16 @@ public class DatasetTester {
             }
         }
 
-        System.out.println("Sample,count_pre,count_post");
+        System.out.println("Sample, re-entrancy-count_before, re-entrancy-count_after, tx-origin-count_before, tx-origin-count_after");
         for (int i = 0; i < infectedReports.size(); i++) {
-            SecurityAnalysisReport report = infectedReports.get(i);
+            SecurityAnalysisReport infectedReport = infectedReports.get(i);
             SecurityAnalysisReport originalReport = originalReports.get(i);
-            System.out.format("%s,%d,%d\n",
-                    report.getContract().getName(),
+            System.out.format("%s,%d,%d,%d,%d\n",
+                    infectedReport.getContract().getName(),
+                    originalReport.countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL),
+                    infectedReport.countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL),
                     originalReport.countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION),
-                    report.countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION)
+                    infectedReport.countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION)
             );
         }
     }
@@ -67,15 +80,21 @@ public class DatasetTester {
         ArrayList<SecurityAnalysisReport> buggyEvmReports = new ArrayList<>();
         for (int i = 1; i <= N; i++) {
             // Read the bytecode from the file
-            String originalBytecode, buggyBytecode;
+            String originalBytecode, buggyReentrancyBytecode, buggyTxoriginBytecode;
             try (BufferedReader br = Files.newBufferedReader(Paths.get(ORIGINAL_EVM_FOLDER + i + ".evm"))) {
                 originalBytecode = br.readLine();
             } catch (IOException e) {
                 System.err.format("Error reading file %s: %s\n", i + ".evm", e);
                 continue;
             }
-            try (BufferedReader br = Files.newBufferedReader(Paths.get(BUGGY_EVM_FOLDER + i + ".evm"))) {
-                buggyBytecode = br.readLine();
+            try (BufferedReader br = Files.newBufferedReader(Paths.get(BUGGY_REENTRANCY_EVM_FOLDER + i + ".evm"))) {
+                buggyReentrancyBytecode = br.readLine();
+            } catch (IOException e) {
+                System.err.format("Error reading file %s: %s\n", i + ".evm", e);
+                continue;
+            }
+            try (BufferedReader br = Files.newBufferedReader(Paths.get(BUGGY_TXORIGIN_EVM_FOLDER + i + ".evm"))) {
+                buggyTxoriginBytecode = br.readLine();
             } catch (IOException e) {
                 System.err.format("Error reading file %s: %s\n", i + ".evm", e);
                 continue;
@@ -90,25 +109,36 @@ public class DatasetTester {
             }
             try {
                 // Analyse the contract
-                Contract contract = new Contract("Contract-" + i, buggyBytecode, false);
-                SecurityAnalysisReport report = SecurityAnalyser.analyse(contract);
-                buggyEvmReports.add(report);
+                Contract reentrancyContract = new Contract("Contract-" + i, buggyReentrancyBytecode, false);
+                SecurityAnalysisReport reportR = SecurityAnalyser.analyse(reentrancyContract);
+                buggyEvmReports.add(reportR);
+                Contract txoriginContract = new Contract("Contract-" + i, buggyTxoriginBytecode, false);
+                SecurityAnalysisReport reportT = SecurityAnalyser.analyse(txoriginContract);
+                buggyEvmReports.add(reportT);
             } catch (NotSolidityContractException e) {
                 System.err.format("Error creating contract for sample %s\n", i);
             }
         }
 
         // Compare the reports
-        int originalVulnerabilitiesSum = 0;
-        int buggyVulnerabilitiesSum = 0;
+        int originalReEntrancySum = 0;
+        int buggyReEntrancySum = 0;
+        int originalTxOriginSum = 0;
+        int buggyTxOriginSum = 0;
         for (int i = 0; i < N; i++) {
-            int originalVulnerabilities = originalEvmReports.get(i).countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION);
-            int buggyVulnerabilities = buggyEvmReports.get(i).countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION);
-            originalVulnerabilitiesSum += originalVulnerabilities;
-            buggyVulnerabilitiesSum += buggyVulnerabilities;
-            System.out.format("%d,%d,%d\n", i + 1, originalVulnerabilities, buggyVulnerabilities);
+            int originalReEntrancy = originalEvmReports.get(i).countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
+            int buggyReEntrancy = buggyEvmReports.get(i).countDetections(SecurityVulnerability.STORE_WRITE_AFTER_UNSAFE_CALL);
+            int originalTxOrigin = originalEvmReports.get(i).countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION);
+            int buggyTxOrigin = buggyEvmReports.get(i).countDetections(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION);
+            originalReEntrancySum += originalReEntrancy;
+            buggyReEntrancySum += buggyReEntrancy;
+            originalTxOriginSum += originalTxOrigin;
+            buggyTxOriginSum += buggyTxOrigin;
+            System.out.format("sample: %d, re-entrancy: (%d->%d), tx-origin: (%d->%d)\n", i + 1, originalReEntrancy, buggyReEntrancy, originalTxOrigin, buggyTxOrigin);
         }
-        System.out.println(originalVulnerabilitiesSum + " total vulnerabilities on the original contracts");
-        System.out.println(buggyVulnerabilitiesSum + " total vulnerabilities on the injected contracts");
+        System.out.println(originalReEntrancySum + " total re-entrancy vulnerabilities on the original contracts");
+        System.out.println(buggyReEntrancySum + " total re-entrancy vulnerabilities on the injected contracts");
+        System.out.println(originalTxOriginSum + " total tx-origin vulnerabilities on the original contracts");
+        System.out.println(buggyTxOriginSum + " total tx-origin vulnerabilities on the injected contracts");
     }
 }
