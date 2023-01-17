@@ -21,20 +21,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
-@Command(name = "ethersolve", mixinStandardHelpOptions = true, description = "EtherSolve, build an accurate CFG from Ethereum bytecode", version = "1.0")
+@Command(name = "ethersolve", mixinStandardHelpOptions = true, description = "EtherSolve, build an accurate CFG from Ethereum bytecode.", version = "1.0")
 public class MainCLI implements Callable<Integer> {
 
-    @Parameters(index = "0", description = "Bytecode string or file containing it")
+    @Parameters(index = "0", description = "Bytecode string or file containing it.")
     private String source;
 
     @ArgGroup(exclusive = true, multiplicity = "1")
     private ContractType contractType;
 
     static class ContractType {
-        @Option(names = {"-c", "--creation"} , required = true, description = "Parse bytecode as creation code")
+        @Option(names = {"-c", "--creation"} , required = true, description = "Parse bytecode as creation code.")
         boolean creation;
 
-        @Option(names = {"-r", "--runtime"} , required = true, description = "Parse bytecode as runtime code")
+        @Option(names = {"-r", "--runtime"} , required = true, description = "Parse bytecode as runtime code.")
         boolean runtime;
     }
 
@@ -42,26 +42,26 @@ public class MainCLI implements Callable<Integer> {
     private OutputType outputType;
 
     static class OutputType {
-        @Option(names = {"-j", "--json"} , required = true, description = "Export a Json report")
+        @Option(names = {"-j", "--json"} , required = true, description = "Export a Json report.")
         boolean json;
 
-        @Option(names = {"-H", "--html"} , required = true, description = "Export a graphic HTML report. Graphviz is required!")
+        @Option(names = {"-H", "--html"} , required = true, description = "Export a graphic HTML report, Graphviz is required!")
         boolean html;
 
-        @Option(names = {"-s", "--svg"} , required = true, description = "Export a graphic SVG image. Graphviz is required!")
+        @Option(names = {"-s", "--svg"} , required = true, description = "Export a graphic SVG image, Graphviz is required!")
         boolean svg;
 
         @Option(names = {"-d", "--dot"} , required = true, description = "Export a dot-notation file")
         boolean dot;
     }
 
-    @Option(names = {"-o", "--output"}, description = "Output file")
+    @Option(names = {"-o", "--output"}, description = "Output file name.")
     private String outputFilename;
 
-    @Option(names = {"--re-entrancy"}, description = "Execute re-entrancy detector and save output")
+    @Option(names = {"--re-entrancy"}, description = "Execute the Re-entrancy detector and save output.")
     private boolean reEntrancyFilename;
 
-    @Option(names = {"--tx-origin"}, description = "Execute tx-origin detector and save output")
+    @Option(names = {"--tx-origin"}, description = "Execute the Tx.origin detector and save output.")
     private boolean txOriginFilename;
 
     @Override
