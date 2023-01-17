@@ -125,6 +125,9 @@ gradle-app.setting
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
 
+# Avoid ignoring main artifact jar file (.jar files are usually ignored)
+!artifact/EtherSolve.jar
+
 # Cache of project
 .gradletasknamecache
 

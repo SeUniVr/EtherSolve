@@ -11,7 +11,7 @@ The tool also provides modules for vulnerabilities detection. It currently suppo
 
 ### JAR
 
-The simplest way to try EtherSolve is through the provided `EtherSolve.jar`.
+The simplest way to try EtherSolve is through the provided `EtherSolve.jar` ([link](https://github.com/SeUnivr/EtherSolve/blob/artifact/EtherSolve.jar)).
 
 ```bash
 Usage: ethersolve [-hV] [--re-entrancy] [--tx-origin] [-o=<outputFilename>] (-c | -r) (-j | -H | -s | -d) <source>
@@ -61,7 +61,7 @@ java -jar EtherSolve.jar -c -H -o index.html --re-entrancy path/to/bytecode/file
 
 ### Gradle
 
-To build from source and run the project you should use gradle (minimum supported version: *5.2.1*).
+To build from source and run the project you should use gradle (minimum Gradle supported version: *5.2.1*). To build from source **Java 8** is required.
 
 EtherSolve is composed of five modules.
 - **Core**: it contains the main procedures to parse the bytecode and build the CFG.
