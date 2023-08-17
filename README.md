@@ -1,11 +1,16 @@
 <img src="https://github.com/SeUnivr/EtherSolve/blob/main/Logo/Logo.png" alt="EtherSolve logo" width="128px" height="128px"><br>
 # EtherSolve
 
-EtherSolve is a tool for *Control Flow Graph (CFG)* reconstruction of Solidity smart-contracts from Ethereum bytecode.
+EtherSolve is a tool for *Control Flow Graph (CFG)* reconstruction and *static analysis* of Solidity smart-contracts from Ethereum bytecode.
 
-The tool is based on the ICPC 2021 paper [EtherSolve: Computing an Accurate Control-Flow Graph from Ethereum Bytecode](https://doi.org/10.1109/ICPC52881.2021.00021)
+The tool is based on the peer-reviewed pubblication
+> Michele Pasqua, Andrea Benini, Filippo Contro, Marco Crosara, Mila Dalla Preda, and Mariano Ceccato. "Enhancing Ethereum smart-contracts static analysis by computing a precise Control-Flow Graph of Ethereum bytecode". In: *Journal of Systems and Software* (pp. 1-18), Elsevier, 2023. DOI: [10.1016/j.jss.2023.111653](https://doi.org/10.1016/j.jss.2023.111653)
 
-The tool also provides modules for vulnerabilities detection. It currently supports *Re-entrancy* and *Tx.origin* vulnerabilities.
+That is a revides and extended version of the peer-reviewed publication
+> Filippo Contro, Marco Crosara, Mariano Ceccato, and Mila Dalla Preda. "EtherSolve: Computing an Accurate Control-Flow Graph from Ethereum Bytecode". In: *Proceedings of the 29<sup>th</sup> IEEE/ACM International Conference on Program Comprehension* (pp. 127-137), IEEE, 2021. DOI: [10.1109/ICPC52881.2021.00021](https://doi.org/10.1109/ICPC52881.2021.00021)
+
+### Vulnerability Detection
+The tool also provides modules for the detection of Ethereum vulnerabilities. It currently supports *Re-entrancy* and *Tx.origin* vulnerabilities.
 
 ## Usage
 
@@ -79,6 +84,6 @@ The following Gradle tasks are available.
 
 For the full list run `gradle tasks`.
 
-## Dataset
+## Replication Package
 
-The full repication package used for the ICPC 2021 paper can be found [here](https://github.com/SeUniVr/EtherSolve_ICPC2021_ReplicationPackage).
+The material to replicate the results presented in the JSS 2023 publication can be found in the [JSS Replication Package](https://zenodo.org/record/7545056).
