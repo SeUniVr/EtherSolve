@@ -1,6 +1,7 @@
 package cli;
 
 import analysers.StoreAccessAfterUnsafeCall;
+import analysers.TxOrigin;
 import graphviz.CFGPrinter;
 import main.SecurityAnalysisReport;
 import main.SecurityDetection;
@@ -20,20 +21,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
-@Command(name = "ethersolve", mixinStandardHelpOptions = true, description = "EtherSolve, build an accurate CFG from Ethereum bytecode", version = "1.0")
+@Command(name = "ethersolve", mixinStandardHelpOptions = true, description = "EtherSolve, build an accurate CFG from Ethereum bytecode.", version = "1.0")
 public class MainCLI implements Callable<Integer> {
 
-    @Parameters(index = "0", description = "Bytecode string or file containing it")
+    @Parameters(index = "0", description = "Bytecode string or file containing it.")
     private String source;
 
     @ArgGroup(exclusive = true, multiplicity = "1")
     private ContractType contractType;
 
     static class ContractType {
-        @Option(names = {"-c", "--creation"} , required = true, description = "Parse bytecode as creation code")
+        @Option(names = {"-c", "--creation"} , required = true, description = "Parse bytecode as creation code.")
         boolean creation;
 
-        @Option(names = {"-r", "--runtime"} , required = true, description = "Parse bytecode as runtime code")
+        @Option(names = {"-r", "--runtime"} , required = true, description = "Parse bytecode as runtime code.")
         boolean runtime;
     }
 
@@ -41,24 +42,27 @@ public class MainCLI implements Callable<Integer> {
     private OutputType outputType;
 
     static class OutputType {
-        @Option(names = {"-j", "--json"} , required = true, description = "Export a Json report")
+        @Option(names = {"-j", "--json"} , required = true, description = "Export a Json report.")
         boolean json;
 
-        @Option(names = {"-H", "--html"} , required = true, description = "Export a graphic HTML report. Graphviz is required!")
+        @Option(names = {"-H", "--html"} , required = true, description = "Export a graphic HTML report, Graphviz is required!")
         boolean html;
 
-        @Option(names = {"-s", "--svg"} , required = true, description = "Export a graphic SVG image. Graphviz is required!")
+        @Option(names = {"-s", "--svg"} , required = true, description = "Export a graphic SVG image, Graphviz is required!")
         boolean svg;
 
         @Option(names = {"-d", "--dot"} , required = true, description = "Export a dot-notation file")
         boolean dot;
     }
 
-    @Option(names = {"-o", "--output"}, description = "Output file")
+    @Option(names = {"-o", "--output"}, description = "Output file name.")
     private String outputFilename;
 
-    @Option(names = {"--re-entrancy"}, description = "Execute re-entrancy detector and save output")
+    @Option(names = {"--re-entrancy"}, description = "Execute the Re-entrancy detector and save output.")
     private boolean reEntrancyFilename;
+
+    @Option(names = {"--tx-origin"}, description = "Execute the Tx.origin detector and save output.")
+    private boolean txOriginFilename;
 
     @Override
     public Integer call() throws Exception {
@@ -77,6 +81,7 @@ public class MainCLI implements Callable<Integer> {
                 System.err.format("Error writing file %s: %s%n", outputFile.getName(), e);
             }
 
+            // re-entrancy detection
             if (reEntrancyFilename) {
                 String absolutePath = System.getProperty("user.dir") + "/";
                 File reEntrancyFile = new File(absolutePath + contractName + "-re-entrancy.csv");
@@ -85,6 +90,18 @@ public class MainCLI implements Callable<Integer> {
                     out.write(reEntrancyContent);
                 } catch (IOException e) {
                     System.err.format("Error writing file %s: %s%n", reEntrancyFile.getName(), e);
+                }
+            }
+
+            // tx-origin detection
+            if (txOriginFilename) {
+                String absolutePath = System.getProperty("user.dir") + "/";
+                File txOriginFile = new File(absolutePath + contractName + "-tx-origin.csv");
+                String txOriginContent = runTxOriginDetector(contract);
+                try (BufferedWriter out = new BufferedWriter(new FileWriter(txOriginFile))) {
+                    out.write(txOriginContent);
+                } catch (IOException e) {
+                    System.err.format("Error writing file %s: %s%n", txOriginFile.getName(), e);
                 }
             }
 
@@ -171,6 +188,25 @@ public class MainCLI implements Callable<Integer> {
         SecurityAnalysisReport report = new SecurityAnalysisReport(contract);
         StoreAccessAfterUnsafeCall.analyse(contract, report);
         report.stopTimer();
+        TreeSet<SecurityDetection> sortedDetections = new TreeSet<>(report.getDetections());
+
+        StringBuilder result = new StringBuilder("offset,opcode,detection\n");
+        for (SecurityDetection securityDetection : sortedDetections) {
+            result.append(securityDetection.getLocation().getOffset())
+                    .append(',')
+                    .append(securityDetection.getLocation())
+                    .append(',')
+                    .append(securityDetection.getVulnerability().getName())
+                    .append('\n');
+        }
+        return result.toString();
+    }
+
+    private String runTxOriginDetector(Contract contract) {
+        SecurityAnalysisReport report = new SecurityAnalysisReport(contract);
+        TxOrigin.analyse(contract, report);
+        report.stopTimer();
+        System.out.println(report.getDetections());
         TreeSet<SecurityDetection> sortedDetections = new TreeSet<>(report.getDetections());
 
         StringBuilder result = new StringBuilder("offset,opcode,detection\n");
