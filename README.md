@@ -16,7 +16,7 @@ The tool also provides modules for the detection of Ethereum vulnerabilities. It
 
 ### JAR
 
-The simplest way to try EtherSolve is through the provided `EtherSolve.jar` ([link](https://github.com/SeUnivr/EtherSolve/blob/tx-origin/artifact/EtherSolve.jar)).
+The simplest way to try EtherSolve is through the provided `EtherSolve.jar` ([link](artifact/EtherSolve.jar)).
 
 ```bash
 Usage: ethersolve [-hV] [--re-entrancy] [--tx-origin] [-o=<outputFilename>] (-c | -r) (-j | -H | -s | -d) <source>
