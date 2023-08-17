@@ -6,7 +6,7 @@ EtherSolve is a tool for *Control Flow Graph (CFG)* reconstruction and *static a
 The tool is based on the peer-reviewed pubblication
 > Michele Pasqua, Andrea Benini, Filippo Contro, Marco Crosara, Mila Dalla Preda, and Mariano Ceccato. "Enhancing Ethereum smart-contracts static analysis by computing a precise Control-Flow Graph of Ethereum bytecode". In: *Journal of Systems and Software* (pp. 1-18), Elsevier, 2023. DOI: [10.1016/j.jss.2023.111653](https://doi.org/10.1016/j.jss.2023.111653)
 
-That is a revides and extended version of the peer-reviewed publication
+That is a revised and extended version of the peer-reviewed publication
 > Filippo Contro, Marco Crosara, Mariano Ceccato, and Mila Dalla Preda. "EtherSolve: Computing an Accurate Control-Flow Graph from Ethereum Bytecode". In: *Proceedings of the 29<sup>th</sup> IEEE/ACM International Conference on Program Comprehension* (pp. 127-137), IEEE, 2021. DOI: [10.1109/ICPC52881.2021.00021](https://doi.org/10.1109/ICPC52881.2021.00021)
 
 ### Vulnerability Detection
