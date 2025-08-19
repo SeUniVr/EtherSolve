@@ -63,8 +63,15 @@ public class HashDB {
 
     public String getSignatureFromHash(String hash) throws IOException{
         Gson gson = new Gson();
+
+        String json = get4ByteJsonFromHash(hash);
+        if (json == null) return null;
+
         FourBytesResponse fbr = gson.fromJson(get4ByteJsonFromHash(hash), FourBytesResponse.class);
-        return fbr.results.get(0).text_signature;
+        if (fbr != null && !fbr.results.isEmpty()) {
+            return fbr.results.get(0).text_signature;
+        }
+        return null;
     }
 
     public AbiFunction getAbiFromHash(String hash) throws Exception{

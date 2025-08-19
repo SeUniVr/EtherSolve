@@ -40,4 +40,6 @@ public class RebuiltIOElement {
     public RebuiltSolidityType getType() {
         return type;
     }
+
+    public int getIndex() { return index; }
 }

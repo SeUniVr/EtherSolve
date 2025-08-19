@@ -97,8 +97,11 @@ public class CfgBuilder {
             removedData = removeOrphanBlocks(basicBlocks, buildReport, bytecode);
         }
         // END_TODO
+
+
         detectDispatcher(basicBlocks);
         detectFallBack(basicBlocks);
+        detectEntryBlocks(basicBlocks);
         validateCfg(basicBlocks, buildReport);
         addSuperNode(basicBlocks);
 
@@ -221,9 +224,9 @@ public class CfgBuilder {
             if (lastOpcode instanceof JumpOpcode){
                 try {
                     nextOffset = stack.peek().longValue();
-                    BasicBlock nextBB = basicBlocks.get(nextOffset);
-                    if (nextBB != null)
-                        current.addSuccessor(nextBB);
+                    BasicBlock nextfirst = basicBlocks.get(nextOffset);
+                    if (nextfirst != null)
+                        current.addSuccessor(nextfirst);
                     else
                         buildReport.addOrphanJumpTargetNullError(lastOpcode.getOffset(), nextOffset);
                 } catch (UnknownStackElementException e) {
@@ -260,9 +263,9 @@ public class CfgBuilder {
                     Triplet<Long, Long, SymbolicExecutionStack> edge = new Triplet<>(current.getOffset(), nextOffset, stack);
                     if (!visited.contains(edge)) {
                         visited.add(edge);
-                        BasicBlock nextBB = basicBlocks.get(nextOffset);
-                        if (nextBB != null)
-                            queue.push(new Triplet<>(nextBB, stack.copy(), dfs_depth + 1));
+                        BasicBlock nextfirst = basicBlocks.get(nextOffset);
+                        if (nextfirst != null)
+                            queue.push(new Triplet<>(nextfirst, stack.copy(), dfs_depth + 1));
                     }
                 }
             } else {
@@ -315,12 +318,67 @@ public class CfgBuilder {
         return bytecode.getBytes().substring((int) firstOffset * 2);
     }
 
+    private static void detectEntryBlocks(TreeMap<Long, BasicBlock> basicBlocks) {
+        BasicBlock dispatcher = basicBlocks.firstEntry().getValue();
+
+        Set<BasicBlock> visited = new HashSet<>();
+        Queue<BasicBlock> queue = new LinkedList<>();
+
+        queue.add(dispatcher);
+        visited.add(dispatcher);
+
+        for (BasicBlock first : dispatcher.getSuccessors()) {
+            queue.add(first);
+            visited.add(first);
+        }
+
+        while (!queue.isEmpty()) {
+            BasicBlock bb  = queue.poll();
+            List<Opcode> opcodes = bb.getOpcodes();
+
+            for (int i = 0; i <= opcodes.size() - 4; i++) {
+                Opcode op1 = opcodes.get(i);
+                Opcode op2 = opcodes.get(i + 1);
+                Opcode op3 = opcodes.get(i + 2);
+                Opcode op4 = opcodes.get(i + 3);
+
+                if (isAPushN(op1, 4) && op2.getName().equals("EQ") && op3.getName().startsWith("PUSH") && op4.getName().equals("JUMPI")) {
+                    ArrayList<Long> jumpTargets = new ArrayList<>();
+                    for (BasicBlock b : bb.getSuccessors()) {
+                        jumpTargets.add(b.getOffset());
+                    }
+
+                    for (Long jumpTarget : jumpTargets) {
+                        if (basicBlocks.containsKey(jumpTarget)) {
+                            BasicBlock targetBlock = basicBlocks.get(jumpTarget);
+
+                            if (!targetBlock.getOpcodes().isEmpty() &&
+                                    targetBlock.getOpcodes().get(0).getName().equals("JUMPDEST") &&
+                                    targetBlock.getType() != BasicBlockType.EXIT &&
+                                    !containsRevertOnly(targetBlock)) {
+
+                                targetBlock.setType(BasicBlockType.ENTRY);
+                            } else {
+                                if (!visited.contains(targetBlock)) {
+                                    visited.add(targetBlock);
+                                    queue.add(targetBlock);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
     private static void detectDispatcher(TreeMap<Long, BasicBlock> basicBlocks){
         long lastOffset = 0;
-        for (BasicBlock bb : basicBlocks.values())
-            if (bb.getLastOpcode() instanceof ReturnOpcode || bb.getLastOpcode() instanceof StopOpcode)
-                if (bb.getOffset() > lastOffset)
-                    lastOffset = bb.getOffset();
+        for (BasicBlock first : basicBlocks.values())
+            if (first.getLastOpcode() instanceof ReturnOpcode || first.getLastOpcode() instanceof StopOpcode)
+                if (first.getOffset() > lastOffset)
+                    lastOffset = first.getOffset();
         long finalLastBlockOffset = lastOffset;
         basicBlocks.forEach((offset, basicBlock) -> {
             if (offset <= finalLastBlockOffset)
@@ -367,9 +425,44 @@ public class CfgBuilder {
     private static void addSuperNode(TreeMap<Long, BasicBlock> basicBlocks){
         BasicBlock superNode =  new BasicBlock(basicBlocks.lastKey() + basicBlocks.lastEntry().getValue().getLength());
         superNode.setType(BasicBlockType.EXIT);
-        for (BasicBlock bb : basicBlocks.values())
-            if(bb.getSuccessors().isEmpty())
-                bb.addSuccessor(superNode);
+        for (BasicBlock first : basicBlocks.values())
+            if(first.getSuccessors().isEmpty())
+                first.addSuccessor(superNode);
         basicBlocks.put(superNode.getOffset(), superNode);
     }
+
+    private static boolean containsRevertOnly(BasicBlock block) {
+        List<Opcode> ops = block.getOpcodes();
+
+        int start = ops.get(0).getName().equals("JUMPDEST") ? 1 : 0;
+
+        for (int i = start; i < ops.size(); i++) {
+            String name = ops.get(i).toString();
+
+            if (!name.contains("REVERT") && !name.contains("PUSH1") && !name.contains("DUP1") && !name.contains("PUSH0")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAPushN(Opcode op, int n) {
+        try {
+            String hex = op.getBytes();
+
+            if (hex.length() < 2)
+                return false;
+
+            int opcode = Integer.parseInt(hex.substring(0, 2), 16);
+            if (opcode >= 0x60 && opcode <= 0x7f) {
+                int pushLen = opcode - 0x5f;
+                return  pushLen == n;
+            }
+        } catch (Exception e) {
+            System.err.println("Error in isPushN" + e.getMessage());
+        }
+
+        return false;
+    }
+
 }

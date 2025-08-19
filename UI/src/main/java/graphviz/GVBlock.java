@@ -3,6 +3,9 @@ package graphviz;
 import parseTree.cfg.BasicBlock;
 import parseTree.cfg.BasicBlockType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class GVBlock {
     private final BasicBlock mBasicBlock;
 
@@ -31,22 +34,45 @@ public class GVBlock {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getId());
-
         sb.append(" [");
-        sb.append("label=\"");
-        sb.append(mBasicBlock.toString().replace("\n", "\\l"));
-        sb.append("\\l\" ");
+
+        sb.append("label=<");
+        sb.append("Type: <b>").append(mBasicBlock.getType()).append("</b><br/>");
+
+        if (!mBasicBlock.getFunctions().isEmpty())
+            sb.append("Functions: <b>").append(mBasicBlock.getFunctions()).append("</b><br/>");
+
+        if (!mBasicBlock.getAllDistances().isEmpty())
+            sb.append("DistanceFromEntries: <b>").append(mBasicBlock.getAllDistances()).append("</b><br/>");
+
+        sb.append("<br/>");
+
+        sb.append(mBasicBlock.toString().replace("\n", "<br/>"));
+
+        if (mBasicBlock.isStop())
+            sb.append("<br/><br/><b>STOP BLOCK</b><br/>");
+
+        if (mBasicBlock.isRevert())
+            sb.append("<br/><br/><b>REVERT BLOCK</b><br/>");
+
+        sb.append("> ");
 
         if(this.isDispatcherBlock())
             sb.append("fillcolor=lemonchiffon ");
         if (this.isRootBlock())
             sb.append("shape=Msquare fillcolor=gold ");
+        if (this.isStopBlock())
+            sb.append("fillcolor=skyblue ");
+        if (this.isRevertBlock())
+            sb.append("fillcolor=lightseagreen ");
         else if (this.isExitBlock())
             sb.append("fillcolor=crimson ");
         else if (this.isLeafBlock())
             sb.append("shape=Msquare color=crimson ");
         else if (this.isFallBackBlock())
             sb.append("fillcolor=orange ");
+        else if (this.isEntryBlock())
+            sb.append("fillcolor=cyan ");
 
         sb.append("]");
         return sb.toString();
@@ -55,6 +81,8 @@ public class GVBlock {
     public String getId(){
         return String.valueOf(mBasicBlock.getOffset());
     }
+
+    public boolean isEntryBlock() { return mBasicBlock.getType() == BasicBlockType.ENTRY; }
 
     public boolean isDispatcherBlock() {
         return mBasicBlock.getType() == BasicBlockType.DISPATCHER;
@@ -76,4 +104,9 @@ public class GVBlock {
     public boolean isExitBlock() {
         return mBasicBlock.getType() == BasicBlockType.EXIT;
     }
+
+    public boolean isStopBlock(){ return mBasicBlock.isStop(); }
+
+    public boolean isRevertBlock() { return mBasicBlock.isRevert(); }
+
 }

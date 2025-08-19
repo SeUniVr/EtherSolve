@@ -35,6 +35,8 @@ public class Cfg implements Iterable<BasicBlock>{
         return basicBlocks.get(offset);
     }
 
+    public List<BasicBlock> getBasicBlocks(){ return new ArrayList<>(basicBlocks.values()); }
+
     /**
      * Default getter for the build report
      * @return build report
@@ -64,6 +66,15 @@ public class Cfg implements Iterable<BasicBlock>{
             successors.put(offset, arr);
         }
         return successors;
+    }
+
+    /**
+     *
+     * @return global entry point -> basic block with minimum offset
+     */
+    public BasicBlock getEntryPoint() {
+        if (basicBlocks.isEmpty()) return null;
+        return basicBlocks.firstEntry().getValue();
     }
 
     /**

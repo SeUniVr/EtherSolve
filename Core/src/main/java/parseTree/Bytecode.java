@@ -196,4 +196,12 @@ public class Bytecode implements Iterable<Opcode>, Comparable<Bytecode>{
         }
         return false;
     }
+
+    /**
+     * Gets the first opcode of the bytecode
+     * @return the first opcode
+     */
+    public Opcode getFirstOpcode() {
+        return opcodes.isEmpty() ? null : opcodes.get(0);
+    }
 }

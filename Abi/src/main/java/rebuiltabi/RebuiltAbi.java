@@ -1,6 +1,10 @@
 package rebuiltabi;
 
-import java.util.ArrayList;
+import parseTree.cfg.BasicBlock;
+import parseTree.cfg.Cfg;
+import utils.Pair;
+
+import java.util.*;
 
 /**
  * Class to represent an approximation of the ABI given by the cfg.
@@ -9,6 +13,7 @@ import java.util.ArrayList;
  */
 public class RebuiltAbi {
     private final ArrayList<RebuiltAbiFunction> functions;
+    private Cfg cfg;    // Added pointer to CFG
 
     /**
      * Default constructor which initialize an empty list
@@ -52,4 +57,16 @@ public class RebuiltAbi {
     public int getLength() {
         return functions.size();
     }
+
+    /**
+     * CFG getter
+     * @return CFG pointer
+     */
+    public Cfg getCfg() { return cfg; }
+
+    /**
+     * CFG setter
+     */
+    public void setCfg(Cfg cfg) { this.cfg = cfg; }
+
 }

@@ -211,6 +211,7 @@ public class CFGPrinter {
         try {
             Desktop desktop = java.awt.Desktop.getDesktop();
             String url = "file:///" + new File(report_path).getAbsolutePath();
+            System.out.println(url);
             desktop.browse(new URI(url));
         } catch (Exception e) {
             System.err.format("Error while opening the html report %s: %s%n", report_path, e);

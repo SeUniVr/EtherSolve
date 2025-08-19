@@ -146,3 +146,11 @@ gradle-app.setting
 .classpath
 .project
 .vscode/
+
+.idea/modules.xml
+.idea/modules
+node_modules/
+venv/
+package-lock.json
+*.iml
+tests/

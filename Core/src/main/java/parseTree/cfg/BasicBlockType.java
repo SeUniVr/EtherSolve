@@ -1,7 +1,8 @@
 package parseTree.cfg;
 
 public enum BasicBlockType {
-    COMMON,
+    ENTRY,
+    CODE,
     DISPATCHER,
     FALLBACK,
     EXIT

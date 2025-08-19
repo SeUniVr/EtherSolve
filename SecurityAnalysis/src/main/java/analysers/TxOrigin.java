@@ -33,9 +33,9 @@ public class TxOrigin {
         Cfg runtimeCfg = contract.getRuntimeCfg();
         // Gather the blocks containing the ORIGIN opcode
         for (BasicBlock bb : runtimeCfg) {
-            if (bb.checkPattern(new OriginOpcode(0)) && bb.getType() == BasicBlockType.COMMON) {
+            if (bb.checkPattern(new OriginOpcode(0)) && bb.getType() == BasicBlockType.CODE) {
                 // Searching for patterns: ORIGIN, PUSH20 0XFFF..., AND, EQ, (ISZERO, ISZERO,)fffffe PUSH2 ..., JUMPI
-                if ((bb.checkPattern(pattern1) || bb.checkPattern(pattern2)) && bb.getType() == BasicBlockType.COMMON) {
+                if ((bb.checkPattern(pattern1) || bb.checkPattern(pattern2)) && bb.getType() == BasicBlockType.CODE) {
                     report.addDetection(new SecurityDetection(SecurityVulnerability.TX_ORIGIN_AS_AUTHENTICATION, getOrigin(bb), TX_ORIGIN_MESSAGE));
                 } else if (taintCheck(bb)) {
                     // Taint analysis returns TRUE

@@ -19,6 +19,8 @@ public class RebuiltAbiFunction {
     private final String hash;
     private final FunctionType type;
     private final ArrayList<RebuiltIOElement> inputs;
+    private long entryPointOffset;
+    private String resolvedSignature;
 
     /**
      * Default constructor with hash and type which initialize an empty list of inputs
@@ -56,6 +58,22 @@ public class RebuiltAbiFunction {
     }
 
     /**
+     * Default getter
+     * @return entry point
+     */
+    public long getEntryPointOffset() {
+        return entryPointOffset;
+    }
+
+    /**
+     * Default getter
+     * @return resolved signature
+     */
+    public String getResolvedSignature() {
+        return resolvedSignature;
+    }
+
+    /**
      * Adds an input
      * @param input input to add
      */
@@ -69,4 +87,19 @@ public class RebuiltAbiFunction {
     public void popInput() {
         this.inputs.remove(this.inputs.size() - 1);
     }
+
+    /**
+     * Default setter
+     */
+    public void setEntryPointOffset(long entryPointOffset) {
+        this.entryPointOffset = entryPointOffset;
+    }
+
+    /**
+     * Default setter
+     */
+    public void setResolvedSignature(String resolvedSignature) {
+        this.resolvedSignature = resolvedSignature;
+    }
+
 }

@@ -2,6 +2,7 @@ package cli;
 
 import analysers.StoreAccessAfterUnsafeCall;
 import analysers.TxOrigin;
+import decompiler.Decompiler;
 import graphviz.CFGPrinter;
 import main.SecurityAnalysisReport;
 import main.SecurityDetection;
@@ -12,6 +13,8 @@ import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import rebuiltabi.AbiExtractor;
+import rebuiltabi.RebuiltAbi;
 import utils.JsonExporter;
 
 import java.io.*;
@@ -70,7 +73,11 @@ public class MainCLI implements Callable<Integer> {
             String bytecode = getBytecodeFromSource(source);
             DateTimeFormatter datetime_format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
             String contractName = "Analysis_" + datetime_format.format(LocalDateTime.now());
+
             Contract contract = new Contract(contractName, bytecode, contractType.runtime);
+            RebuiltAbi abi = AbiExtractor.getAbiFromContract(contract);
+            abi.setCfg(contract.getRuntimeCfg());
+
             File outputFile = getOutputFile(outputFilename, contractName, outputType);
             String content = getOutputFileContent(outputType, contract);
 
@@ -104,6 +111,9 @@ public class MainCLI implements Callable<Integer> {
                     System.err.format("Error writing file %s: %s%n", txOriginFile.getName(), e);
                 }
             }
+
+            Decompiler decompiler = new Decompiler();
+            decompiler.decompile(contract.getRuntimeCfg(), abi, contract.getSolidityVersion(), "DecompiledCode");
 
             return 0;
         } catch (IllegalArgumentException e){

@@ -28,7 +28,7 @@ public class StoreAccessAfterUnsafeCall {
         Cfg runtimeCfg = contract.getRuntimeCfg();
         // Gather the blocks containing the CALL opcode
         for (BasicBlock bb : runtimeCfg){
-            if (bb.checkPattern(new CallOpcode(0)) && bb.getType() == BasicBlockType.COMMON){
+            if (bb.checkPattern(new CallOpcode(0)) && bb.getType() == BasicBlockType.CODE){
                 // Check if it is an unsafe call
                 if (isUnsafeCall(bb)){
                     // Check if it can reach an SSTORE or an SLOAD opcode through DFS
@@ -56,7 +56,7 @@ public class StoreAccessAfterUnsafeCall {
                         }
 
                         for (BasicBlock successor : currentBlock.getSuccessors())
-                            if (! visited.contains(successor) && successor.getType() == BasicBlockType.COMMON)
+                            if (! visited.contains(successor) && successor.getType() == BasicBlockType.CODE)
                                 queue.add(successor);
                     }
                 }
