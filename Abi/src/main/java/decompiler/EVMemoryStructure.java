@@ -82,6 +82,16 @@ public class EVMemoryStructure {
         // If no value found
         return Optional.empty();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<BigInteger, MemoryStructure> entry : evmMemory.entrySet()) {
+            sb.append(entry.getValue().getStartAddress()).append(" => ").append(entry.getValue().getValueStored()).append(", ");
+        }
+
+        return sb.toString();
+    }
 }
 
 

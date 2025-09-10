@@ -1,24 +1,33 @@
 package decompiler;
 
+import abi.HashDB;
+import abi.fields.FunctionType;
 import opcodes.Opcode;
 import parseTree.cfg.BasicBlock;
 import parseTree.cfg.BasicBlockType;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.List;
 
 public class InstructionResolver {
     private EVMemoryStructure memory;                        // EVM Memory Structure simulator
     private Map<String, String> storage = new HashMap<>();   // EVM Storage Structure simulator
     private ArrayList<String> stack = new ArrayList<>();     // EVM Stack Structure simulator
 
+
     Map<Long, Integer> visitBlocksCounter;
     boolean checkingLocalVariableInStack;
+    private Map<String, List<String>> arrayLocations = new HashMap<>();
+
+    Map<String, String> typeInferences = new HashMap<>();
+    List<Integer> functionArguments;
+    boolean needToManageIf = false;
 
     private static final List<BasicBlockType> READABLE_BLOCKS = Arrays.asList(BasicBlockType.CODE, BasicBlockType.DISPATCHER, BasicBlockType.FALLBACK);
     private static final List<BasicBlockType> ANALYZABLE_BLOCKS = Arrays.asList(BasicBlockType.CODE, BasicBlockType.FALLBACK);
-    private static final List<String> ABSTRACT_VALUES = Arrays.asList("storage", "msg", "arg");
-    private static final List<String> COMPARE_SIGNS = Arrays.asList(">", "<", "==", "!=");
+    private static final List<String> ABSTRACT_VALUES = Arrays.asList("storage", "msg", "arg", "localVar");
+    private static final List<String> COMPARE_SIGNS = Arrays.asList(">", "<", "==", "!=", ">=", "<=");
     private static final String ADDRESS_MASK = "0xffffffffffffffffffffffffffffffffffffffff";
 
     public InstructionResolver() {
@@ -30,10 +39,23 @@ public class InstructionResolver {
      * @param paths
      * @return List of Block Trace
      */
-    public List<BlockTracing> resolve(List<List<BasicBlock>> paths) {
+    public List<BlockTracing> resolve(List<List<BasicBlock>> paths, Map<String, String> inferences) {
         List<BlockTracing> relations = new ArrayList<>();
+        typeInferences.putAll(inferences);
         for (List<BasicBlock> path : paths) {
+            functionArguments = new ArrayList<>();
             resolvePath(path, relations);
+        }
+
+        for (Map.Entry<String, String> entry : typeInferences.entrySet()) {
+            if (inferences.containsKey(entry.getKey())) {
+                if (inferences.get(entry.getKey()).startsWith("mapping"))
+                    if (inferences.get(entry.getKey()).split(" => ")[1].contains("z")) {
+                        inferences.put(entry.getKey(), entry.getValue());
+                    }
+
+            } else
+                inferences.put(entry.getKey(), entry.getValue());
         }
 
         return relations;
@@ -68,105 +90,223 @@ public class InstructionResolver {
     }
 
     private void resolveOpcode(Opcode opcode, List<Opcode> opcodeList, int opcodeIndex, BasicBlock block, BlockTracing blockTracing) {
+
         if (containsInstruction(opcode, "PUSH")) {
             stack.add(getPUSHArg(opcode));
         }
-        else if (containsInstruction(opcode, "POP")) {
-            stack.remove(stack.size() - 1);
+        if (containsInstruction(opcode, "POP")) {
+            if (!stack.isEmpty())
+                stack.remove(stack.size() - 1);
+            else
+                System.err.println("Warning: skipped POP opcode because stack was empty.");
         }
-        else if (containsInstruction(opcode, "DUP")) {
+        if (containsInstruction(opcode, "DUP")) {
             int idx = getInstructionIndex(opcode, 3);
             stack.add(stack.get(stack.size() - idx));
         }
-        else if (containsInstruction(opcode, "SWAP")) {
+        if (containsInstruction(opcode, "SWAP")) {
             int idx = getInstructionIndex(opcode, 4);
             int lastIndex = stack.size() - 1;
             int targetIndex = lastIndex - idx;
             Collections.swap(stack, lastIndex, targetIndex);
 
         }
-        else if (containsInstruction(opcode, "SLOAD")) {
+        if (containsInstruction(opcode, "SLOAD")) {
             String value = stack.remove(stack.size() - 1);
-            // No array, mapping...
-            if (!value.contains("[")) {
-                stack.add("_storage" + convertToInt(value));
+            String rootArray = isArrayElement(value);
+
+            if (rootArray == null) {
+                // No array, mapping...
+                if (!value.contains("[") && doesNotContainAbstractValue(value)) {
+                    if (storage.containsKey(value))
+                        stack.add(storage.get(value));
+                    else
+                        stack.add("_storage" + convertToInt(value));
+                } else {
+                    if (storage.containsKey(value))
+                        stack.add(storage.get(value));
+                    else
+                        stack.add("_storage" + value);
+                }
             } else {
-                stack.add("_storage" + value);
+                if  (storage.containsKey("_storage" + convertToInt(rootArray) + "[" +  convertToInt(value) + "]"))
+                     stack.add(storage.get("_storage" + convertToInt(rootArray) + "[" +  convertToInt(value) + "]"));
+                else
+                    stack.add("_storage" + convertToInt(rootArray) + "[" +  convertToInt(value) + "]");
             }
         }
-        else if (containsInstruction(opcode, "SSTORE")) {
+        if (containsInstruction(opcode, "SSTORE")) {
             String offset = stack.remove(stack.size() - 1);
             String value = stack.remove(stack.size() - 1);
 
+            storage.put(offset, value);
+
+
             if (!doesNotContainAbstractValue(offset)) {
+                // Looking for old occurrences of offset
+                for (int a = 0; a < stack.size(); a++) {
+                    String element =  stack.get(a);
+                    if (element.equals("_storage" + offset)) {
+                        stack.set(a, "_localVar" + a);
+                        blockTracing.appendCode("_localVar" + a + " = " + "_storage" + offset + ";\n");
+                    }
+
+                }
+
                 if (!doesNotContainAbstractValue(value)) {
                     if (block.getType() == BasicBlockType.CODE && visitBlocksCounter.get(block.getOffset()) == 1) {
-                        blockTracing.appendCode("_storage" + offset + " = " + value + ";\n");
+                        String rootArray = isArrayElement(offset);
+                        if (rootArray == null)
+                            blockTracing.appendCode("_storage" + offset + " = " + value + ";\n");
+                        else
+                            blockTracing.appendCode("_storage" + convertToInt(rootArray) + "[" + offset + "] = " + value + ";\n");
                     }
                 } else {
                     if (block.getType() == BasicBlockType.CODE && visitBlocksCounter.get(block.getOffset()) == 1) {
-                        blockTracing.appendCode("_storage" + offset + " = " + convertToInt(value) + ";\n");
+                        String rootArray = isArrayElement(offset);
+                        if (rootArray == null)
+                            blockTracing.appendCode("_storage" + offset + " = " + convertToInt(value) + ";\n");
+                        else
+                            blockTracing.appendCode("_storage" + convertToInt(rootArray) + "[" + offset + "] = " + convertToInt(value) + ";\n");
                     }
                 }
             } else {
                 if (!doesNotContainAbstractValue(value)) {
                     if (block.getType() == BasicBlockType.CODE && visitBlocksCounter.get(block.getOffset()) == 1) {
-                        blockTracing.appendCode("_storage" + convertToInt(offset) + " = " + value + ";\n");
+                        String rootArray = isArrayElement(offset);
+                        if (rootArray == null)
+                            blockTracing.appendCode("_storage" + convertToInt(offset) + " = " + value + ";\n");
+                        else
+                            blockTracing.appendCode("_storage" + convertToInt(rootArray) + "[" + convertToInt(offset) + "] = " + value + ";\n");
                     }
                 } else {
-                    blockTracing.appendCode("_storage" + convertToInt(offset) + " = " + convertToInt(value) + ";\n");
+                    String rootArray = isArrayElement(offset);
+                    if (rootArray == null)
+                        blockTracing.appendCode("_storage" + convertToInt(offset) + " = " + convertToInt(value) + ";\n");
+                    else
+                        blockTracing.appendCode("_storage" + convertToInt(rootArray) + "[" + convertToInt(offset) + "] = " + convertToInt(value) + ";\n");
                 }
             }
             storage.put(offset, value);
         }
-        else if (containsInstruction(opcode, "MLOAD")) {
+        if (containsInstruction(opcode, "MLOAD")) {
             String address = stack.remove(stack.size() - 1);
-            BigInteger startAddress = convertToInt(address);
-            Optional<String> valueInMemory = memory.loadValueFromMemory(startAddress);
+            if (doesNotContainAbstractValue(address)) {
+                BigInteger startAddress = convertToInt(address);
+                Optional<String> valueInMemory = memory.loadValueFromMemory(startAddress);
 
-            if (valueInMemory.isPresent()) {
-                stack.add(valueInMemory.get());
+                if (valueInMemory.isPresent()) {
+                    stack.add(valueInMemory.get());
+                } else {
+                    memory.addMemoryStructure(startAddress, startAddress.add(BigInteger.valueOf(31)), "0x00");
+                    stack.add("0x00");
+                }
             } else {
-                memory.addMemoryStructure(startAddress, startAddress.add(BigInteger.valueOf(31)), "0x00");
-                stack.add("0x00");
+                stack.add("mem(" + address + ")");
             }
+
         }
-        else if (containsInstruction(opcode, "MSTORE")) {
+        if (containsInstruction(opcode, "MSTORE")) {
             String address = stack.remove(stack.size() - 1);
             String valueToMemorize =  stack.remove(stack.size() - 1);
-            BigInteger startAddress = convertToInt(address);
-            BigInteger endAddress = startAddress.add(BigInteger.valueOf(31));
-            memory.addMemoryStructure(startAddress, endAddress, valueToMemorize);
+            BigInteger startAddress;
+            BigInteger endAddress;
+            if (doesNotContainAbstractValue(address)) {
+                startAddress = convertToInt(address);
+                endAddress = startAddress.add(BigInteger.valueOf(31));
+                memory.addMemoryStructure(startAddress, endAddress, valueToMemorize);
+            }
         }
-        else if (containsInstruction(opcode, "JUMPI")) {
+        if (containsInstruction(opcode, "JUMPI")) {
             stack.remove(stack.size() - 1);
             stack.remove(stack.size() - 1);
         }
-        else if (isInstruction(opcode, "JUMP")) {
+        if (isInstruction(opcode, "JUMP")) {
             if (!stack.isEmpty()) {
                 stack.remove(stack.size() - 1);
             }
         }
-        else if (containsInstruction(opcode, "REVERT")) {
+        if (containsInstruction(opcode, "REVERT")) {
             stack.remove(stack.size() - 1);
             stack.remove(stack.size() - 1);
             blockTracing.appendCode("revert();\n");
         }
-        else if (!isOperationInstruction(opcode).equals("??")) {
+        if (!isOperationInstruction(opcode).equals("??")) {
             String sign = isOperationInstruction(opcode);
             String firstOperand =  stack.remove(stack.size() - 1);
             String secondOperand =  stack.remove(stack.size() - 1);
 
-            if (isNeutralOperation(firstOperand, secondOperand, sign)) {
-                stack.add(firstOperand);
+            String neutralOperand = isNeutralOperation(firstOperand, secondOperand, sign);
+            if (neutralOperand != null) {
+                stack.add(neutralOperand);
             }
             else if (!doesNotContainAbstractValue(firstOperand)) {
                 if (!doesNotContainAbstractValue(secondOperand)) {
+                    if (!typeInferences.containsKey(firstOperand)) {
+                        if (!firstOperand.contains("[")) {
+                            typeInferences.put(firstOperand, "uint");
+                        } else if (typeInferences.containsKey(firstOperand.split("\\[")[0])) {
+                            if (typeInferences.get(firstOperand.split("\\[")[0]).startsWith("mapping")) {
+                                typeInferences.put(firstOperand.split("\\[")[0], typeInferences.get(firstOperand.split("\\[")[0]).split(" => ")[0] + " => uint)");
+                            }
+                        }
+                    } else if (firstOperand.contains("[")) {
+                        String typeArray = typeInferences.get(firstOperand.split("\\[")[0]);
+                        typeArray = typeArray.replaceAll("var", "uint");
+                        typeInferences.put(firstOperand.split("\\[")[0], typeArray);
+                        updateArrayTypeElements(firstOperand.split("\\[")[0], "uint");
+                    }
+
+                    if (!typeInferences.containsKey(secondOperand)) {
+                        if (!firstOperand.contains("[")) {
+                            typeInferences.put(secondOperand, "uint");
+                        } else if (typeInferences.containsKey(secondOperand.split("\\[")[0])) {
+                            if (typeInferences.get(secondOperand.split("\\[")[0]).startsWith("mapping")) {
+                                typeInferences.put(secondOperand.split("\\[")[0], typeInferences.get(secondOperand.split("\\[")[0]).split(" => ")[0] + " => uint)");
+                            }
+                        }
+                    } else if (secondOperand.contains("[")) {
+                        String typeArray = typeInferences.get(secondOperand.split("\\[")[0]);
+                        typeArray = typeArray.replaceAll("var", "uint");
+                        typeInferences.put(secondOperand.split("\\[")[0], typeArray);
+                        updateArrayTypeElements(firstOperand.split("\\[")[0], "uint");
+                    }
+
                     stack.add(firstOperand + " " + sign + " " + secondOperand);
                 } else {
+                    if (!typeInferences.containsKey(firstOperand)) {
+                        if (!firstOperand.contains("[")) {
+                            typeInferences.put(firstOperand, "uint");
+                        } else if (typeInferences.containsKey(firstOperand.split("\\[")[0])) {
+                            if (typeInferences.get(firstOperand.split("\\[")[0]).startsWith("mapping")) {
+                                typeInferences.put(firstOperand.split("\\[")[0], typeInferences.get(firstOperand.split("\\[")[0]).split(" => ")[0] + " => uint)");
+                            }
+
+                        }
+                    } else if (firstOperand.contains("[")) {
+                        String typeArray = typeInferences.get(firstOperand.split("\\[")[0]);
+                        typeArray = typeArray.replaceAll("var", "uint");
+                        typeInferences.put(firstOperand.split("\\[")[0], typeArray);
+                        updateArrayTypeElements(firstOperand.split("\\[")[0], "uint");
+                    }
                     stack.add(firstOperand + " " + sign + " " + convertToInt(secondOperand));
                 }
             } else if (!doesNotContainAbstractValue(secondOperand)) {
+                if (!typeInferences.containsKey(secondOperand)) {
+                    if (!secondOperand.contains("[")) {
+                        typeInferences.put(secondOperand, "uint");
+                    } else if (typeInferences.containsKey(secondOperand.split("\\[")[0])) {
+                        if (typeInferences.get(secondOperand.split("\\[")[0]).startsWith("mapping")) {
+                            typeInferences.put(secondOperand.split("\\[")[0], typeInferences.get(secondOperand.split("\\[")[0]).split(" => ")[0] + " => uint)");
+                        }
+                    }
+                }  else if (secondOperand.contains("[")) {
+                    String typeArray = typeInferences.get(secondOperand.split("\\[")[0]);
+                    typeArray = typeArray.replaceAll("var", "uint");
+                    typeInferences.put(secondOperand.split("\\[")[0], typeArray);
+                    updateArrayTypeElements(firstOperand.split("\\[")[0], "uint");
+                }
+
                 stack.add(convertToInt(firstOperand) + " " + sign + " " + secondOperand);
             } else {
                 BigInteger firstOperandInt = convertToInt(firstOperand);
@@ -175,7 +315,7 @@ public class InstructionResolver {
                 stack.add("0x" + unsignedRes.toString(16));
             }
         }
-        else if (!isCompareInstruction(opcode).equals("??")) {
+        if (!isCompareInstruction(opcode).equals("??")) {
             String sign = isCompareInstruction(opcode);
             String firstOperand = stack.remove(stack.size() - 1);
             String secondOperand = stack.remove(stack.size() - 1);
@@ -187,33 +327,87 @@ public class InstructionResolver {
                 if (sign.equals("==")) sign = "!=";
             }
 
+            // Heuristic for arrays: check index < length
+            if (opcode.toString().contains("LT")) {
+                // if index > length, there is an invalid block
+                for (BasicBlock successor : block.getSuccessors()) {
+                    for (Opcode op : successor.getOpcodes()) {
+                        if (op.toString().split(" ")[1].equals("INVALID")) {
+                            String rootArray = stack.get(stack.size() - 2);
+                            List<String> indexes = new ArrayList<>();
+                            if (doesNotContainAbstractValue(secondOperand)) {
+                                for (int i = convertToInt(rootArray).intValue() ; i < convertToInt(secondOperand).intValue(); i++) {
+                                    indexes.add("0x" + i);
+                                    if (!typeInferences.containsKey("_storage" + convertToInt(rootArray) + "[" + convertToInt("0x" + i) + "]"))
+                                        typeInferences.put("_storage" + convertToInt(rootArray) + "[" + convertToInt("0x" + i) + "]", "var");
+                                }
+                                arrayLocations.put(rootArray, indexes);
+                                if (!typeInferences.containsKey("_storage" + convertToInt(rootArray)))
+                                    typeInferences.put("_storage" + convertToInt(rootArray), "var[" + convertToInt(secondOperand).intValue() + "]");
+                                break;
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            String resultOfCompare;
             if (!doesNotContainAbstractValue(firstOperand)) {
                 if (!doesNotContainAbstractValue(secondOperand)) {
-                    stack.add(firstOperand + " " + sign + " " + secondOperand);
+                    String typeInference = getTypeFromOperation(opcode);
+                    typeInferences.put(firstOperand, typeInference);
+                    typeInferences.put(secondOperand, typeInference);
+                    resultOfCompare = firstOperand + " " + sign + " " + secondOperand;
                 } else {
-                    stack.add(firstOperand + " " + sign + " " + convertToInt(secondOperand));
+                    String typeInference = getTypeFromOperation(opcode);
+                    typeInferences.put(firstOperand, typeInference);
+                    resultOfCompare = firstOperand + " " + sign + " " + convertToInt(secondOperand);
                 }
             } else if (!doesNotContainAbstractValue(secondOperand)) {
-                stack.add(convertToInt(firstOperand) + " " + sign + " " + secondOperand);
+                String typeInference = getTypeFromOperation(opcode);
+                typeInferences.put(secondOperand, typeInference);
+                resultOfCompare = convertToInt(firstOperand) + " " + sign + " " + secondOperand;
             } else {
                 BigInteger firstOperandInt = convertToInt(firstOperand);
                 BigInteger secondOperandInt = convertToInt(secondOperand);
-                stack.add(firstOperandInt.compareTo(secondOperandInt) > 0 ? "0x01" : "0x00");
+                resultOfCompare = firstOperandInt.compareTo(secondOperandInt) > 0 ? "0x01" : "0x00";
+            }
+            stack.add(resultOfCompare);
+
+
+            // After this op there is PUSH + JUMP and not ISZERO: map this code fragment
+            if (opcodeList.get(opcodeIndex+1).toString().contains("PUSH") && opcodeList.get(opcodeIndex+2).toString().contains("JUMPI")) {
+                needToManageIf = true;
             }
         }
-        else if (containsInstruction(opcode, "EXP")) {
-            BigInteger base = convertToInt(stack.remove(stack.size() - 1));
-            BigInteger pow = convertToInt(stack.remove(stack.size() - 1));
-            BigInteger mod = BigInteger.valueOf(1).shiftLeft(256);
+        if (containsInstruction(opcode, "EXP")) {
+            String baseStr = stack.remove(stack.size() - 1);
+            String powStr =  stack.remove(stack.size() - 1);
+            if (doesNotContainAbstractValue(baseStr) && doesNotContainAbstractValue(powStr)) {
+                BigInteger base = convertToInt(baseStr);
+                BigInteger pow = convertToInt(powStr);
+                BigInteger mod = BigInteger.valueOf(1).shiftLeft(256);
+                stack.add("0x" + base.modPow(pow, mod).toString(16));
+            } else {
+                stack.add(baseStr + "^" + powStr);
+            }
+        }
+        if (containsInstruction(opcode, "NOT")) {
+            String valueStr =  stack.remove(stack.size() - 1);
+            if (doesNotContainAbstractValue(valueStr)) {
+                BigInteger value = convertToInt(valueStr);
+                BigInteger mask = BigInteger.valueOf(2).pow(256).subtract(BigInteger.valueOf(1));
+                stack.add("0x" + value.not().and(mask).toString(16));
+            } else {
+                stack.add("!" + valueStr);
+                stack.add("!" + valueStr);
+            }
+        }
+        if (containsInstruction(opcode, "ISZERO") || needToManageIf) {
+            if (needToManageIf)
+                needToManageIf = false;
 
-            stack.add("0x" + base.modPow(pow, mod).toString(16));
-        }
-        else if (containsInstruction(opcode, "NOT")) {
-            BigInteger value = convertToInt(stack.remove(stack.size() - 1));
-            BigInteger mask = BigInteger.valueOf(2).pow(256).subtract(BigInteger.valueOf(1));
-            stack.add("0x" + value.not().and(mask).toString(16));
-        }
-        else if (containsInstruction(opcode, "ISZERO")) {
             // Check the only or the second opcode ISZERO
             if (!containsInstruction(opcodeList.get(opcodeIndex+1), "ISZERO")) {
                 String value = stack.get(stack.size() - 1);
@@ -227,6 +421,10 @@ public class InstructionResolver {
                     if (ANALYZABLE_BLOCKS.contains(block.getType()) && visitBlocksCounter.get(block.getOffset()) == 1) {
                         if (block.getSuccessors().stream().distinct().count() == 2) {
                             blockTracing.appendCode("if (" + value + ")");
+                            // type inference
+                            if (doesNotContainCompareSigns(value))
+                                typeInferences.put(value, "bool");
+
                             if (!containsInstruction(opcodeList.get(opcodeIndex-1), "ISZERO")) {
                                 blockTracing.appendCode(" => @Block: " + convertToInt(getPUSHArg(opcodeList.get(opcodeList.size()-2))));
                                 boolean found = false;
@@ -250,7 +448,7 @@ public class InstructionResolver {
                 }
             }
         }
-        else if (!isLogicInstruction(opcode).equals("??")) {
+        if (!isLogicInstruction(opcode).equals("??")) {
             String firstOperand =  stack.remove(stack.size() - 1);
             String secondOperand =  stack.remove(stack.size() - 1);
 
@@ -265,18 +463,18 @@ public class InstructionResolver {
             // - maschera d'indirizzo 0xffffff...
             // - qualsiasi altro operando
             // Si tiene come risultato il secondo operando
-            else if (firstOperand.startsWith("0xf") && firstOperand.length() >= 30) {
+            else if (firstOperand.startsWith("0xf")) {
+                if (secondOperand.startsWith("_storage0"))
+                    typeInferences.put(secondOperand, "address");
                 stack.add(secondOperand);
             }
-            else if (firstOperand.contains("storage") && secondOperand.startsWith("msg.sender")) {
-                stack.add(firstOperand);
-            } else if (firstOperand.startsWith("msg.sender") && secondOperand.contains("storage")) {
+            else if (!doesNotContainAbstractValue(firstOperand) || !doesNotContainAbstractValue(secondOperand)) {
                 stack.add(firstOperand);
             }
             else {
                 BigInteger firstOperandInt = convertToInt(firstOperand);
                 BigInteger secondOperandInt = convertToInt(secondOperand);
-                BigInteger mask =  BigInteger.valueOf(1).shiftLeft(256).subtract(BigInteger.valueOf(1));
+                BigInteger mask = BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE);
 
                 switch (isLogicInstruction(opcode)) {
                     case "&&" : stack.add("0x" + firstOperandInt.and(secondOperandInt).and(mask).toString(16)); break;
@@ -284,42 +482,41 @@ public class InstructionResolver {
                 }
             }
         }
-        else if (containsInstruction(opcode, "RETURN")) {
+        if (containsInstruction(opcode, "RETURN")) {
             String size = stack.remove(stack.size() - 1);
             stack.remove(stack.size() - 1);
-            Optional<String> returnValue = memory.loadValueFromMemory(convertToInt(size));
 
-            if (returnValue.isPresent() && returnValue.get().contains("storage")) {
-                blockTracing.appendCode("return " + returnValue.get() + ";\n");
-            } else {
-                blockTracing.appendCode("return " + size + ";\n");
-            }
-        }
-        else if (containsInstruction(opcode, "CALLDATALOAD")) {
-            BigInteger idx = convertToInt(stack.remove(stack.size() - 1));
-            stack.add("_arg" + idx);
-        }
-        else if (containsInstruction(opcode, "CALLVALUE")) {
-            stack.add("msg.value");
-        }
-        else if (containsInstruction(opcode, "CALLER")) {
-            // EURISTICA:
-            // Non potendo vedere l'assegnamento a variabili locali perchè viene solo caricato
-            // il valore sullo stack durante l'utilizzo, se quando letto CALLER, si verifica se
-            // sullo stack sono presenti valori anomali (?).
-            if (!checkingLocalVariableInStack) {
-                for (String instruction : stack) {
-                    if (instruction.startsWith("_storage") && instruction.contains("[")) {
-                        if (block.getType() == BasicBlockType.CODE && visitBlocksCounter.get(block.getOffset()) == 1) {
-                            blockTracing.appendCode("_localVar" + stack.indexOf(instruction) + " = " + instruction + ";\n");
-                            checkingLocalVariableInStack = true;
-                        }
-                    }
+            if (doesNotContainAbstractValue(size)) {
+                Optional<String> returnValue = memory.loadValueFromMemory(convertToInt(size));
+
+                if (returnValue.isPresent() && returnValue.get().contains("storage")) {
+                    blockTracing.appendCode("return " + returnValue.get() + ";\n");
+                } else {
+                    blockTracing.appendCode("return " + size + ";\n");
                 }
             }
+        }
+        if (containsInstruction(opcode, "CALLDATALOAD")) {
+            stack.remove(stack.size() - 1);
+            functionArguments.add(functionArguments.size());
+            stack.add("_arg" + functionArguments.size());
+        }
+        if (containsInstruction(opcode, "CALLDATASIZE")) {
+            stack.add("0x1");
+        }
+        if (containsInstruction(opcode, "CALLDATACOPY")) {
+            String memOffset = stack.remove(stack.size() - 1);
+            String dataOffset =  stack.remove(stack.size() - 1);
+            String length = stack.remove(stack.size() - 1);
+        }
+        if (containsInstruction(opcode, "CALLVALUE")) {
+            stack.add("msg.value");
+        }
+        if (containsInstruction(opcode, "CALLER")) {
+            typeInferences.put("msg.sender", "address");
             stack.add("msg.sender");
         }
-        else if (containsInstruction(opcode, "SHA3")) {
+        if (containsInstruction(opcode, "SHA3")) {
             BigInteger firstValue =  convertToInt(stack.remove(stack.size() - 1));
             BigInteger secondValue = convertToInt(stack.remove(stack.size() - 1));
             List<String> values = new ArrayList<>();
@@ -330,10 +527,32 @@ public class InstructionResolver {
                 firstValue = firstValue.add(BigInteger.valueOf(32));
             }
             if (values.size() == 2) {
+                typeInferences.put("_storage" + convertToInt(values.get(1)), "mapping(" + typeInferences.get(values.get(0)) +  " => z)");
                 stack.add(convertToInt(values.get(1)) + "[" + values.get(0) + "]");
+            } else if (values.size() == 1) {
+                stack.add(values.get(0));
             }
         }
-        else if (containsInstruction(opcode, "CALL")) {
+        if (containsInstruction(opcode, "SHR")) {
+            String shift = stack.remove(stack.size() - 1);
+            if (doesNotContainAbstractValue(shift)) {
+                String value = stack.remove(stack.size() - 1);
+                if (doesNotContainAbstractValue(value)) {
+                    BigInteger shiftInt = convertToInt(shift);
+                    BigInteger valueInt = convertToInt(value);
+
+                    if (shiftInt.compareTo(BigInteger.valueOf(256)) > 0)
+                        stack.add("0x00");
+                    else {
+                        BigInteger result = valueInt.shiftRight(shiftInt.intValue());
+                        stack.add((result.toString()));
+                    }
+                } else {
+                    stack.add(value);
+                }
+            }
+        }
+        if (equalsInstruction(opcode, "CALL")) {
             String gas =  stack.remove(stack.size() - 1);
             String to =  stack.remove(stack.size() - 1);
             String value = stack.remove(stack.size() - 1);
@@ -342,14 +561,49 @@ public class InstructionResolver {
             String retOffset = stack.remove(stack.size() - 1);
             String retLength = stack.remove(stack.size() - 1);
 
-            stack.add("success");
+            stack.add("0x01");
 
-            blockTracing.appendCode(to +  ".call();\n");
+            // send() or transfer()
+            if (gas.contains("2300")) {
+                // transfer()
+                if (opcodeList.get(opcodeIndex+1).toString().contains("ISZERO"))
+                    blockTracing.appendCode(to +  ".transfer(" + value + ");\n");
+                else
+                    blockTracing.appendCode(to +  ".send(" + value + ");\n");
+            } else {
+                blockTracing.appendCode(to +  ".call(" + value + ");\n");
+            }
+        }
+        if (containsInstruction(opcode, "LOG")) {
+            String mem_start = stack.remove(stack.size() - 1);
+            String mem_size = stack.remove(stack.size() - 1);
+            String eventHash = stack.remove(stack.size() - 1);
+            int topics = Integer.parseInt(opcode.toString().split(" ")[1].substring(3));
+            List<String> values = new ArrayList<>();
+
+            for (int k = 1; k < topics; k++) {
+                String topic =  stack.remove(stack.size() - 1);
+                values.add(topic);
+            }
+            String code = "event_" + eventHash + "(";
+            for (int a = 0; a < values.size(); a++) {
+                String value = values.get(a);
+                if (a < values.size() - 1) {
+                    code += value + ", ";
+                } else {
+                    code += value + ");\n";
+                }
+            }
+            blockTracing.appendCode(code);
         }
     }
 
     private boolean containsInstruction(Opcode opcode, String instruction) {
         return opcode.toString().contains(instruction);
+    }
+
+    private boolean equalsInstruction(Opcode opcode, String instruction) {
+        return opcode.toString().split(" ")[1].equals(instruction);
     }
 
     private boolean isInstruction(Opcode opcode, String instruction) {
@@ -362,7 +616,7 @@ public class InstructionResolver {
             case "ADD": return "+";
             case "SUB": return "-";
             case "MUL": return "*";
-            case "DIV": return "//";
+            case "DIV": return "/";
             default: return "??";
         }
     }
@@ -370,8 +624,25 @@ public class InstructionResolver {
     private String isCompareInstruction(Opcode opcode) {
         String opStr =  opcode.toString().split(" ")[1];
         switch (opStr) {
-            case "GT": return ">";
+            case "GT":
+            case "SGT": return ">";
+            case "LT":
+            case "SLT": return "<";
             case "EQ": return "==";
+            default: return "??";
+        }
+    }
+
+    private String getTypeFromOperation(Opcode opcode) {
+        String opStr =  opcode.toString().split(" ")[1];
+        switch (opStr) {
+            case "GT":
+            case "EQ":
+            case "LT":
+                return "uint";
+            case "SGT":
+            case "SLT":
+                return "int";
             default: return "??";
         }
     }
@@ -385,6 +656,24 @@ public class InstructionResolver {
         }
     }
 
+    private String isArrayElement(String value) {
+        for (Map.Entry<String, List<String>> entry : arrayLocations.entrySet()) {
+            for (String en : entry.getValue()) {
+                if (convertToInt(value).equals(convertToInt(en)))
+                    return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    private void updateArrayTypeElements(String key, String type) {
+        for (Map.Entry<String, String> entry : typeInferences.entrySet()) {
+            if (entry.getKey().startsWith(key + "[")) {
+                typeInferences.put(entry.getKey(), type);
+            }
+        }
+    }
+
     private boolean doesNotContainAbstractValue(String value) {
         for (String abstractValue : ABSTRACT_VALUES) {
             if (value.contains(abstractValue)) { return false; }
@@ -392,15 +681,27 @@ public class InstructionResolver {
         return true;
     }
 
-    private boolean isNeutralOperation(String first, String second, String sign) {
+    private boolean doesNotContainCompareSigns(String value) {
+        for (String compareSign : COMPARE_SIGNS) {
+            if (value.contains(compareSign)) { return false; }
+        }
+        return true;
+    }
+
+    // Control if one of the operands is a neutral element (var + 0, var * 1, ...)
+    private String isNeutralOperation(String first, String second, String sign) {
         if (!doesNotContainAbstractValue(first) && !doesNotContainAbstractValue(second))
-            return false;
-        if (convertToInt(second).equals(BigInteger.valueOf(0)) && (sign.equals("+") || sign.equals("-")))
-            return true;
-        else if (convertToInt(second).equals(BigInteger.valueOf(1)) && (sign.equals("*") || sign.equals("//")))
-            return true;
-        else
-            return false;
+            return null;
+        if ((doesNotContainAbstractValue(second) && convertToInt(second).equals(BigInteger.valueOf(0))) && (sign.equals("+") || sign.equals("-")))
+            return first;
+        else if ((doesNotContainAbstractValue(first) && convertToInt(first).equals(BigInteger.valueOf(0))) && (sign.equals("+") || sign.equals("-")))
+            return second;
+        else if ((doesNotContainAbstractValue(second) && convertToInt(second).equals(BigInteger.valueOf(1))) && (sign.equals("*") || sign.equals("/")))
+            return first;
+        else if ((doesNotContainAbstractValue(first) && convertToInt(first).equals(BigInteger.valueOf(1))) &&  (sign.equals("*") || sign.equals("/")))
+            return second;
+
+        return null;
     }
 
     private BigInteger calculate(String sign, BigInteger firstOperandInt, BigInteger secondOperandInt) {

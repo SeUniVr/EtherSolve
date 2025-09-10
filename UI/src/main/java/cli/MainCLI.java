@@ -113,7 +113,7 @@ public class MainCLI implements Callable<Integer> {
             }
 
             Decompiler decompiler = new Decompiler();
-            decompiler.decompile(contract.getRuntimeCfg(), abi, contract.getSolidityVersion(), "DecompiledCode");
+            decompiler.decompile(contract.getRuntimeCfg(), abi, contract.getSolidityVersion(), "DecompiledCode", ".");
 
             return 0;
         } catch (IllegalArgumentException e){
