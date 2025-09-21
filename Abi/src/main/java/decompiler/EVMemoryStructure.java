@@ -1,48 +1,10 @@
 package decompiler;
 
+import javax.swing.text.html.Option;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-
-/**
- * Representation of a memory unit.
- */
-final class MemoryStructure {
-    private final BigInteger startAddress;
-    private final BigInteger endAddress;
-    private final String valueStored;
-
-    public MemoryStructure(BigInteger startAddress, BigInteger endAddress, String valueStored) {
-        this.startAddress = startAddress;
-        this.endAddress = endAddress;
-        this.valueStored = valueStored;
-    }
-
-    /**
-     * @return start Address for load, store.
-     */
-    public BigInteger getStartAddress() { return startAddress; }
-
-    /**
-     * @return end Address for splitting locations
-     */
-    public  BigInteger getEndAddress() { return endAddress; }
-
-    /**
-     * @return value stored in MemoryStructure
-     */
-    public String getValueStored() { return valueStored; }
-
-    /**
-     * Compare in order to find the right MemoryStructure
-     * @param address -> search filter.
-     * @return if address is in this MemoryStructure.
-     */
-    public boolean contains(BigInteger address) {
-        return address.compareTo(startAddress) >= 0 && address.compareTo(endAddress) <= 0;
-    }
-}
 
 /**
  * It simulates the Memory structure of EVM, which is a list of bytes.
@@ -81,6 +43,19 @@ public class EVMemoryStructure {
         }
         // If no value found
         return Optional.empty();
+    }
+
+    /**
+     * Get last element of EVMemoryStructure
+     * @return last element of TreeMap
+     */
+    public Optional<String> getLastMemoryStructure() {
+        Map.Entry<BigInteger, MemoryStructure> last = evmMemory.lastEntry();
+        return last != null ? Optional.of(last.getValue().getValueStored()) : Optional.empty();
+    }
+
+    public Iterable<MemoryStructure> getMemoryStructures() {
+        return evmMemory.values();
     }
 
     @Override

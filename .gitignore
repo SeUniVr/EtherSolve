@@ -154,3 +154,6 @@ venv/
 package-lock.json
 *.iml
 tests/
+
+# Decompiled output files
+*Analysis*.sol
